@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="io.cyanlab.loinasd.wordllst.MainActivity">
+    <item
+        android:id="@+id/addWL"
+        android:checkable="false"
+        android:enabled="true"
+        android:icon="@drawable/ic_add_white_24dp"
+        android:orderInCategory="100"
+        android:title="@string/add_wordlist"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="101"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+</menu>
