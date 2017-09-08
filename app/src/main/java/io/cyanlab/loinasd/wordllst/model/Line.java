@@ -16,6 +16,8 @@ final class Line {
         this.wordlist = wordlist;
     }
 
+    public Line(){}
+
     public ArrayList<Word> getPrime() {
         return prime;
     }
@@ -38,5 +40,17 @@ final class Line {
 
     public Wordlist getWordlist(){
         return this.wordlist;
+    }
+
+    public void setWordlist (Wordlist wordlist){
+        this.wordlist = wordlist;
+    }
+
+    public void setPrime(ArrayList<Word> words){
+        this.prime = words;
+    }
+
+    public void setTranslate(ArrayList<Word> words){
+        this.translate = words;
     }
 }

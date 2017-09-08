@@ -6,9 +6,13 @@ import java.util.Observable;
 public final class Facade extends Observable implements Model{
 
 private Facade(){}
+
     private ArrayList<Wordlist> wordlists;
 
-    public void addWordlist(){}
+    public void addWordlist(){
+        LazyPars lz = new LazyPars();
+        wordlists.add(lz.createWl());
+    }
 
     public int getWordlistsNum(){
         return this.wordlists.size();
@@ -89,6 +93,5 @@ private Facade(){}
             return wordsStr;
         }
     }
-
 
 }
