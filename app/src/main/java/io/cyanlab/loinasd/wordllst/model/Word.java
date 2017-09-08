@@ -3,19 +3,17 @@ package io.cyanlab.loinasd.wordllst.model;
 
 import android.support.annotation.NonNull;
 
-import java.util.ArrayList;
 
 class Word {
 
     private final String word;
     private final Lang lang;
+    private final Line line;
 
-    private ArrayList<String> translation = new ArrayList<>();
-    private ArrayList<String> synonyms = new ArrayList<>();
-
-    public Word(@NonNull String word, @NonNull Lang lang) {
+    public Word(@NonNull String word, @NonNull Lang lang, @NonNull Line line) {
         this.word = word;
         this.lang = lang;
+        this.line = line;
     }
 
     public String getWord() {
@@ -25,20 +23,9 @@ class Word {
     public Lang getLang() {
         return lang;
     }
-
-    public ArrayList<String> getTranslation() {
-        return translation;
+    public Line getLine(){
+        return this.line;
     }
 
-    public void setTranslation(ArrayList<String> translation) {
-        this.translation = translation;
-    }
 
-    public ArrayList<String> getSynonyms() {
-        return synonyms;
-    }
-
-    public void setSynonyms(ArrayList<String> synonyms) {
-        this.synonyms = synonyms;
-    }
 }
