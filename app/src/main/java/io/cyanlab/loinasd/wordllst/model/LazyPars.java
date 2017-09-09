@@ -84,13 +84,14 @@ class LazyPars {
                String s = sc.nextLine();
                int ind = s.indexOf("/");
                int prevInd = 0;
-               while ((s.charAt(ind) == '/') && (ind != s.lastIndexOf("/")) && (ind != -1)) {
+               while ( (ind != s.lastIndexOf("/")) && (s.charAt(ind) == '/') &&(ind != -1)) {
                    Word word = new Word(s.substring(prevInd, ind - 1), Lang.EN, line);
                    prevInd = ind;
-                   ind = s.substring(ind + 1).indexOf("/");
+                   s = s.replace('/','1');
+                   ind = s.indexOf("/");
                    line.getPrime().add(word);
                }
-               s = s.substring(s.indexOf("     "));
+               s = s.substring(s.indexOf("     ")+2);
                Word word = new Word(s, Lang.RU, line);
                line.getTranslate().add(word);
                lines.add(line);

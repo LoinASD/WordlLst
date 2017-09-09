@@ -1,6 +1,5 @@
 package io.cyanlab.loinasd.wordllst.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 
@@ -12,6 +11,10 @@ class Wordlist {
 
     public Wordlist(String name, ArrayList<Line> lines) {
         this.lines = lines;
+        this.name = name;
+    }
+
+    public Wordlist(String name){
         this.name = name;
     }
 

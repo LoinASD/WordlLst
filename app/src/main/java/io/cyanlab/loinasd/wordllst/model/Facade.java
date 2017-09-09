@@ -5,17 +5,28 @@ import java.util.Observable;
 
 public final class Facade extends Observable implements Model{
 
-private Facade(){}
+    private Facade(){}
 
-    private ArrayList<Wordlist> wordlists;
+
+    private static Facade instance;
+
+    public static Facade getFacade(){
+        if(instance == null){
+            instance = new Facade();
+        }
+        return instance;
+    }
+
+    private static ArrayList<Wordlist> wordlists = new ArrayList<>();
 
     public void addWordlist(){
-        LazyPars lz = new LazyPars();
-        wordlists.add(lz.createWl());
+        LazyPars lazyPars = new LazyPars();
+        Wordlist wordlist = lazyPars.createWl();
+        wordlists.add(wordlist);
     }
 
     public int getWordlistsNum(){
-        return this.wordlists.size();
+        return wordlists.size();
     }
 
     public int getWordlistNumByName(String name){
@@ -43,7 +54,7 @@ private Facade(){}
         }
     }
 
-    public int getWordlistLinesNumByNum(int wordlistNum){
+    public int getWordlistLinesCountByNum(int wordlistNum){
         if ((wordlistNum > wordlists.size()-1)||(wordlistNum<0)){
             return -1;
         }
