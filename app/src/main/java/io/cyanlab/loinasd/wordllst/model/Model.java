@@ -5,18 +5,18 @@ import java.util.Observable;
 
 public interface Model{
 
-    public void addWordlist();
+    void addWordlist();
 
-    public int getWordlistsNum();
+    int getWordlistsNum();
 
-    public int getWordlistNumByName(String name);
+    int getWordlistNumByName(String name);
 
-    public String getWordlistNameByNum(int wordlistNum);
+    String getWordlistNameByNum(int wordlistNum);
 
-    public int getWordlistLinesNumByNum(int wordlistNum);
+    int getWordlistLinesCountByNum(int wordlistNum);
 
-    public ArrayList<String> getPrimByLineNum(int wordlistNum, int lineNum);
+    ArrayList<String> getPrimByLineNum(int wordlistNum, int lineNum);
 
-    public ArrayList<String> getTransByLineNum(int wordlistNum, int lineNum);
+    ArrayList<String> getTransByLineNum(int wordlistNum, int lineNum);
 
 }
