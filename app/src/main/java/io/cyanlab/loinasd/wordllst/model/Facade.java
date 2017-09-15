@@ -1,13 +1,11 @@
 package io.cyanlab.loinasd.wordllst.model;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.Observable;
 
-import io.cyanlab.loinasd.wordllst.controller.LazyPars;
 
 public final class Facade extends Observable implements Model{
 
@@ -38,68 +36,6 @@ public final class Facade extends Observable implements Model{
         }
     }
 
-    public void loadWordLists(SQLiteDatabase sqLiteDatabase){
-        Cursor c = sqLiteDatabase.query("MbWordList",null,null, null, null, null, null);
-        if (c.moveToFirst()){
-            do{
-                String f = c.getString(c.getColumnIndex("wlId"));
-                ArrayList<Line> lines = new ArrayList<Line>();
-                while (c.getString(c.getColumnIndex("wlId")).equals(f)) {
-                    Line line = new Line();
-                    String s = c.getString(c.getColumnIndex("prim"));
-                    int ind = s.indexOf("/");
-                    int prevInd = 0;
-                    while ((ind != -1) &&(s.charAt(ind) == '/')) {
-                        Word word = new Word(s.substring(prevInd, ind), Lang.EN, line);
-                        prevInd = ind+1;
-                        s = s.replaceFirst("/","=");
-                        ind = s.indexOf("/");
-                        line.getPrime().add(word);
-                        if(ind == -1){
-                            break;
-                        }
-                    }
-
-                    s = c.getString(c.getColumnIndex("trans"));
-                    ind = s.lastIndexOf("/");
-                    Word word = new Word(s.substring(0,ind), Lang.RU, line);
-                    line.getTranslate().add(word);
-                    lines.add(line);
-                    if(c.moveToNext()){}
-                    else{break;};
-                }
-                c.moveToPrevious();
-                Wordlist wordlist = new Wordlist(c.getString(c.getColumnIndex("wlId")),lines);
-                this.wordlists.add(wordlist);
-            }while(c.moveToNext());
-        }
-    }
-
-    public void addWordlist(SQLiteDatabase sqLiteDatabase){
-        LazyPars lazyPars = new LazyPars();
-        ContentValues cv = new ContentValues();
-        Wordlist wordlist;
-        for (int i =0;i<3;i++){
-            wordlist = lazyPars.createWl(i);
-            for (int j =0; j< wordlist.getLines().size();j++){
-                String k = new String();
-                for (int x = 0;x<wordlist.getLines().get(j).getPrime().size();x++) {
-                     String s = wordlist.getLines().get(j).getPrime().get(x).getWord();
-                     k += s+"/";
-                }
-                cv.put("wlId",wordlist.getName());
-                cv.put("prim",k);
-                k = "";
-                for (int x = 0;x<wordlist.getLines().get(j).getTranslate().size();x++) {
-                    String s = wordlist.getLines().get(j).getTranslate().get(x).getWord();
-                    k += s+"/";
-                }
-                cv.put("trans",k);
-                sqLiteDatabase.insert("MbWordList",null,cv);
-            }
-        }
-    }
-
     public int getWordlistsNum(){
         return wordlists.size();
     }
@@ -112,7 +48,7 @@ public final class Facade extends Observable implements Model{
             i++;
         }
 
-        if (wordlists.get(i).getName().equals(name)){
+        if ((i<wordlists.size())&&(wordlists.size()!= 0)&&(wordlists.get(i).getName().equals(name))){
             return i;
         }
         else{
@@ -188,14 +124,14 @@ public final class Facade extends Observable implements Model{
             words.add(new Word(s,this.getLang(0),line));
         }
         line.setPrime(words);
-        words.clear();
+        words = new ArrayList<Word>();
         for (String s: trans
              ) {
             words.add(new Word(s,this.getLang(1),line));
         }
         line.setTranslate(words);
         line.setWordlist(wordlists.get(wordListNum));
-        wordlists.get(wordListNum);
+        wordlists.get(wordListNum).getLines().add(line);
     }
 
     public int addWordlist(String s){

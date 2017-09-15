@@ -35,7 +35,6 @@ public class MainActivity extends Activity {
         database = dbHelper.getWritableDatabase();
         wlView = new WLView(this);
         scroll = (LinearLayout)findViewById(R.id.scroll);
-        facade.loadWordLists(database);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
         wlView.setOrientation(LinearLayout.VERTICAL);
         scrollView.addView(wlView, lp);

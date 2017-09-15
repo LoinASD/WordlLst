@@ -1,9 +1,5 @@
 package io.cyanlab.loinasd.wordllst.controller;
 
-/**
- * Created by Анатолий on 15.09.2017.
- */
-
 class StandardWlLibrary {
     public static final String Character = new String("responsible/reliable/trustworthy \tОтвественный\n" +
             "bossy/dictatorial \tЛюбящий командовать\n" +

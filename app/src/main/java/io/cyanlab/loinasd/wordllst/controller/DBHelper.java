@@ -15,11 +15,11 @@ public class DBHelper extends SQLiteOpenHelper {
     private Facade facade = Facade.getFacade();
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table MbWordList ("
-                + "wlId text,"
-                + "prim text,"
-                + "trans text" + ");");
-        facade.addWordlist(db);
+        db.execSQL("create table WordLists ("
+                + "wlId text"+ ");");
+        for (int i=0;i<3;i++){
+            LazyPars.createWl(i,db);
+        }
     }
 
     @Override
@@ -27,5 +27,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public void onOpen(SQLiteDatabase db) {}
+    public void onOpen(SQLiteDatabase db) {
+        LazyPars.loadWls(db);}
 }

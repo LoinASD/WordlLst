@@ -8,7 +8,7 @@ import java.util.Observable;
 
 public interface Model{
 
-    void addWordlist(SQLiteDatabase sqLiteDatabase);
+    int addWordlist(String s);
 
     int getWordlistsNum();
 
