@@ -53,4 +53,5 @@ final class Line {
     public void setTranslate(ArrayList<Word> words){
         this.translate = words;
     }
+
 }

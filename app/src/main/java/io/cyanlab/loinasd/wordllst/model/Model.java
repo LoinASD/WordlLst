@@ -1,11 +1,14 @@
 package io.cyanlab.loinasd.wordllst.model;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
 import java.util.ArrayList;
 import java.util.Observable;
 
 public interface Model{
 
-    void addWordlist();
+    void addWordlist(SQLiteDatabase sqLiteDatabase);
 
     int getWordlistsNum();
 

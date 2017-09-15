@@ -1,12 +1,73 @@
 package io.cyanlab.loinasd.wordllst.view;
 
-import java.util.Observable;
-import java.util.Observer;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.support.constraint.solver.widgets.WidgetContainer;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.app.Activity;
+
+import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.model.Facade;
 
 
-public final class WLView implements Observer {
-    @Override
-    public void update(Observable o, Object arg) {
-
+public class WLView extends LinearLayout {
+    public WLView(Context context) {
+        super(context);
     }
+
+    public void getWordlistAsList(int wordlistNum, LayoutInflater layoutInflater){
+        Facade facade = Facade.getFacade();
+        for (int i = 0; i<facade.getWordlistLinesCountByNum(wordlistNum);i++){
+            LineView.getLine(layoutInflater, this, wordlistNum,i);
+        }
+    }
+
+    public void changeWlView(){
+        LinearLayout.LayoutParams lp;
+        LinearLayout.LayoutParams lp2;
+        switch (this.getChildAt(0).findViewById(R.id.primeTV).getLayoutParams().height){
+            case (LayoutParams.MATCH_PARENT):{
+                lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT,7);
+                lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT,0);
+                break;
+            }
+            case(LayoutParams.WRAP_CONTENT):{
+                lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT,6);
+                lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT,4);
+                break;
+            }
+            default:{
+                lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT,7);
+                lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT,0);
+                break;
+            }
+        }
+        lp.setMargins(0,0,8,0);
+        for (int i = 0; i< this.getChildCount();i++){
+            this.getChildAt(i).findViewById(R.id.primeTV).setLayoutParams(lp);
+            this.getChildAt(i).findViewById(R.id.translateTV).setLayoutParams(lp2);
+        }
+    }
+
+    public static void getWordlistAsButton(final int wordListNum, Activity activity, final WLView wlView,final LayoutInflater layoutInflater, LinearLayout linearLayout) {
+        Facade facade = Facade.getFacade();
+        Button button = new Button(activity);
+        View.OnClickListener onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                wlView.removeAllViews();
+                wlView.getWordlistAsList(wordListNum,layoutInflater);
+            }
+        };
+        button.setText(facade.getWordlistNameByNum(wordListNum));
+        button.setOnClickListener(onClickListener);
+        linearLayout.addView(button);
+    }
+
+
 }

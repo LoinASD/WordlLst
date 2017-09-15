@@ -79,7 +79,7 @@ public final class PDFParser {
         return false;
     }
 
-    private String readText(String stopTag) throws IOException {
+ /*   private String readText(String stopTag) throws IOException {
         StringBuilder buf = new StringBuilder();
         ch = r.read();    cc = (char) ch;
         countChars++;
@@ -106,7 +106,7 @@ public final class PDFParser {
         }
         return new String(buf);
     }
-
+*/
     /*private static boolean hasMoreObj() throws IOException {
         outer: while (ch > -1) {
             ch = r.read(); cc = (char) ch;
