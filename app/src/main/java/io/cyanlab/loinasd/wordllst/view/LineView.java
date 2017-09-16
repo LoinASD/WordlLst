@@ -6,6 +6,9 @@ import io.cyanlab.loinasd.wordllst.model.Facade;
 import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -44,4 +47,22 @@ public class LineView {
         }
         linearLayout.addView(view);
     }
+
+    public static void getEditableLines(WLView wlView, Activity activity){
+    for (int i = 0; i<wlView.getChildCount();i++) {
+        TextView primtv = (TextView)wlView.getChildAt(i).findViewById(R.id.primeTV);
+        TextView transtv = (TextView)wlView.getChildAt(i).findViewById(R.id.translateTV);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)primtv.getLayoutParams();
+        LinearLayout.LayoutParams lp2 = (LinearLayout.LayoutParams)transtv.getLayoutParams();
+        EditText prim = new EditText(activity);
+        EditText trans = new EditText(activity);
+        prim.setText(primtv.getText());
+        trans.setText(transtv.getText());
+        LinearLayout ll = (LinearLayout)wlView.getChildAt(i);
+        ll.removeAllViews();
+        ll.addView(prim,lp);
+        ll.addView(trans,lp2);
+    }
+}
+
 }

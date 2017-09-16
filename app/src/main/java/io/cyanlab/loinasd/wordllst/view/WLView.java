@@ -1,14 +1,11 @@
 package io.cyanlab.loinasd.wordllst.view;
 
 import android.content.Context;
-import android.content.DialogInterface;
-import android.support.constraint.solver.widgets.WidgetContainer;
+import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.app.Activity;
 
 import io.cyanlab.loinasd.wordllst.R;
@@ -16,12 +13,19 @@ import io.cyanlab.loinasd.wordllst.model.Facade;
 
 
 public class WLView extends LinearLayout {
+    private String wordlistName;
+
+    public String getWordlistName(){
+        return wordlistName;
+    }
+
     public WLView(Context context) {
         super(context);
     }
 
     public void getWordlistAsList(int wordlistNum, LayoutInflater layoutInflater){
         Facade facade = Facade.getFacade();
+        wordlistName = facade.getWordlistNameByNum(wordlistNum);
         for (int i = 0; i<facade.getWordlistLinesCountByNum(wordlistNum);i++){
             LineView.getLine(layoutInflater, this, wordlistNum,i);
         }
@@ -54,9 +58,10 @@ public class WLView extends LinearLayout {
         }
     }
 
-    public static void getWordlistAsButton(final int wordListNum, Activity activity, final WLView wlView,final LayoutInflater layoutInflater, LinearLayout linearLayout) {
+    public static void getWordlistAsButton(final int wordListNum, final Activity activity, final WLView wlView, final LayoutInflater layoutInflater, LinearLayout linearLayout) {
         Facade facade = Facade.getFacade();
         Button button = new Button(activity);
+
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -64,10 +69,11 @@ public class WLView extends LinearLayout {
                 wlView.getWordlistAsList(wordListNum,layoutInflater);
             }
         };
+
+
         button.setText(facade.getWordlistNameByNum(wordListNum));
         button.setOnClickListener(onClickListener);
         linearLayout.addView(button);
     }
-
 
 }

@@ -151,5 +151,8 @@ public final class Facade extends Observable implements Model{
 
     }
 
-
+    public void clearLines(int wordlistNum){
+        Wordlist wordlist = this.wordlists.get(wordlistNum);
+        wordlist.getLines().clear();
+    }
 }

@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import io.cyanlab.loinasd.wordllst.model.Facade;
+import io.cyanlab.loinasd.wordllst.view.WLView;
 
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -27,6 +28,16 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public void onOpen(SQLiteDatabase db) {
+    public void loadAllWordlists(SQLiteDatabase db) {
         LazyPars.loadWls(db);}
+
+    @Override
+    public void onOpen(SQLiteDatabase db){
+        LazyPars.loadWls(db);
+    }
+
+    public void saveWl(String s, SQLiteDatabase db, WLView wlView){
+        LazyPars.saveWL(s,db,wlView);
+        LazyPars.loadWl(s,db);
+    }
 }

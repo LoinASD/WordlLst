@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.ToggleButton;
 
 import io.cyanlab.loinasd.wordllst.model.Facade;
 import io.cyanlab.loinasd.wordllst.view.*;
@@ -25,12 +26,14 @@ public class MainActivity extends Activity {
     ScrollView scrollView;
     DBHelper dbHelper;
     SQLiteDatabase database;
+    ToggleButton toggleButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         scrollView = (ScrollView)findViewById(R.id.scrollView);
         facade = Facade.getFacade();
+        toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
         dbHelper = new DBHelper(this);
         database = dbHelper.getWritableDatabase();
         wlView = new WLView(this);
@@ -39,14 +42,41 @@ public class MainActivity extends Activity {
         wlView.setOrientation(LinearLayout.VERTICAL);
         scrollView.addView(wlView, lp);
         wlInflater = getLayoutInflater();
-        dbHelper.close();
-        View.OnClickListener change = new View.OnClickListener() {
+        final Activity act = this;
+        final View.OnClickListener change = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 wlView.changeWlView();
             }
         };
 
+        View.OnClickListener setEditable = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View id = wlView.getChildAt(0).findViewById(R.id.primeTV);
+                if(id != null) {
+                    switch (wlView.getChildAt(0).findViewById(R.id.primeTV).getLayoutParams().height) {
+                        case (LinearLayout.LayoutParams.MATCH_PARENT): {
+                            break;
+                        }
+                        case (LinearLayout.LayoutParams.WRAP_CONTENT): {
+                            wlView.changeWlView();
+                            break;
+                        }
+                    }
+                    LineView.getEditableLines(wlView, act);
+                    wlView.setOnClickListener(null);
+                } else{
+                    dbHelper.saveWl(wlView.getWordlistName(),database,wlView);
+                    wlView.removeAllViews();
+                    wlView.getWordlistAsList(facade.getWordlistNumByName(wlView.getWordlistName()),wlInflater);
+                    wlView.setOnClickListener(change);
+                }
+            }
+        };
+
+
+        toggleButton.setOnClickListener(setEditable);
         wlView.setOnClickListener(change);
 
         for(int i = 0; i<facade.getWordlistsNum();i++){
