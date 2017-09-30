@@ -68,7 +68,8 @@ public class MainActivity extends Activity {
                             break;
                         }
                     }
-                    LineView.getEditableLines(wlView, act);
+                    wlView.removeAllViews();
+                    wlView.getEditableWordlist(wlInflater);
                     wlView.setOnClickListener(null);
                 } else{
                     dbHelper.saveWl(wlView.getWordlistName(),database,wlView);
