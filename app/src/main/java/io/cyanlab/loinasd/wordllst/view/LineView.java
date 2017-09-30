@@ -10,9 +10,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class LineView {
+class LineView {
 
-    public static void getLine(LayoutInflater lineInflater, LinearLayout linearLayout, int wordlistNum, int lineNum){
+    static void getLine(LayoutInflater lineInflater, LinearLayout linearLayout, int wordlistNum, int lineNum){
         View view = lineInflater.inflate(R.layout.simple_line,linearLayout,false);
         Facade facade = Facade.getFacade();
         TextView prim = (TextView)view.findViewById(R.id.primeTV);
@@ -31,9 +31,8 @@ public class LineView {
         }
         k ="";
         for (int j = 0; j< facade.getTransByLineNum(wordlistNum,lineNum).size();j++) {
-            String s = new String();
-            s = facade.getTransByLineNum(wordlistNum,lineNum).get(j);
-            k+=s;
+            String s = facade.getTransByLineNum(wordlistNum,lineNum).get(j);
+            k += s;
             if (j!=facade.getTransByLineNum(wordlistNum,lineNum).size()-1){
                 k+=",";
             }
@@ -43,21 +42,34 @@ public class LineView {
         linearLayout.addView(view);
     }
 
-    public static void getEditableLines(WLView wlView, Activity activity){
-    for (int i = 0; i<wlView.getChildCount();i++) {
-        TextView primtv = (TextView)wlView.getChildAt(i).findViewById(R.id.primeTV);
-        TextView transtv = (TextView)wlView.getChildAt(i).findViewById(R.id.translateTV);
-        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)primtv.getLayoutParams();
-        LinearLayout.LayoutParams lp2 = (LinearLayout.LayoutParams)transtv.getLayoutParams();
-        EditText prim = new EditText(activity);
-        EditText trans = new EditText(activity);
-        prim.setText(primtv.getText());
-        trans.setText(transtv.getText());
-        LinearLayout ll = (LinearLayout)wlView.getChildAt(i);
-        ll.removeAllViews();
-        ll.addView(prim,lp);
-        ll.addView(trans,lp2);
+    static void getEditableLine(int wordlistNum, int lineNum, WLView wlView, LayoutInflater lineInflater){
+        Facade facade = Facade.getFacade();
+        View view = lineInflater.inflate(R.layout.editableline,wlView,false);
+        EditText prim = (EditText) view.findViewById(R.id.primeET);
+        EditText trans = (EditText) view.findViewById(R.id.transET);
+        prim.setText("");
+        trans.setText("");
+        String k ="";
+        for (int j = 0; j< facade.getPrimByLineNum(wordlistNum,lineNum).size();j++) {
+            String s = facade.getPrimByLineNum(wordlistNum,lineNum).get(j);
+            k+=s;
+            if (j!=facade.getPrimByLineNum(wordlistNum,lineNum).size()-1){
+                k+=",";
+            }
+            k+=" ";
+            prim.setText(k);
+        }
+        k ="";
+        for (int j = 0; j< facade.getTransByLineNum(wordlistNum,lineNum).size();j++) {
+            String s = facade.getTransByLineNum(wordlistNum,lineNum).get(j);
+            k+=s;
+            if (j!=facade.getTransByLineNum(wordlistNum,lineNum).size()-1){
+                k+=",";
+            }
+            k+=" ";
+            trans.setText(k);
+        }
+        wlView.addView(view);
     }
-}
 
 }

@@ -76,4 +76,12 @@ public class WLView extends LinearLayout {
         linearLayout.addView(button);
     }
 
+    public void getEditableWordlist(LayoutInflater layoutInflater){
+        Facade facade = Facade.getFacade();
+        int wordlistNum = facade.getWordlistNumByName(wordlistName);
+        for (int i = 0; i<facade.getWordlistLinesCountByNum(wordlistNum);i++){
+            LineView.getEditableLine(wordlistNum, i, this,layoutInflater);
+        }
+    }
+
 }

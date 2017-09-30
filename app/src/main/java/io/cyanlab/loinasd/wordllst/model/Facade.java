@@ -1,8 +1,4 @@
 package io.cyanlab.loinasd.wordllst.model;
-
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-
 import java.util.ArrayList;
 import java.util.Observable;
 
@@ -12,15 +8,6 @@ public final class Facade extends Observable implements Model{
     private Facade(){}
 
     private static Facade instance;
-    private static ArrayList<Wordlist> wls = new ArrayList<>();
-
-    public static ArrayList<Wordlist> getWls() {
-        return wls;
-    }
-
-    public static ArrayList<Wordlist> getWordlists() {
-        return wordlists;
-    }
 
     public static Facade getFacade(){
         if(instance == null){
@@ -29,7 +16,72 @@ public final class Facade extends Observable implements Model{
         return instance;
     }
 
-    private static ArrayList<Wordlist> wordlists = new ArrayList<>();
+
+    // Первый список и методы для работы с ним
+
+    private ArrayList<Wordlist> wordlists = new ArrayList<>();
+
+    public int addWordlist(String s){
+
+        if (this.getWordlistNumByName(s) == -1){
+
+            this.wordlists.add(new Wordlist(s));
+
+            return this.getWordlistNumByName(s);
+
+        }
+        else{
+
+            return -1;
+
+        }
+
+    }
+
+    public void clearLines(int wordlistNum){
+        Wordlist wordlist = this.wordlists.get(wordlistNum);
+        wordlist.getLines().clear();
+    }
+
+    public void addLine(int wordListNum,ArrayList<String> prim, ArrayList<String> trans){
+        Line line = new Line();
+        ArrayList<Word> words= new ArrayList<Word>();
+        for (String s:prim
+                ) {
+            words.add(new Word(s,this.getLang(0),line));
+        }
+        line.setPrime(words);
+        words = new ArrayList<Word>();
+        for (String s: trans
+                ) {
+            words.add(new Word(s,this.getLang(1),line));
+        }
+        line.setTranslate(words);
+        line.setWordlist(wordlists.get(wordListNum));
+        wordlists.get(wordListNum).getLines().add(line);
+    }
+
+    //   ???
+    public void fillWordList() {
+
+    }
+
+
+    // Второй список. Зачем статичные методы?
+    private static ArrayList<Wordlist> wls = new ArrayList<>();
+
+    // Эти методы имеет смысл вызывать только внутри пакета, тк Wordlist является protected
+ /*   public static ArrayList<Wordlist> getWordlists() {
+        return wordlists;
+    }*/
+
+    public static ArrayList<Wordlist> getWls() {
+        return wls;
+    }
+
+
+
+
 
     public Lang getLang(int langNum){
         switch(langNum){
@@ -43,16 +95,6 @@ public final class Facade extends Observable implements Model{
                 return Lang.EN;
             }
         }
-    }
-
-    public void createNewWordList(String name) {
-        Wordlist wl = new Wordlist(name);
-        wordlists.add(wl);
-
-    }
-
-    public void fillWordList() {
-
     }
 
     public int getWordlistsNum(){
@@ -99,7 +141,7 @@ public final class Facade extends Observable implements Model{
         }
         else{
             final ArrayList<Word> words = wordlists.get(wordlistNum).getLines().get(lineNum).getPrime();
-            ArrayList<String> wordsStr= new ArrayList<String>(){
+            return new ArrayList<String>(){
                 @Override
                 public String get(int index) {
                     return words.get(index).getWord();
@@ -110,7 +152,7 @@ public final class Facade extends Observable implements Model{
                     return words.size();
                 }
             };
-            return wordsStr;
+
         }
     }
 
@@ -120,7 +162,7 @@ public final class Facade extends Observable implements Model{
         }
         else{
             final ArrayList<Word> words = wordlists.get(wordlistNum).getLines().get(lineNum).getTranslate();
-            ArrayList<String> wordsStr= new ArrayList<String>(){
+            return new ArrayList<String>(){
                 @Override
                 public String get(int index) {
                     return words.get(index).getWord();
@@ -131,47 +173,10 @@ public final class Facade extends Observable implements Model{
                     return words.size();
                 }
             };
-            return wordsStr;
+
         }
     }
 
-    public void addLine(int wordListNum,ArrayList<String> prim, ArrayList<String> trans){
-        Line line = new Line();
-        ArrayList<Word> words= new ArrayList<Word>();
-        for (String s:prim
-             ) {
-            words.add(new Word(s,this.getLang(0),line));
-        }
-        line.setPrime(words);
-        words = new ArrayList<Word>();
-        for (String s: trans
-             ) {
-            words.add(new Word(s,this.getLang(1),line));
-        }
-        line.setTranslate(words);
-        line.setWordlist(wordlists.get(wordListNum));
-        wordlists.get(wordListNum).getLines().add(line);
-    }
 
-    public int addWordlist(String s){
 
-        if (this.getWordlistNumByName(s) == -1){
-
-            this.wordlists.add(new Wordlist(s));
-
-            return this.getWordlistNumByName(s);
-
-        }
-        else{
-
-            return -1;
-
-        }
-
-    }
-
-    public void clearLines(int wordlistNum){
-        Wordlist wordlist = this.wordlists.get(wordlistNum);
-        wordlist.getLines().clear();
-    }
 }
