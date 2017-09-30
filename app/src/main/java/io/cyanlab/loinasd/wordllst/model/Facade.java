@@ -12,6 +12,15 @@ public final class Facade extends Observable implements Model{
     private Facade(){}
 
     private static Facade instance;
+    private static ArrayList<Wordlist> wls = new ArrayList<>();
+
+    public static ArrayList<Wordlist> getWls() {
+        return wls;
+    }
+
+    public static ArrayList<Wordlist> getWordlists() {
+        return wordlists;
+    }
 
     public static Facade getFacade(){
         if(instance == null){
@@ -34,6 +43,16 @@ public final class Facade extends Observable implements Model{
                 return Lang.EN;
             }
         }
+    }
+
+    public void createNewWordList(String name) {
+        Wordlist wl = new Wordlist(name);
+        wordlists.add(wl);
+
+    }
+
+    public void fillWordList() {
+
     }
 
     public int getWordlistsNum(){

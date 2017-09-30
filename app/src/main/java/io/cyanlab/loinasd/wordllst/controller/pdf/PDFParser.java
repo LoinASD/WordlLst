@@ -1,20 +1,21 @@
-package io.cyanlab.loinasd.wordllst.model;
+package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 
 public final class PDFParser {
 
-    GZIPInputStream gis;
+    private static String HARDCORE_FILE = "Download/1.pdf";
     private static PDFParser pdfParser;
     private static final String markerStream = "stream";
     private static final String markerObj = "obj";
     private static final String markerDecode = "/Filter/FlateDecode/Length";
     private static final String markerLength = "Length";
     private static BufferedReader r;
+    private static String PDFName;
+    private static String WLName;
     private static int ch;
     private static char cc;
     private static String file;
@@ -24,29 +25,36 @@ public final class PDFParser {
 
     private PDFParser(){}
 
+
     public static PDFParser getParser() {
+        //Singleton
         if (pdfParser == null) pdfParser = new PDFParser();
         return pdfParser;
     }
 
+    public static BufferedReader getR() {
+        return r;
+    }
+
+    public static void setR(BufferedReader r) {
+        PDFParser.r = r;
+    }
+
     public static void parse() throws IOException{
+            /*the main method, witch parse pdf document*/
+
         ch = 0;
         while (readMarker(markerObj)) {
             readObj();
         }
+        r.close();
 
-    }
-
-    private static class Obj {
-        int length;
-        StringBuffer message;
-
-        Obj() {
-
-        }
     }
 
     private static void readObj() throws IOException {
+        /*this factory method read object tags and create PdfObject
+        * with params red from stream*/
+
         if (readMarker(markerDecode)) {
             currentLength = 0;
 

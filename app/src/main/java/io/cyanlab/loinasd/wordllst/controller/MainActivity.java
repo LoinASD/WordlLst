@@ -1,4 +1,4 @@
-package io.cyanlab.loinasd.wordllst;
+package io.cyanlab.loinasd.wordllst.controller;
 
 import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.ToggleButton;
 
+import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.model.Facade;
 import io.cyanlab.loinasd.wordllst.view.*;
 import io.cyanlab.loinasd.wordllst.controller.*;
@@ -31,6 +32,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //---------------------------------------------//
         scrollView = (ScrollView)findViewById(R.id.scrollView);
         facade = Facade.getFacade();
         toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
@@ -49,6 +52,7 @@ public class MainActivity extends Activity {
                 wlView.changeWlView();
             }
         };
+        //----------------------------------------------//
 
         View.OnClickListener setEditable = new View.OnClickListener() {
             @Override
