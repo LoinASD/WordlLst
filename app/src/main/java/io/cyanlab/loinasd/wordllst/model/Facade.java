@@ -61,26 +61,6 @@ public final class Facade extends Observable implements Model{
         wordlists.get(wordListNum).getLines().add(line);
     }
 
-    //   ???
-    public void fillWordList() {
-
-    }
-
-
-    // Второй список. Зачем статичные методы?
-    private static ArrayList<Wordlist> wls = new ArrayList<>();
-
-    // Эти методы имеет смысл вызывать только внутри пакета, тк Wordlist является protected
- /*   public static ArrayList<Wordlist> getWordlists() {
-        return wordlists;
-    }*/
-
-    public static ArrayList<Wordlist> getWls() {
-        return wls;
-    }
-
-
-
 
 
     public Lang getLang(int langNum){
