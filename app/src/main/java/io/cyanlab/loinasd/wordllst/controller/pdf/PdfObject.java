@@ -8,8 +8,11 @@ import java.nio.ByteBuffer;
 
 public class PdfObject {
 
+    private DictionaryParams dictionaryParams;
 
     public PdfObject(ByteBuffer bf) {
+
+
 
     }
 }

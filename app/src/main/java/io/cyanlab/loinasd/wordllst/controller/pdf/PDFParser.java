@@ -2,9 +2,7 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.zip.DataFormatException;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 
 class PDFParser {
@@ -18,33 +16,21 @@ class PDFParser {
     private static final String markerLength = "Length";
 
 
-    //Парсит большинство объектов, но часто, как по мне, путает obj и endobj, поэтому ошибки
+    /*Парсит все в этой жизни, пишет в 1 поток.
+    Надо будет еще раз все посмотреть и убрать костыли.*/
 
-
-
-
-    private static void parsePdf(String file) {
+    private static void parsePdf(String file, OutputStream out) {
         try {
-            // Поправить
-            File pdf = new File("C:/Android/Describing people_Сharacter_Intermediate.pdf");
-            long pfdLength = pdf.length();
-            FileInputStream fio = new FileInputStream(pdf);
-            //byte[] byteBuffer = new byte[(int) pfdLength];
-            //int fileLength = fio.read(byteBuffer);
-            ByteBuffer bb = ByteBuffer.allocate(9);
-            cc = (char)fio.read();
-
-            //Мб лучше пока сс!=0
-            //for (long i = 0; i < pdf.length(); i++)
-            while((fio.available()!=0)){
-                cc = (char) fio.read();
+            File pdf = new File(file);
+            BufferedInputStream bufImput = new BufferedInputStream(new FileInputStream(pdf));
+            cc = (char) bufImput.read();
+            while ((bufImput.available() != 0)) {
+                cc = (char) bufImput.read();
                 char[] marker = markerObj.toCharArray();
-
                 if (cc == marker[0]) {
                     boolean isObj = true;
                     for (int j = 1; j < marker.length; j++) {
-                        //bb.put((byte) cc);
-                        cc = (char) fio.read();
+                        cc = (char) bufImput.read();
                         if (cc != marker[j]) isObj = false;
                     }
                     if (!isObj) {
@@ -52,27 +38,48 @@ class PDFParser {
                     } else {
                         boolean isObjEnd = false;
                         boolean isFonts = false;
-                        int streamLength = -1;
-                        while ((cc != '>')&&(!isFonts)) {
+                        int streamLength = 0;
+                        while ((cc != '<') && (!isObjEnd)) {
+                            if (cc == '\n') {
+                                cc = (char) bufImput.read();
+                                if (cc == '<') break;
+                                else {
+                                    isObjEnd = true;
+                                    for (int i = 0; i < markerEndObj.length(); i++) {
+                                        cc = (char) bufImput.read();
+                                        if (cc != markerEndObj.charAt(i)) {
+                                            isObjEnd = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            cc = (char) bufImput.read();
+                        }
+                        if (isObjEnd) {
+                            continue;
+                        }
+                        while ((cc != '>') && (!isFonts)) {
                             char[] marker2 = markerLength.toCharArray();
-                            cc = (char) fio.read();
+                            cc = (char) bufImput.read();
+
                             if (cc == marker2[0]) {
                                 boolean isLength = true;
                                 for (int j = 1; j < marker2.length; j++) {
-                                    cc = (char) fio.read();
+                                    cc = (char) bufImput.read();
                                     if (cc != marker2[j]) isLength = false;
                                 }
                                 if (isLength) {
                                     StringBuffer res = new StringBuffer(6);
-                                    fio.read();
-                                    cc = (char) fio.read();
-                                    while ((cc != '>')&&(cc!= '/')) {
+                                    bufImput.read();
+                                    cc = (char) bufImput.read();
+                                    while ((cc != '>') && (cc != '/')) {
                                         res.append(cc);
-                                        cc = (char) fio.read();
+                                        cc = (char) bufImput.read();
                                     }
                                     if (cc == '/') {
                                         isFonts = true;
-                                    } else{
+                                    } else {
                                         try {
                                             streamLength = Integer.parseInt(res.toString());
                                         } catch (NumberFormatException e) {
@@ -81,72 +88,87 @@ class PDFParser {
                                     }
                                 }
                             }
+                            if (cc == '>') cc = (char) bufImput.read();
                         }
-                        if (isFonts) {
+                        if ((isFonts) || (streamLength <= 0)) {
                             marker = markerEndObj.toCharArray();
-                            isObjEnd = false;
-                            int k = fio.available();
-                            while (!isObjEnd){
-                                cc = (char)fio.read();
-                                if (cc == marker[0]){
+                            while (!isObjEnd) {
+                                cc = (char) bufImput.read();
+                                if (cc == marker[0]) {
                                     isObjEnd = true;
                                     for (int j = 1; j < marker.length; j++) {
-                                        cc = (char) fio.read();
+                                        cc = (char) bufImput.read();
                                         if (cc != marker[j]) isObjEnd = false;
                                     }
                                 }
                             }
                             continue;
 
-                        } else{
+                        } else {
                             marker = markerStream.toCharArray();
-                            while(cc!=marker[0]){
-                                cc = (char)fio.read();
-                                if (cc == markerEndStream.toCharArray()[0]){
-                                    isObjEnd = true;
+                            boolean isStream = false;
+                            while ((!isStream) && (!isObjEnd)) {
+
+                                if (cc == marker[0]) {
+                                    isStream = true;
                                     for (int j = 1; j < marker.length; j++) {
-                                        cc = (char) fio.read();
-                                        if (cc != marker[j]) isObjEnd = false;
+                                        cc = (char) bufImput.read();
+                                        if (cc != marker[j]) {
+                                            isStream = false;
+                                            break;
+                                        }
                                     }
-                                    if (isObjEnd) break;
+                                    if (isStream) break;
                                 }
+                                if (cc == '\n') {
+                                    cc = (char) bufImput.read();
+                                    if (cc == 's') continue;
+                                    else {
+                                        for (int i = 0; i < markerEndObj.length(); i++) {
+                                            cc = (char) bufImput.read();
+                                            if (cc != markerEndObj.charAt(i)) isObjEnd = false;
+                                        }
+                                    }
+                                }
+                                cc = (char) bufImput.read();
                             }
-                            boolean isStream = true;
-                            for (int j = 1; j < marker.length; j++) {
-                                cc = (char) fio.read();
-                                if (cc != marker[j]) isStream = false;
+                            if (isObjEnd) {
+                                continue;
                             }
-                            if ((!isStream)||(streamLength <=0 )||(fio.available()==0)){
+                            if (!isStream) {
                                 marker = markerEndObj.toCharArray();
-                                isObjEnd = false;
-                                while (!isObjEnd){
-                                    cc = (char)fio.read();
-                                    if (cc == marker[0]){
+                                while (!isObjEnd) {
+                                    cc = (char) bufImput.read();
+                                    if (cc == marker[0]) {
                                         isObjEnd = true;
                                         for (int j = 1; j < marker.length; j++) {
-                                            cc = (char) fio.read();
+                                            cc = (char) bufImput.read();
                                             if (cc != marker[j]) isObjEnd = false;
                                         }
                                     }
                                 }
                                 continue;
                             } else {
-                                fio.read();
-                                fio.read();
-                                FileOutputStream fOS = new FileOutputStream("C:/Android/"+ streamLength+".txt");
-                                decode(streamLength,fio,fOS);
+                                bufImput.read();
+                                bufImput.read();
+                                //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
+                                try {
+                                    decode(streamLength, bufImput, out);
+                                    System.out.println(streamLength);
+                                } catch (DataFormatException e) {
+                                    System.out.println("Ошибка расшифровки GZIPa");
+                                    return;
+                                }
                             }
 
                         }
-
                         marker = markerEndObj.toCharArray();
-                        isObjEnd = false;
-                        while ((!isObjEnd)&&(fio.available()!=0)){
-                            cc = (char)fio.read();
-                            if (cc == marker[0]){
+                        while ((!isObjEnd) && (bufImput.available() > 0)) {
+                            cc = (char) bufImput.read();
+                            if (cc == marker[0]) {
                                 isObjEnd = true;
                                 for (int j = 1; j < marker.length; j++) {
-                                    cc = (char) fio.read();
+                                    cc = (char) bufImput.read();
                                     if (cc != marker[j]) isObjEnd = false;
                                 }
                             }
@@ -165,10 +187,6 @@ class PDFParser {
         }
     }
 
-    private static void readMarker(String marker) {
-
-    }
-
     private static void parse() {
         try {
             FileInputStream fio = new FileInputStream("/home/loinasd/prog/test/pdfParser/out1.txt");
@@ -179,32 +197,18 @@ class PDFParser {
 
     }
 
-    private static void decode(int length, InputStream in, OutputStream out) {
-        try {
-            //FileInputStream fileInputStream = new FileInputStream("/home/loinasd/prog/test/pdfParser/new.txt");
-            byte[] output = new byte[length];
-            int compressedDataLength = in.read(output);
-            Inflater decompressor = new Inflater();
-            decompressor.setInput(output, 0, compressedDataLength);
-            byte[] result = new byte[length * 10];
-            int resultLength = decompressor.inflate(result);
-            decompressor.end();
-            String outputString = new String(result, 0, resultLength, "UTF-8");
-            System.out.print(outputString);
-            //FileOutputStream fileOutputStream = new FileOutputStream("/home/loinasd/prog/test/pdfParser/out1.txt");
-            out.write(result, 0, resultLength);
-            out.close();
-        }
-        catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        catch (DataFormatException e) {
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
+    private static void decode(int length, InputStream in, OutputStream out) throws DataFormatException, IOException {
+        byte[] output = new byte[length];
+        int compressedDataLength = in.read(output);
+        Inflater decompressor = new Inflater();
+        decompressor.setInput(output, 0, compressedDataLength);
+        byte[] result = new byte[length * 10];
+        int resultLength = decompressor.inflate(result);
+        decompressor.end();
+        String outputString = new String(result, 0, resultLength, "UTF-8");
+        System.out.print(outputString);
+        //FileOutputStream fileOutputStream = new FileOutputStream("/home/loinasd/prog/test/pdfParser/out1.txt");
+        out.write(result, 0, resultLength);
     }
 
     public static boolean isZipped(byte[] compressed) {
