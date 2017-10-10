@@ -27,18 +27,19 @@ public class TextExtractor {
                 node.convertText(converter);
 
             }
+            nodeCollect();
+            for (Node node : nodes) {
+                System.out.println(node.getText());
+            }
         }
-        nodeCollect();
-        for (Node node : nodes) {
-            System.out.println(node.getText());
-        }
+
 
     }
 
     private void parse() throws IOException {
         while (ch != -1) {
             lineStr = readLine();
-            if (lineStr.equals("BT")) {
+            if (lineStr.equals("BT\r")) {
                 textToken();
             } else if (lineStr.equals("begincmap")){
                 parseCMap();
@@ -128,6 +129,7 @@ public class TextExtractor {
     private void nodeCollect() {
         ArrayList<Node> newNodes = new ArrayList<>();
         boolean b = false;
+        nodes.trimToSize();
         Node prev = nodes.get(0);
         for (Node node: nodes) {
             if (b) {

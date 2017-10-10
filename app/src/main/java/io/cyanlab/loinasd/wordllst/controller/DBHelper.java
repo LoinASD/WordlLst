@@ -4,6 +4,12 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
+import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
 import io.cyanlab.loinasd.wordllst.model.Facade;
 import io.cyanlab.loinasd.wordllst.view.WLView;
 
@@ -18,9 +24,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table WordLists ("
                 + "wlId text"+ ");");
-        for (int i=0;i<3;i++){
-            LazyPars.createWl(i,db);
-        }
+
     }
 
     @Override

@@ -15,51 +15,6 @@ import java.util.Scanner;
 
 class LazyPars {
 
-    public static void createWl (int i, SQLiteDatabase database){
-
-        Scanner sc;
-        String k;
-
-        switch (i) {
-
-            case(0): {
-                sc = new Scanner(StandardWlLibrary.Character);
-                k = "Character";
-                break;
-            }
-
-            case (1):{
-                sc = new Scanner(StandardWlLibrary.WorkAndJobs);
-                k = "WorkAndJobs";
-                break;
-            }
-
-            default:{
-                sc = new Scanner(StandardWlLibrary.Houses);
-                k = "Houses";
-                break;
-            }
-        }
-
-        database.execSQL("create table "+ k +" ("
-                + "id integer primary key autoincrement,"
-                + "prim text,"
-                + "trans text" + ");");
-
-        ContentValues kek = new ContentValues();
-        kek.put("wlId",k);
-        database.insert("WordLists",null,kek);
-        while (sc.hasNextLine()) {
-            ContentValues cv = new ContentValues();
-            String s = sc.nextLine();
-            cv.put("prim",s.substring(0,s.indexOf(" \t")));
-            cv.put("trans",s.substring(s.indexOf(" \t")+2));
-            database.insert(k,null,cv);
-        }
-
-
-    }
-
     public static void loadWls (SQLiteDatabase database){
         Facade facade = Facade.getFacade();
         Cursor c = database.query("WordLists",null,null, null, null, null, null);
