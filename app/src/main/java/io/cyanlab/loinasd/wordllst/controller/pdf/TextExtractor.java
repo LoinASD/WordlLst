@@ -155,8 +155,7 @@ public class TextExtractor {
             if (toggle) {
                 t.add(n.getText());
                 toggle = false;
-            }
-            if (!toggle) {
+            }else {
                 p.add(n.getText());
                 toggle = true;
             }
