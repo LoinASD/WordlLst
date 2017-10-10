@@ -56,8 +56,20 @@ public class MainActivity extends AppCompatActivity {
         scroll = (LinearLayout)findViewById(R.id.scroll);
 
         ByteArrayOutputStream oS = new ByteArrayOutputStream();
-        int parsed = PDFParser.parsePdf("Describing people_Сharacter_Intermediate.pdf", oS,this);
+        int parsed = PDFParser.parsePdf("Describing people_Сharacter_Intermediate.pdf", oS);
         ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
+
+        if (parsed == 1) {
+            try {
+                TextExtractor textExtractor = new TextExtractor(iS);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        oS = new ByteArrayOutputStream();
+        parsed = PDFParser.parsePdf("Wordlist_Houses1.pdf", oS);
+        iS = new ByteArrayInputStream(oS.toByteArray());
 
         if (parsed == 1) {
             try {
