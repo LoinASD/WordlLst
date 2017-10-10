@@ -9,14 +9,23 @@ final class Line {
     private Lang[] langs = new Lang[2];
     private Wordlist wordlist;
 
-    public Line(Wordlist wordlist, ArrayList<Word> prime, ArrayList<Word> translate, Lang[] langs) {
+    public Line(Wordlist wordlist, ArrayList<Word> prime, ArrayList<Word> translate, Lang[] lang) {
         this.prime = prime;
         this.translate = translate;
-        this.langs = langs;
+        this.langs = lang;
         this.wordlist = wordlist;
     }
 
     public Line(){}
+
+    public Line(Wordlist wl, ArrayList<String> pr, ArrayList<String> trans) {
+        for (String s: pr) {
+            prime.add(new Word(s));
+        }
+        for (String s: trans) {
+            translate.add(new Word(s));
+        }
+    }
 
     public ArrayList<Word> getPrime() {
         return prime;
@@ -26,7 +35,7 @@ final class Line {
         return translate;
     }
 
-    public Lang[] getLangs() {
+   /* public Lang[] getLangs() {
         return langs;
     }
 
@@ -36,7 +45,7 @@ final class Line {
 
     public Lang getTranslationLang(){
         return langs[1];
-    }
+    }*/
 
     public Wordlist getWordlist(){
         return this.wordlist;

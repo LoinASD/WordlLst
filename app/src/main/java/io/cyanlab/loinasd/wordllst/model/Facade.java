@@ -1,5 +1,7 @@
 package io.cyanlab.loinasd.wordllst.model;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Observable;
 
 
@@ -157,6 +159,17 @@ public final class Facade extends Observable implements Model{
         }
     }
 
-
+    public void addNewWL(String name, ArrayList<String> node1, ArrayList<String> node2) {
+        Wordlist wl = new Wordlist(name);
+        Line l;
+        if (node1.size() == node2.size()) {
+            for (int i = 0; i < node1.size(); i++) {
+                ArrayList<String> p = new ArrayList<>(Arrays.asList(node1.get(i).split("[,/]")));
+                ArrayList<String> t = new ArrayList<>(Arrays.asList(node2.get(i).split("[,/]")));
+                l = new Line(wl, p, t);
+                wl.addLine(l);
+            }
+        }
+    }
 
 }

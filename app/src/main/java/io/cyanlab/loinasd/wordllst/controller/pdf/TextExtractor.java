@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import io.cyanlab.loinasd.wordllst.model.Facade;
+
 
 public class TextExtractor {
 
@@ -144,5 +146,19 @@ public class TextExtractor {
             }
         }
         nodes = newNodes;
+        boolean toggle = false;
+        ArrayList<String> p = new ArrayList<>(), t = new ArrayList<>();
+        String WLname = nodes.remove(0).getText();
+        for (Node n : nodes) {
+            if (toggle) {
+                t.add(n.getText());
+                toggle = false;
+            }
+            if (!toggle) {
+                p.add(n.getText());
+                toggle = true;
+            }
+        }
+        Facade.getFacade().addNewWL(WLname,p, t);
     }
 }
