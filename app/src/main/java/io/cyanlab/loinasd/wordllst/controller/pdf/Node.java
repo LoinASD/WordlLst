@@ -19,7 +19,10 @@ class Node {
         if (rawText.charAt(0) == '(') {
             String[] stringarr = rawText.split("[(]");
             for (String s : stringarr) {
-                s= s.split("[)]")[0];
+                String[] sS= s.split("[)]");
+                if (sS.length>0){
+                    s = sS[0];
+                }
                 message.append(s);
             }
         } else if (rawText.charAt(0) == '<') {
