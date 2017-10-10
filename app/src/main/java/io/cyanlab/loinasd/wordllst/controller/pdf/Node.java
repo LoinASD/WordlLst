@@ -17,30 +17,36 @@ public class Node {
     public void convertText(CharConverter converter) {
         char cc;
         StringBuilder message = new StringBuilder();
-        String[] stringarr = rawText.split("[(]");
-        for (String s : stringarr) {
-            s= s.split("[)]")[0];
-            message.append(s);
-        }
-        System.out.println(message);
-        int i = 0;
-        cc = rawText.charAt(i);
-        while (i < rawText.length()) {
-            if (cc == '<') {
-                cc = rawText.charAt(++i);
-                StringBuilder numChar;
+        if (rawText.charAt(0) == '(') {
+            String[] stringarr = rawText.split("[(]");
+            for (String s : stringarr) {
+                s= s.split("[)]")[0];
+                message.append(s);
+            }
+        } else if (rawText.charAt(0) == '<') {
+            int i = 0;
 
-                while (cc != '>') {
-                    numChar = new StringBuilder();
-                    for (int j = 0; j < 4; j++) { // 4 - char`s length in HEX
-                        numChar.append(cc);
-                        cc = rawText.charAt(++i);
+            while (i < rawText.length()) {
+                cc = rawText.charAt(i);
+                if (cc == '<') {
+                    cc = rawText.charAt(++i);
+                    StringBuilder numChar;
+
+                    while (cc != '>') {
+                        numChar = new StringBuilder();
+                        for (int j = 0; j < 4; j++) { // 4 - char`s length in HEX
+                            numChar.append(cc);
+                            cc = rawText.charAt(++i);
+                        }
+                        int c = Integer.parseInt(numChar.toString(), 16);
+                        message.append(converter.convert(c));
                     }
-                    int c = Integer.parseInt(numChar.toString(), 16);
-                    message.append(converter.convert(c));
                 }
+                i++;
             }
         }
+
+
 
         this.text = message.toString();
     }

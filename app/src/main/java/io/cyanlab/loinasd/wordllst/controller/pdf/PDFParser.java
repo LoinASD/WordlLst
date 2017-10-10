@@ -1,7 +1,6 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -12,7 +11,7 @@ class PDFParser {
     private static final String markerEndStream = "endstream";
     private static final String markerObj = "obj";
     private static final String markerEndObj = "endobj";
-    private static final String markerDecode = "/Filter/FlateDecode/Length";
+    //private static final String markerDecode = "/Filter/FlateDecode/Length";
     private static final String markerLength = "Length";
 
 
