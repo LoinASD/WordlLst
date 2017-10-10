@@ -1,10 +1,8 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import io.cyanlab.loinasd.wordllst.model.Facade;
@@ -13,14 +11,14 @@ import io.cyanlab.loinasd.wordllst.model.Facade;
 public class TextExtractor {
 
     private static int ch;
-    private final BufferedReader io;
+    private final BufferedInputStream io;
     private ArrayList<Node> nodes = new ArrayList<>();
     private CharConverter converter = new CharConverter();
     private static String lineStr;
     private static boolean gotDictionary = false;
 
     public TextExtractor(InputStream io) throws IOException {
-        this.io = new BufferedReader(new InputStreamReader(io));
+        this.io = new BufferedInputStream(io);
         ch = 0;
 
         parse();
@@ -40,8 +38,7 @@ public class TextExtractor {
 
     private void parse() throws IOException {
         while (ch != -1) {
-            //lineStr = readLine();
-            lineStr = io.readLine();
+            lineStr = readLine();
             if (lineStr.equals("BT")) {
                 textToken();
             } else if (lineStr.equals("begincmap")){
@@ -54,14 +51,16 @@ public class TextExtractor {
     private void parseCMap() throws IOException {
         converter = new CharConverter();
         String[] chars;
-        int count;
+        int count = 0;
         while (ch != -1) {
-            lineStr = io.readLine();
+            lineStr = readLine();
             if (lineStr.endsWith("beginbfchar")){
                 count = Integer.parseInt("" + lineStr.charAt(0));
                 for (int i = count; i > 0; i--) {
-                    lineStr = io.readLine();
+                    lineStr = readLine();
                     chars = lineStr.split(" ");
+                    String s = chars[0].substring(1, 5);
+                    int c = Integer.parseInt(s, 16);
                     int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
                     int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
                     converter.addNewRange(c1, c1, c2);
@@ -70,7 +69,7 @@ public class TextExtractor {
             if (lineStr.endsWith("beginbfrange")) {
                 count = Integer.parseInt("" + lineStr.charAt(0));
                 for (int i = count; i > 0; i--) {
-                    lineStr = io.readLine();
+                    lineStr = readLine();
                     chars = lineStr.split(" ");
                     int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
                     int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
@@ -90,7 +89,7 @@ public class TextExtractor {
     private void getCord(Node node) throws IOException {
         ch = io.read();
         while ((char) ch != '[') {
-            lineStr = io.readLine();
+            lineStr = readLine();
             if (lineStr.endsWith("Tm")) {
                 String[] cord = lineStr.split(" ");
                 node.setX(Double.parseDouble(cord[4]));
@@ -100,19 +99,21 @@ public class TextExtractor {
         }
     }
 
-/*    private String readLine() throws IOException {
+    private String readLine() throws IOException {
         StringBuilder l = new StringBuilder();
         while (ch != -1) {
             ch = io.read();
             if (ch == -1) return "";
             if ((char) ch != '\n') {
+                if (l.charAt(l.length() - 1) == '\r')
+                    l.deleteCharAt(l.length() - 1);
                 l.append((char) ch);
             } else {
                 return l.toString();
             }
         }
         return l.toString();
-    }*/
+    }
 
     private void textToken() throws IOException {
         StringBuilder message = new StringBuilder();
