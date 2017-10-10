@@ -58,7 +58,9 @@ public class WLView extends LinearLayout {
         }
     }
 
-    public static void getWordlistAsButton(final int wordListNum, final Activity activity, final WLView wlView, final LayoutInflater layoutInflater, LinearLayout linearLayout) {
+    public static void getWordlistAsButton(final int wordListNum,
+                                           final Activity activity, final WLView wlView,
+                                           final LayoutInflater layoutInflater, LinearLayout linearLayout) {
         Facade facade = Facade.getFacade();
         Button button = new Button(activity);
 
