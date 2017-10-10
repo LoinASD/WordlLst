@@ -1,37 +1,33 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
+import android.app.Activity;
+import android.os.Environment;
+
 import java.io.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 public class PDFParser {
-    private static int ch;
+
     private static char cc;
     private static final String markerStream = "stream";
-    private static final String markerEndStream = "endstream";
     private static final String markerObj = "obj";
     private static final String markerEndObj = "endobj";
-    //private static final String markerDecode = "/Filter/FlateDecode/Length";
     private static final String markerLength = "Length";
 
 
-    /*Парсит все в этой жизни, пишет в 1 поток.
-    Надо будет еще раз все посмотреть и убрать костыли.*/
+    /*Парсит все в этой жизни, пишет в 1 поток.*/
 
-    private static void parsePdf(String file, OutputStream out) {
+    public static int parsePdf(String file, OutputStream out, Activity activity) {
         try {
-            File pdf = new File(file);
-            BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(pdf));
+            File kek = new File("sdcard/Download/Describing people_Сharacter_Intermediate.pdf");
+            FileInputStream pdf = new FileInputStream("sdcard/Download/Describing people_Сharacter_Intermediate.pdf");
+            BufferedInputStream bufInput = new BufferedInputStream(pdf);
             cc = (char) bufInput.read();
             while ((bufInput.available() != 0)) {
                 cc = (char) bufInput.read();
-                char[] marker = markerObj.toCharArray();
-                if (cc == marker[0]) {
-                    boolean isObj = true;
-                    for (int j = 1; j < marker.length; j++) {
-                        cc = (char) bufInput.read();
-                        if (cc != marker[j]) isObj = false;
-                    }
+                if (cc == markerObj.charAt(0)) {
+                    boolean isObj = search4Marker(bufInput,markerObj);
                     if (!isObj) {
                         continue;
                     } else {
@@ -43,14 +39,7 @@ public class PDFParser {
                                 cc = (char) bufInput.read();
                                 if (cc == '<') break;
                                 else {
-                                    isObjEnd = true;
-                                    for (int i = 0; i < markerEndObj.length(); i++) {
-                                        cc = (char) bufInput.read();
-                                        if (cc != markerEndObj.charAt(i)) {
-                                            isObjEnd = false;
-                                            break;
-                                        }
-                                    }
+                                    isObjEnd = search4EndObj(bufInput);
                                 }
                             }
                             cc = (char) bufInput.read();
@@ -59,15 +48,9 @@ public class PDFParser {
                             continue;
                         }
                         while ((cc != '>') && (!isFonts)) {
-                            char[] marker2 = markerLength.toCharArray();
                             cc = (char) bufInput.read();
-
-                            if (cc == marker2[0]) {
-                                boolean isLength = true;
-                                for (int j = 1; j < marker2.length; j++) {
-                                    cc = (char) bufInput.read();
-                                    if (cc != marker2[j]) isLength = false;
-                                }
+                            if (cc == markerLength.charAt(0)) {
+                                boolean isLength = search4Marker(bufInput,markerLength);
                                 if (isLength) {
                                     StringBuffer res = new StringBuffer(6);
                                     bufInput.read();
@@ -90,43 +73,21 @@ public class PDFParser {
                             if (cc == '>') cc = (char) bufInput.read();
                         }
                         if ((isFonts) || (streamLength <= 0)) {
-                            marker = markerEndObj.toCharArray();
-                            while (!isObjEnd) {
-                                cc = (char) bufInput.read();
-                                if (cc == marker[0]) {
-                                    isObjEnd = true;
-                                    for (int j = 1; j < marker.length; j++) {
-                                        cc = (char) bufInput.read();
-                                        if (cc != marker[j]) isObjEnd = false;
-                                    }
-                                }
-                            }
+                            while (!search4EndObj(bufInput)) {}
                             continue;
 
                         } else {
-                            marker = markerStream.toCharArray();
                             boolean isStream = false;
                             while ((!isStream) && (!isObjEnd)) {
-
-                                if (cc == marker[0]) {
-                                    isStream = true;
-                                    for (int j = 1; j < marker.length; j++) {
-                                        cc = (char) bufInput.read();
-                                        if (cc != marker[j]) {
-                                            isStream = false;
-                                            break;
-                                        }
-                                    }
-                                    if (isStream) break;
+                                if (cc == markerStream.charAt(0)) {
+                                    isStream = search4Marker(bufInput, markerStream);
                                 }
+                                if (isStream) break;
                                 if (cc == '\n') {
                                     cc = (char) bufInput.read();
                                     if (cc == 's') continue;
                                     else {
-                                        for (int i = 0; i < markerEndObj.length(); i++) {
-                                            cc = (char) bufInput.read();
-                                            if (cc != markerEndObj.charAt(i)) isObjEnd = false;
-                                        }
+                                        isObjEnd = search4EndObj(bufInput);
                                     }
                                 }
                                 cc = (char) bufInput.read();
@@ -135,42 +96,24 @@ public class PDFParser {
                                 continue;
                             }
                             if (!isStream) {
-                                marker = markerEndObj.toCharArray();
                                 while (!isObjEnd) {
-                                    cc = (char) bufInput.read();
-                                    if (cc == marker[0]) {
-                                        isObjEnd = true;
-                                        for (int j = 1; j < marker.length; j++) {
-                                            cc = (char) bufInput.read();
-                                            if (cc != marker[j]) isObjEnd = false;
-                                        }
-                                    }
+                                    isObjEnd = search4EndObj(bufInput);
                                 }
                                 continue;
-                            } else {
+                            } else{
                                 bufInput.read();
                                 bufInput.read();
                                 //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
                                 try {
                                     decode(streamLength, bufInput, out);
-                                    System.out.println(streamLength);
                                 } catch (DataFormatException e) {
                                     System.out.println("Ошибка расшифровки GZIPa");
-                                    return;
                                 }
                             }
 
                         }
-                        marker = markerEndObj.toCharArray();
                         while ((!isObjEnd) && (bufInput.available() > 0)) {
-                            cc = (char) bufInput.read();
-                            if (cc == marker[0]) {
-                                isObjEnd = true;
-                                for (int j = 1; j < marker.length; j++) {
-                                    cc = (char) bufInput.read();
-                                    if (cc != marker[j]) isObjEnd = false;
-                                }
-                            }
+                            isObjEnd = search4EndObj(bufInput);
                         }
 
 
@@ -179,10 +122,11 @@ public class PDFParser {
                 }
             }
 
+            return 1;
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            return 0;
         } catch (IOException e) {
-            e.printStackTrace();
+            return 0;
         }
     }
 
@@ -199,7 +143,33 @@ public class PDFParser {
         out.write(result, 0, resultLength);
     }
 
-    public static boolean isZipped(byte[] compressed) {
-        return compressed[0] == 31 && compressed[1] == -117;
+
+    // Возвращает 1 когда нашел и 0 когда не нашел endobj
+
+    private static boolean search4EndObj(InputStream inputStream) throws IOException{
+        boolean isObjEnd = true;
+        for (int i = 0; i < markerEndObj.length(); i++) {
+            cc = (char) inputStream.read();
+            if (cc != markerEndObj.charAt(i)) {
+                isObjEnd = false;
+                break;
+            }
+        }
+        return isObjEnd;
     }
+
+    // Возвращает 1 когда нашел и 0 когда не нашел Маркер
+
+    private static boolean search4Marker(InputStream inputStream, String marker) throws IOException{
+        boolean isMarker = true;
+        for (int i = 1; i < marker.length(); i++) {
+            cc = (char) inputStream.read();
+            if (cc != marker.charAt(i)) {
+                isMarker= false;
+                break;
+            }
+        }
+        return isMarker;
+    }
+
 }

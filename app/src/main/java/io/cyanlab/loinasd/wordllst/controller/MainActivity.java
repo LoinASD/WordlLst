@@ -11,7 +11,13 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.ToggleButton;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
+import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
 import io.cyanlab.loinasd.wordllst.model.Facade;
 import io.cyanlab.loinasd.wordllst.view.*;
 import io.cyanlab.loinasd.wordllst.controller.*;
@@ -41,6 +47,20 @@ public class MainActivity extends Activity {
         database = dbHelper.getWritableDatabase();
         wlView = new WLView(this);
         scroll = (LinearLayout)findViewById(R.id.scroll);
+
+        ByteArrayOutputStream oS = new ByteArrayOutputStream();
+        int parsed = PDFParser.parsePdf("Describing people_Сharacter_Intermediate.pdf", oS,this);
+        ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
+
+        if (parsed == 1) {
+            try {
+                TextExtractor textExtractor = new TextExtractor(iS);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
         wlView.setOrientation(LinearLayout.VERTICAL);
         scrollView.addView(wlView, lp);

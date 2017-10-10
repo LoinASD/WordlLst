@@ -170,6 +170,8 @@ public final class Facade extends Observable implements Model{
                 wl.addLine(l);
             }
         }
+        wordlists.add(wl);
     }
+
 
 }
