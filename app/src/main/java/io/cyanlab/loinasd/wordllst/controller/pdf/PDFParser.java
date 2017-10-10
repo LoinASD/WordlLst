@@ -207,7 +207,6 @@ class PDFParser {
         decompressor.end();
         String outputString = new String(result, 0, resultLength, "UTF-8");
         System.out.print(outputString);
-        //FileOutputStream fileOutputStream = new FileOutputStream("/home/loinasd/prog/test/pdfParser/out1.txt");
         out.write(result, 0, resultLength);
     }
 
