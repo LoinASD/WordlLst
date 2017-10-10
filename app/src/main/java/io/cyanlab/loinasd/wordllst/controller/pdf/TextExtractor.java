@@ -1,5 +1,6 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -8,14 +9,14 @@ import java.util.ArrayList;
 public class TextExtractor {
 
     private static int ch;
-    private final InputStream io;
+    private final BufferedInputStream io;
     private ArrayList<Node> nodes = new ArrayList<>();
     private CharConverter converter = new CharConverter();
     private static String lineStr;
     private static boolean gotDictionary = false;
 
     public TextExtractor(InputStream io) throws IOException {
-        this.io = io;
+        this.io = new BufferedInputStream(io);
         ch = 0;
 
         parse();

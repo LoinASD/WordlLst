@@ -186,16 +186,6 @@ class PDFParser {
         }
     }
 
-    private static void parse() {
-        try {
-            FileInputStream fio = new FileInputStream("/home/loinasd/prog/test/pdfParser/out1.txt");
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     private static void decode(int length, InputStream in, OutputStream out) throws DataFormatException, IOException {
         byte[] output = new byte[length];
         int compressedDataLength = in.read(output);
