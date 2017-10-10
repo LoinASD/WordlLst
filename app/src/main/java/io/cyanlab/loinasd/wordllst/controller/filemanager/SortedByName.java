@@ -1,7 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.filemanager;
 
 import java.util.Comparator;
-public class SortedByName implements Comparator {
+class SortedByName implements Comparator {
     @Override
     public int compare(Object o1, Object o2) {
         String str1 = (String) o1;

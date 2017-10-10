@@ -29,7 +29,7 @@ public class FileDialog extends AlertDialog {
     public static String CURRENT_PATH = "/sdcard";
 
     public static String ROOT_PATH =
-            Environment.getExternalStorageDirectory().getPath();;
+            Environment.getExternalStorageDirectory().getPath();
 
 
     public FileDialog(Context context) {

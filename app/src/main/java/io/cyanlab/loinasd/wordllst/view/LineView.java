@@ -42,7 +42,7 @@ class LineView {
         linearLayout.addView(view);
     }
 
-    static void getEditableLine(int wordlistNum, int lineNum, WLView wlView, LayoutInflater lineInflater){
+    /*static void getEditableLine(int wordlistNum, int lineNum, WLView wlView, LayoutInflater lineInflater){
         Facade facade = Facade.getFacade();
         View view = lineInflater.inflate(R.layout.editableline,wlView,false);
         EditText prim = (EditText) view.findViewById(R.id.primeET);
@@ -70,6 +70,6 @@ class LineView {
             trans.setText(k);
         }
         wlView.addView(view);
-    }
+    }*/
 
 }
