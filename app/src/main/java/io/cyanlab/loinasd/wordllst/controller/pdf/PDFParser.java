@@ -18,10 +18,9 @@ public class PDFParser {
 
     /*Парсит все в этой жизни, пишет в 1 поток.*/
 
-    public static int parsePdf(String file, OutputStream out, Activity activity) {
+    public static int parsePdf(String file, OutputStream out) {
         try {
-            File kek = new File("sdcard/Download/Describing people_Сharacter_Intermediate.pdf");
-            FileInputStream pdf = new FileInputStream("sdcard/Download/Describing people_Сharacter_Intermediate.pdf");
+            FileInputStream pdf = new FileInputStream("sdcard/Download/"+file);
             BufferedInputStream bufInput = new BufferedInputStream(pdf);
             cc = (char) bufInput.read();
             while ((bufInput.available() != 0)) {

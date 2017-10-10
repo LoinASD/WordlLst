@@ -105,10 +105,10 @@ public class TextExtractor {
             ch = io.read();
             if (ch == -1) return "";
             if ((char) ch != '\n') {
-                if (l.charAt(l.length() - 1) == '\r')
-                    l.deleteCharAt(l.length() - 1);
                 l.append((char) ch);
             } else {
+                if (l.charAt(l.length() - 1) == '\r')
+                    l.deleteCharAt(l.length() - 1);
                 return l.toString();
             }
         }
