@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-class PDFParser {
+public class PDFParser {
     private static int ch;
     private static char cc;
     private static final String markerStream = "stream";

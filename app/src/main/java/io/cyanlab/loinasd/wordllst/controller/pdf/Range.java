@@ -1,6 +1,6 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
-public class Range {
+class Range {
 
     private final int begin;
     private final int end;

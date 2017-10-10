@@ -1,8 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import java.util.ArrayList;
-
-public class CharConverter {
+class CharConverter {
 
     private ArrayList<Range> ranges = new ArrayList<>();
 
