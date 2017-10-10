@@ -21,15 +21,15 @@ class PDFParser {
     private static void parsePdf(String file, OutputStream out) {
         try {
             File pdf = new File(file);
-            BufferedInputStream bufImput = new BufferedInputStream(new FileInputStream(pdf));
-            cc = (char) bufImput.read();
-            while ((bufImput.available() != 0)) {
-                cc = (char) bufImput.read();
+            BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(pdf));
+            cc = (char) bufInput.read();
+            while ((bufInput.available() != 0)) {
+                cc = (char) bufInput.read();
                 char[] marker = markerObj.toCharArray();
                 if (cc == marker[0]) {
                     boolean isObj = true;
                     for (int j = 1; j < marker.length; j++) {
-                        cc = (char) bufImput.read();
+                        cc = (char) bufInput.read();
                         if (cc != marker[j]) isObj = false;
                     }
                     if (!isObj) {
@@ -40,12 +40,12 @@ class PDFParser {
                         int streamLength = 0;
                         while ((cc != '<') && (!isObjEnd)) {
                             if (cc == '\n') {
-                                cc = (char) bufImput.read();
+                                cc = (char) bufInput.read();
                                 if (cc == '<') break;
                                 else {
                                     isObjEnd = true;
                                     for (int i = 0; i < markerEndObj.length(); i++) {
-                                        cc = (char) bufImput.read();
+                                        cc = (char) bufInput.read();
                                         if (cc != markerEndObj.charAt(i)) {
                                             isObjEnd = false;
                                             break;
@@ -53,28 +53,28 @@ class PDFParser {
                                     }
                                 }
                             }
-                            cc = (char) bufImput.read();
+                            cc = (char) bufInput.read();
                         }
                         if (isObjEnd) {
                             continue;
                         }
                         while ((cc != '>') && (!isFonts)) {
                             char[] marker2 = markerLength.toCharArray();
-                            cc = (char) bufImput.read();
+                            cc = (char) bufInput.read();
 
                             if (cc == marker2[0]) {
                                 boolean isLength = true;
                                 for (int j = 1; j < marker2.length; j++) {
-                                    cc = (char) bufImput.read();
+                                    cc = (char) bufInput.read();
                                     if (cc != marker2[j]) isLength = false;
                                 }
                                 if (isLength) {
                                     StringBuffer res = new StringBuffer(6);
-                                    bufImput.read();
-                                    cc = (char) bufImput.read();
+                                    bufInput.read();
+                                    cc = (char) bufInput.read();
                                     while ((cc != '>') && (cc != '/')) {
                                         res.append(cc);
-                                        cc = (char) bufImput.read();
+                                        cc = (char) bufInput.read();
                                     }
                                     if (cc == '/') {
                                         isFonts = true;
@@ -87,16 +87,16 @@ class PDFParser {
                                     }
                                 }
                             }
-                            if (cc == '>') cc = (char) bufImput.read();
+                            if (cc == '>') cc = (char) bufInput.read();
                         }
                         if ((isFonts) || (streamLength <= 0)) {
                             marker = markerEndObj.toCharArray();
                             while (!isObjEnd) {
-                                cc = (char) bufImput.read();
+                                cc = (char) bufInput.read();
                                 if (cc == marker[0]) {
                                     isObjEnd = true;
                                     for (int j = 1; j < marker.length; j++) {
-                                        cc = (char) bufImput.read();
+                                        cc = (char) bufInput.read();
                                         if (cc != marker[j]) isObjEnd = false;
                                     }
                                 }
@@ -111,7 +111,7 @@ class PDFParser {
                                 if (cc == marker[0]) {
                                     isStream = true;
                                     for (int j = 1; j < marker.length; j++) {
-                                        cc = (char) bufImput.read();
+                                        cc = (char) bufInput.read();
                                         if (cc != marker[j]) {
                                             isStream = false;
                                             break;
@@ -120,16 +120,16 @@ class PDFParser {
                                     if (isStream) break;
                                 }
                                 if (cc == '\n') {
-                                    cc = (char) bufImput.read();
+                                    cc = (char) bufInput.read();
                                     if (cc == 's') continue;
                                     else {
                                         for (int i = 0; i < markerEndObj.length(); i++) {
-                                            cc = (char) bufImput.read();
+                                            cc = (char) bufInput.read();
                                             if (cc != markerEndObj.charAt(i)) isObjEnd = false;
                                         }
                                     }
                                 }
-                                cc = (char) bufImput.read();
+                                cc = (char) bufInput.read();
                             }
                             if (isObjEnd) {
                                 continue;
@@ -137,22 +137,22 @@ class PDFParser {
                             if (!isStream) {
                                 marker = markerEndObj.toCharArray();
                                 while (!isObjEnd) {
-                                    cc = (char) bufImput.read();
+                                    cc = (char) bufInput.read();
                                     if (cc == marker[0]) {
                                         isObjEnd = true;
                                         for (int j = 1; j < marker.length; j++) {
-                                            cc = (char) bufImput.read();
+                                            cc = (char) bufInput.read();
                                             if (cc != marker[j]) isObjEnd = false;
                                         }
                                     }
                                 }
                                 continue;
                             } else {
-                                bufImput.read();
-                                bufImput.read();
+                                bufInput.read();
+                                bufInput.read();
                                 //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
                                 try {
-                                    decode(streamLength, bufImput, out);
+                                    decode(streamLength, bufInput, out);
                                     System.out.println(streamLength);
                                 } catch (DataFormatException e) {
                                     System.out.println("Ошибка расшифровки GZIPa");
@@ -162,12 +162,12 @@ class PDFParser {
 
                         }
                         marker = markerEndObj.toCharArray();
-                        while ((!isObjEnd) && (bufImput.available() > 0)) {
-                            cc = (char) bufImput.read();
+                        while ((!isObjEnd) && (bufInput.available() > 0)) {
+                            cc = (char) bufInput.read();
                             if (cc == marker[0]) {
                                 isObjEnd = true;
                                 for (int j = 1; j < marker.length; j++) {
-                                    cc = (char) bufImput.read();
+                                    cc = (char) bufInput.read();
                                     if (cc != marker[j]) isObjEnd = false;
                                 }
                             }
