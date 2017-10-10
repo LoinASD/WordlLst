@@ -73,5 +73,7 @@ public class Node {
     public void setRawText(String text) {
         this.rawText = text;
     }
+
+    public void setText(String text) {this.text = text;}
 }
 

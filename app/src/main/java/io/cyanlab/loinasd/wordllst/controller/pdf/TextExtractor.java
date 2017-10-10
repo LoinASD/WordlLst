@@ -23,10 +23,13 @@ public class TextExtractor {
         if (gotDictionary){
             for (Node node: nodes) {
                 node.convertText(converter);
-                System.out.println(node.getText());
+
             }
         }
-
+        nodeCollect();
+        for (Node node : nodes) {
+            System.out.println(node.getText());
+        }
 
     }
 
@@ -120,5 +123,26 @@ public class TextExtractor {
         nodes.add(node);
     }
 
-
+    private void nodeCollect() {
+        ArrayList<Node> newNodes = new ArrayList<>();
+        boolean b = false;
+        Node prev = nodes.get(0);
+        for (Node node: nodes) {
+            if (b) {
+                prev.setText(prev.getText() + node.getText());
+                b = false;
+                continue;
+            }
+            if (node.getText().trim().equals("-")) {
+                prev.setText(prev.getText() + node.getText());
+                b = true;
+                continue;
+            }
+            if (!node.getText().equals(" ")) {
+                newNodes.add(node);
+                prev = node;
+            }
+        }
+        nodes = newNodes;
+    }
 }
