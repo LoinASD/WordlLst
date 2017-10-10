@@ -35,10 +35,48 @@ public class TextExtractor {
             if (lineStr.equals("BT")) {
                 textToken();
             } else if (lineStr.equals("begincmap")){
-                //TODO: parse cmap
+                parseCMap();
             }
 
         }
+    }
+
+    private void parseCMap() throws IOException {
+        converter = new CharConverter();
+        String[] chars;
+        int count = 0;
+        while (ch != -1) {
+            lineStr = readLine();
+            if (lineStr.endsWith("beginbfchar")){
+                count = Integer.parseInt("" + lineStr.charAt(0));
+                for (int i = count; i > 0; i--) {
+                    lineStr = readLine();
+                    chars = lineStr.split(" ");
+                    String s = chars[0].substring(1, 5);
+                    int c = Integer.parseInt(s, 16);
+                    int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
+                    int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
+                    converter.addNewRange(c1, c1, c2);
+                }
+            }
+            if (lineStr.endsWith("beginbfrange")) {
+                count = Integer.parseInt("" + lineStr.charAt(0));
+                for (int i = count; i > 0; i--) {
+                    lineStr = readLine();
+                    chars = lineStr.split(" ");
+                    int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
+                    int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
+                    int c3 = Integer.parseInt(chars[2].substring(1, 5), 16);
+                    converter.addNewRange(c1, c2, c3);
+                }
+            }
+
+            if (lineStr.equals("endcmap")) {
+                gotDictionary = true;
+                break;
+            }
+        }
+
     }
 
     private void getCord(Node node) throws IOException {
@@ -58,14 +96,14 @@ public class TextExtractor {
         StringBuilder l = new StringBuilder();
         while (ch != -1) {
             ch = io.read();
-
+            if (ch == -1) return "";
             if ((char) ch != '\n') {
                 l.append((char) ch);
             } else {
                 return l.toString();
             }
         }
-        return null;
+        return l.toString();
     }
 
     private void textToken() throws IOException {
@@ -80,4 +118,6 @@ public class TextExtractor {
         node.setRawText(message.toString().trim());
         nodes.add(node);
     }
+
+
 }

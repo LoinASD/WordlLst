@@ -1,7 +1,6 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 public class Node {
-
     private double x;
     private double y;
     private String rawText;
