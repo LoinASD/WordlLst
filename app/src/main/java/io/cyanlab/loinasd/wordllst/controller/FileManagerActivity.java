@@ -5,7 +5,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -14,39 +16,38 @@ import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.R;
 
-public class FileManagerActivity extends AppCompatActivity {
+public class FileManagerActivity extends AppCompatActivity{
 
     private static File dir;
-    public static String CURRENT_PATH = "/sdcard/storage";
-    public static String ROOT_PATH =
+    private static String[] files;
+    private static ArrayAdapter<String> adapter;
+    private static String CURRENT_PATH = "/sdcard/storage";
+    private static String ROOT_PATH =
             Environment.getExternalStorageDirectory().getPath();
-    LinearLayout treeLayout, wayLayout;
-    LayoutInflater fileInflater;
-    ScrollView scrollFileView;
-    TextView ftv;
+    LinearLayout wayLayout;
+    ListView lw;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_manager);
         //----------------------------------//
-        treeLayout = (LinearLayout) findViewById(R.id.treeLayout);
         wayLayout = (LinearLayout) findViewById(R.id.wayLayout);
-        scrollFileView = (ScrollView) findViewById(R.id.scrollFileView);
-        dir = new File(CURRENT_PATH);
-        fileInflater = getLayoutInflater();
+        lw = (ListView) findViewById(R.id.treeListView);
+        lw.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        dir = new File(ROOT_PATH);
         //-----------------------------------//
         showDir(dir);
     }
 
+
+
     private void showDir(File dir) {
-        for (File f: dir.listFiles()) {
-            View v = fileInflater.inflate(R.layout.file_line, treeLayout);
-            ftv = (TextView) v.findViewById(R.id.fileTextView);
+        files = dir.list();
+        adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1, files);
 
-            ftv.setText(f.getName());
-        }
+        lw.setAdapter(adapter);
     }
-
 
 }

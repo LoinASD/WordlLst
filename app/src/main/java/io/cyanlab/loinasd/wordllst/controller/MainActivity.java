@@ -32,12 +32,13 @@ import io.cyanlab.loinasd.wordllst.controller.*;
 public class MainActivity extends AppCompatActivity {
 
 
+    static final int REQUEST_CODE_FM = 1;
     LayoutInflater wlInflater;
     WLView wlView;
     Facade facade;
     LinearLayout scroll;
     Button button;
-    ScrollView scrollView;
+    //ScrollView scrollView;
     DBHelper dbHelper;
     SQLiteDatabase database;
     ToggleButton toggleButton;
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //---------------------------------------------//
-        scrollView = (ScrollView)findViewById(R.id.scrollView);
+        //scrollView = (ScrollView)findViewById(R.id.scrollView);
         facade = Facade.getFacade();
         //toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
         dbHelper = new DBHelper(this);
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
         wlView.setOrientation(LinearLayout.VERTICAL);
-        scrollView.addView(wlView, lp);
+        //scrollView.addView(wlView, lp);
         wlInflater = getLayoutInflater();
         final Activity act = this;
         final View.OnClickListener change = new View.OnClickListener() {
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         };
         //----------------------------------------------//
 
-        View.OnClickListener setEditable = new View.OnClickListener() {
+        /*View.OnClickListener setEditable = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 View id = wlView.getChildAt(0).findViewById(R.id.primeTV);
@@ -117,15 +118,15 @@ public class MainActivity extends AppCompatActivity {
                     wlView.setOnClickListener(change);
                 }
             }
-        };
+        };*/
 
 
         //toggleButton.setOnClickListener(setEditable);
-        wlView.setOnClickListener(change);
+        //wlView.setOnClickListener(change);
 
-        for(int i = 0; i<facade.getWordlistsNum();i++){
+/*        for(int i = 0; i<facade.getWordlistsNum();i++){
             WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
-        }
+        }*/
 
 
 
@@ -149,9 +150,7 @@ public class MainActivity extends AppCompatActivity {
         //-------------------------------//
 
         //-------MY----------------//
-        /*wlInflater = getLayoutInflater();
-        ll = (LinearLayout) findViewById(R.id.ll);
-*/
+        wlInflater = getLayoutInflater();
         //----------------------------------//
     }
 
@@ -176,14 +175,26 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.addWL) {
             Intent fileManager = new Intent(this, FileManagerActivity.class);
-            startActivity(fileManager);
+            startActivityForResult(fileManager, REQUEST_CODE_FM);
+            setResult(RESULT_OK, fileManager);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data == null) {return;}
+        if (requestCode == REQUEST_CODE_FM) {
+            if (resultCode == RESULT_OK) {
+                String file = data.getStringExtra("file");
+                System.out.println(file);
 
+            }
+        }
+
+    }
 
 
 }
