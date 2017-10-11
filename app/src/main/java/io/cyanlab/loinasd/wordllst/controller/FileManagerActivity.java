@@ -6,12 +6,17 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.R;
@@ -19,8 +24,13 @@ import io.cyanlab.loinasd.wordllst.R;
 public class FileManagerActivity extends AppCompatActivity{
 
     private static File dir;
+    private static ArrayList<Map<String, Object>> data;
     private static String[] files;
+    private static int img;
     private static ArrayAdapter<String> adapter;
+    private static  SimpleAdapter sa;
+    final String ATTRIBUTE_NAME_TEXT = "text";
+    final String ATTRIBUTE_NAME_IMAGE = "image";
     private static String CURRENT_PATH = "/sdcard/storage";
     private static String ROOT_PATH =
             Environment.getExternalStorageDirectory().getPath();
@@ -41,13 +51,27 @@ public class FileManagerActivity extends AppCompatActivity{
     }
 
 
-
     private void showDir(File dir) {
         files = dir.list();
-        adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_1, files);
+        //adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, files);
+        data = new ArrayList<>(
+                files.length);
+        Map<String, Object> m;
+        File f;
+        for (String file : files) {
+            f = new File(dir, file);
+            if (f.isDirectory()) img = R.drawable.ic_folder_black_24dp;
+            else img = R.drawable.ic_description_black_24dp;
 
-        lw.setAdapter(adapter);
+            m = new HashMap<>();
+            m.put(ATTRIBUTE_NAME_TEXT, file);
+            m.put(ATTRIBUTE_NAME_IMAGE, img);
+            data.add(m);
+        }
+        String[] from = { ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE };
+        int[] to = { R.id.fileTextView, R.id.fileImageView };
+        sa = new SimpleAdapter(this, data, R.layout.file_line, from, to);
+        lw.setAdapter(sa);
     }
 
 }
