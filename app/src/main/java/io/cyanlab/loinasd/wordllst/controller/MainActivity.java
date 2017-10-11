@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 String file = data.getStringExtra("file");
                 System.out.println(file);
-                
+                startParser(file);
 
             }
         }
@@ -203,6 +204,8 @@ public class MainActivity extends AppCompatActivity {
         if (parsed == 1) {
             try {
                 TextExtractor textExtractor = new TextExtractor(iS);
+                Snackbar.make(null, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
             } catch (IOException e) {
                 e.printStackTrace();
             }
