@@ -1,7 +1,5 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
-
-import android.app.Activity;
-import android.os.Environment;
+import android.app.Activity;import android.os.Environment;
 
 import java.io.*;
 import java.util.zip.DataFormatException;
@@ -25,7 +23,7 @@ public class PDFParser {
             while ((bufInput.available() != 0)) {
                 int streamLength = 0;
                 boolean isFonts = false;
-                while ((cc != '>') && (!isFonts)) {
+                while ((cc != '>') && (!isFonts)&&(buInput.available()>0)) {
                     cc = (char) bufInput.read();
                     if (cc == markerLength.charAt(0)) {
                         boolean isLength = search4Marker(bufInput,markerLength);
@@ -55,7 +53,7 @@ public class PDFParser {
                     continue;
                 } else {
                     boolean isStream = false;
-                    while ((!isStream) && (!isObjEnd)) {
+                    while ((!isStream)(buInput.available()>0)) {
                         if (cc == markerStream.charAt(0)) {
                             isStream = search4Marker(bufInput, markerStream);
                         }
