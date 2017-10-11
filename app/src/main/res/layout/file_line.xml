@@ -3,17 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:weightSum="5">
 
     <ImageView
         android:id="@+id/fileImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_margin="16dp"
+        android:layout_weight="1"
+        android:background="@android:color/background_light" />
 
     <TextView
         android:id="@+id/fileTextView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_height="32dp"
+        android:layout_margin="20dp"
+        android:layout_weight="4"
         android:text="TextView" />
 </LinearLayout>
