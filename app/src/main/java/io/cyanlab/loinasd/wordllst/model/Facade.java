@@ -45,38 +45,20 @@ public final class Facade extends Observable implements Model{
         wordlist.getLines().clear();
     }
 
-    public void addLine(int wordListNum,ArrayList<String> prim, ArrayList<String> trans){
+    public void addLine(int wordListNum, ArrayList<String> prim, ArrayList<String> trans){
         Line line = new Line();
         ArrayList<Word> words= new ArrayList<Word>();
-        for (String s:prim
-                ) {
-            words.add(new Word(s,this.getLang(0),line));
+        for (String s : prim) {
+            words.add( new Word(s, line));
         }
         line.setPrime(words);
         words = new ArrayList<Word>();
-        for (String s: trans
-                ) {
-            words.add(new Word(s,this.getLang(1),line));
+        for (String s : trans) {
+            words.add(new Word(s,line));
         }
         line.setTranslate(words);
         line.setWordlist(wordlists.get(wordListNum));
         wordlists.get(wordListNum).getLines().add(line);
-    }
-
-
-
-    public Lang getLang(int langNum){
-        switch(langNum){
-            case(0):{
-                return Lang.EN;
-            }
-            case(1):{
-                return Lang.RU;
-            }
-            default:{
-                return Lang.EN;
-            }
-        }
     }
 
     public int getWordlistsNum(){
