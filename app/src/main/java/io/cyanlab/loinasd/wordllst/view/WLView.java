@@ -75,7 +75,7 @@ public class WLView extends LinearLayout {
 
         button.setText(facade.getWordlistNameByNum(wordListNum));
         button.setOnClickListener(onClickListener);
-        //linearLayout.addView(button);
+        linearLayout.addView(button);
     }
 
     /*public void getEditableWordlist(LayoutInflater layoutInflater){

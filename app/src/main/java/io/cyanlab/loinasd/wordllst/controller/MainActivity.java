@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     Facade facade;
     LinearLayout scroll;
     Button button;
-    //ScrollView scrollView;
+    ScrollView scrollView;
     DBHelper dbHelper;
     SQLiteDatabase database;
     ToggleButton toggleButton;
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //---------------------------------------------//
-        //scrollView = (ScrollView)findViewById(R.id.scrollView);
+        scrollView = (ScrollView)findViewById(R.id.scrollView);
         facade = Facade.getFacade();
         //toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
         dbHelper = new DBHelper(this);
@@ -57,34 +57,10 @@ public class MainActivity extends AppCompatActivity {
         wlView = new WLView(this);
         scroll = (LinearLayout)findViewById(R.id.scroll);
 
-        ByteArrayOutputStream oS = new ByteArrayOutputStream();
-        int parsed = PDFParser.parsePdf("Describing people_Сharacter_Intermediate.pdf", oS);
-        ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
-
-        if (parsed == 1) {
-            try {
-                TextExtractor textExtractor = new TextExtractor(iS);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        oS = new ByteArrayOutputStream();
-        parsed = PDFParser.parsePdf("Wordlist_Houses1.pdf", oS);
-        iS = new ByteArrayInputStream(oS.toByteArray());
-
-        if (parsed == 1) {
-            try {
-                TextExtractor textExtractor = new TextExtractor(iS);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
         wlView.setOrientation(LinearLayout.VERTICAL);
-        //scrollView.addView(wlView, lp);
+        scrollView.addView(wlView, lp);
         wlInflater = getLayoutInflater();
         final Activity act = this;
         final View.OnClickListener change = new View.OnClickListener() {
@@ -125,9 +101,7 @@ public class MainActivity extends AppCompatActivity {
         //toggleButton.setOnClickListener(setEditable);
         //wlView.setOnClickListener(change);
 
-/*        for(int i = 0; i<facade.getWordlistsNum();i++){
-            WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
-        }*/
+/*        */
 
 
 
@@ -204,8 +178,13 @@ public class MainActivity extends AppCompatActivity {
         if (parsed == 1) {
             try {
                 TextExtractor textExtractor = new TextExtractor(iS);
-                Snackbar.make(null, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                scroll.removeAllViews();
+                for(int i = 0; i<facade.getWordlistsNum();i++){
+                    WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
+                }
+                /*Snackbar.make(wlView, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();*/
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
