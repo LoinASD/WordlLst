@@ -61,13 +61,13 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 File f = new File(CURRENT_PATH, files[position]);
-                CURRENT_PATH = files[position];
+                CURRENT_PATH = f.getAbsolutePath();
                 logger.log(Level.INFO, CURRENT_PATH);
                 if (f.isDirectory()) showDir(f.getAbsoluteFile());
                 else {
                     Intent intent = new Intent();
                     intent.putExtra("file", f.getAbsolutePath());
-                    setResult(RESULT_OK);
+                    setResult(RESULT_OK, intent);
                     finish();
                 }
             }

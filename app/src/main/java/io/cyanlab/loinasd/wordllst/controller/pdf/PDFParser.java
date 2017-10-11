@@ -72,6 +72,7 @@ public class PDFParser {
                         }
                     }
                 }
+                cc = (char) bufInput.read();
             }
             return 1;
         } catch (FileNotFoundException e) {
