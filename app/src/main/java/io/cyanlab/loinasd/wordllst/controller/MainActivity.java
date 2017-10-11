@@ -132,11 +132,11 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
         //-----------Other------------------
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -150,8 +150,7 @@ public class MainActivity extends AppCompatActivity {
         //-------------------------------//
 
         //-------MY----------------//
-        wlInflater = getLayoutInflater();
-        //----------------------------------//
+        wlInflater = getLayoutInflater();        //----------------------------------//
     }
 
     @Override
@@ -190,10 +189,24 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 String file = data.getStringExtra("file");
                 System.out.println(file);
+                
 
             }
         }
+    }
+    
+    public void startParser(String file){
+        ByteArrayOutputStream oS = new ByteArrayOutputStream();
+        int parsed = PDFParser.parsePdf(file, oS);
+        ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
 
+        if (parsed == 1) {
+            try {
+                TextExtractor textExtractor = new TextExtractor(iS);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
