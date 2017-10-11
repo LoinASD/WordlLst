@@ -20,107 +20,61 @@ public class PDFParser {
 
     public static int parsePdf(String file, OutputStream out) {
         try {
-            FileInputStream pdf = new FileInputStream("sdcard/Download/"+file);
-            BufferedInputStream bufInput = new BufferedInputStream(pdf);
+            BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
             while ((bufInput.available() != 0)) {
-                cc = (char) bufInput.read();
-                if (cc == markerObj.charAt(0)) {
-                    boolean isObj = search4Marker(bufInput,markerObj);
-                    if (!isObj) {
-                        continue;
-                    } else {
-                        boolean isObjEnd = false;
-                        boolean isFonts = false;
-                        int streamLength = 0;
-                        while ((cc != '<') && (!isObjEnd)) {
-                            if (cc == '\n') {
-                                cc = (char) bufInput.read();
-                                if (cc == '<') break;
-                                else {
-                                    isObjEnd = search4EndObj(bufInput);
-                                }
-                            }
+                int streamLength = 0;
+                boolean isFonts = false;
+                while ((cc != '>') && (!isFonts)) {
+                    cc = (char) bufInput.read();
+                    if (cc == markerLength.charAt(0)) {
+                        boolean isLength = search4Marker(bufInput,markerLength);
+                        if (isLength) {
+                            StringBuffer res = new StringBuffer(6);
+                            bufInput.read();
                             cc = (char) bufInput.read();
-                        }
-                        if (isObjEnd) {
-                            continue;
-                        }
-                        while ((cc != '>') && (!isFonts)) {
-                            cc = (char) bufInput.read();
-                            if (cc == markerLength.charAt(0)) {
-                                boolean isLength = search4Marker(bufInput,markerLength);
-                                if (isLength) {
-                                    StringBuffer res = new StringBuffer(6);
-                                    bufInput.read();
-                                    cc = (char) bufInput.read();
-                                    while ((cc != '>') && (cc != '/')) {
-                                        res.append(cc);
-                                        cc = (char) bufInput.read();
-                                    }
-                                    if (cc == '/') {
-                                        isFonts = true;
-                                    } else {
-                                        try {
-                                            streamLength = Integer.parseInt(res.toString());
-                                        } catch (NumberFormatException e) {
-                                            isFonts = true;
-                                        }
-                                    }
-                                }
-                            }
-                            if (cc == '>') cc = (char) bufInput.read();
-                        }
-                        if ((isFonts) || (streamLength <= 0)) {
-                            while (!search4EndObj(bufInput)) {}
-                            continue;
-
-                        } else {
-                            boolean isStream = false;
-                            while ((!isStream) && (!isObjEnd)) {
-                                if (cc == markerStream.charAt(0)) {
-                                    isStream = search4Marker(bufInput, markerStream);
-                                }
-                                if (isStream) break;
-                                if (cc == '\n') {
-                                    cc = (char) bufInput.read();
-                                    if (cc == 's') continue;
-                                    else {
-                                        isObjEnd = search4EndObj(bufInput);
-                                    }
-                                }
+                            while ((cc != '>') && (cc != '/')) {
+                                res.append(cc);
                                 cc = (char) bufInput.read();
                             }
-                            if (isObjEnd) {
-                                continue;
-                            }
-                            if (!isStream) {
-                                while (!isObjEnd) {
-                                    isObjEnd = search4EndObj(bufInput);
-                                }
-                                continue;
-                            } else{
-                                bufInput.read();
-                                bufInput.read();
-                                //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
+                            if (cc == '/') {
+                                isFonts = true;
+                            } else {
                                 try {
-                                    decode(streamLength, bufInput, out);
-                                } catch (DataFormatException e) {
-                                    System.out.println("Ошибка расшифровки GZIPa");
+                                    streamLength = Integer.parseInt(res.toString());
+                                } catch (NumberFormatException e) {
+                                    isFonts = true;
                                 }
                             }
-
                         }
-                        while ((!isObjEnd) && (bufInput.available() > 0)) {
-                            isObjEnd = search4EndObj(bufInput);
-                        }
-
-
                     }
-
+                    if (cc == '>') cc = (char) bufInput.read();
+                }
+                        
+                if ((isFonts) || (streamLength <= 0)) {
+                    continue;
+                } else {
+                    boolean isStream = false;
+                    while ((!isStream) && (!isObjEnd)) {
+                        if (cc == markerStream.charAt(0)) {
+                            isStream = search4Marker(bufInput, markerStream);
+                        }
+                        if (!isStream) cc = (char) bufInput.read();
+                    }
+                    if (!isStream) {
+                        continue;
+                    } else{
+                        bufInput.read();
+                        bufInput.read();
+                        //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
+                        try {
+                            decode(streamLength, bufInput, out);
+                        } catch (DataFormatException e) {
+                            System.out.println("Ошибка расшифровки GZIPa");
+                        }
+                    }
                 }
             }
-
             return 1;
         } catch (FileNotFoundException e) {
             return 0;
@@ -143,19 +97,7 @@ public class PDFParser {
     }
 
 
-    // Возвращает 1 когда нашел и 0 когда не нашел endobj
 
-    private static boolean search4EndObj(InputStream inputStream) throws IOException{
-        boolean isObjEnd = true;
-        for (int i = 0; i < markerEndObj.length(); i++) {
-            cc = (char) inputStream.read();
-            if (cc != markerEndObj.charAt(i)) {
-                isObjEnd = false;
-                break;
-            }
-        }
-        return isObjEnd;
-    }
 
     // Возвращает 1 когда нашел и 0 когда не нашел Маркер
 
