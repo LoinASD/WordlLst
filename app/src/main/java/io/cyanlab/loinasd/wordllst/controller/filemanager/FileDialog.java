@@ -39,7 +39,17 @@ public class FileDialog extends AlertDialog {
         filenameFilter=new FilenameFilter(){
             @Override
             public boolean accept(File directory, String fileName) {
-                return fileName.matches(FILENAME_FILTER);
+                File file = new File(directory,fileName);
+                if (file.isDirectory()){
+                    return true;
+                }else{
+                    if (fileName.endsWith(".pdf")){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                }
             }
         };
     }
