@@ -21,6 +21,7 @@ public class PDFParser {
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
             while ((bufInput.available() != 0)) {
+                cc = (char) bufInput.read();
                 int streamLength = 0;
                 boolean isFonts = false;
                 while ((cc != '>') && (!isFonts)&&(bufInput.available()>0)) {
@@ -53,7 +54,7 @@ public class PDFParser {
                     continue;
                 } else {
                     boolean isStream = false;
-                    while ((bufInput.available()>0)) {
+                    while ((!isStream)&&(bufInput.available()>0)) {
                         if (cc == markerStream.charAt(0)) {
                             isStream = search4Marker(bufInput, markerStream);
                         }
@@ -72,7 +73,6 @@ public class PDFParser {
                         }
                     }
                 }
-                cc = (char) bufInput.read();
             }
             return 1;
         } catch (FileNotFoundException e) {
