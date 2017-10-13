@@ -141,6 +141,7 @@ public class TextExtractor {
         ArrayList<Node> newNodes = new ArrayList<>();
         boolean b = false;
         nodes.trimToSize();
+        //------DELETE EMPTY NODES AND CONCAT NODES WITH HYPH---??
         Node prev = nodes.get(0);
         for (Node node: nodes) {
             if (b) {
@@ -159,18 +160,25 @@ public class TextExtractor {
             }
         }
         nodes = newNodes;
+        //-------------------------------------------------//
+
+        //-------SPREADING------------------------//
         boolean toggle = false;
-        ArrayList<String> p = new ArrayList<>(), t = new ArrayList<>();
-        String WLname = nodes.remove(0).getText();
+        ArrayList<String> left = new ArrayList<>(),
+                right = new ArrayList<>(),
+                center = new ArrayList<>();
+
+        //String WLname = nodes.remove(0).getText();
+
+        Node head = nodes.get(0);
+        boolean notAHead = false;
         for (Node n : nodes) {
-            if (toggle) {
-                t.add(n.getText());
-                toggle = false;
-            }else {
-                p.add(n.getText());
-                toggle = true;
-            }
+            if (n.getY() == head.getY()) notAHead = true;
+            if (n.getX() < 300) left.add(n.getText());
+            else right.add(n.getText());
         }
-        Facade.getFacade().addNewWL(WLname,p, t);
+
+        //--------------------------------------------//
+        Facade.getFacade().addNewWL(head.getText(),left, right);
     }
 }
