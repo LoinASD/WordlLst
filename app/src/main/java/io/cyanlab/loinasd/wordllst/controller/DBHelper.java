@@ -33,11 +33,12 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public void loadAllWordlists(SQLiteDatabase db) {
-        LazyPars.loadWls(db);}
+        //LazyPars.loadWls(db);
+    }
 
     @Override
     public void onOpen(SQLiteDatabase db){
-        LazyPars.loadWls(db);
+        //LazyPars.loadWls(db);
     }
 
     public void saveWl(String s, SQLiteDatabase db, WLView wlView){
