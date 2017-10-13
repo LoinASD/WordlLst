@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 pb.setVisibility(ProgressBar.VISIBLE);
                 final String file = data.getStringExtra("file");
-                System.out.println(file);
                 parser = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -157,13 +156,15 @@ public class MainActivity extends AppCompatActivity {
         int parsed = PDFParser.parsePdf(file, oS);
         final ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
 
-        extractor = new Thread(new Runnable() {
+        /*extractor = new Thread(new Runnable() {
             @Override
             public void run() {
                 TextExtractor.getExtractor().extract(iS);
             }
         });
-        extractor.start();
+        extractor.start();*/
+
+        TextExtractor.getExtractor().extract(iS);
 
         if (parsed == 1) {
             Message m = new Message();
@@ -186,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
         //TODO: this method for update lines in real time
         pb.setVisibility(ProgressBar.GONE);
         scroll.removeAllViews();
-        for(int i = 0; i<facade.getWordlistsNum();i++){
+        for(int i = 0; i<facade.getWlsCount();i++){
             WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
         }
     }

@@ -187,8 +187,9 @@ public class TextExtractor {
 
         Node head = nodes.get(0);
         boolean notAHead = false;
+        nodes.remove(head);
         for (Node n : nodes) {
-            if (n.getY() == head.getY()) notAHead = true;
+            if (n.getY() != head.getY()) notAHead = true;
             if (n.getX() < 300) left.add(n.getText());
             else right.add(n.getText());
         }

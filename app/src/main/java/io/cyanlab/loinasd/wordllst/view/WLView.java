@@ -1,7 +1,6 @@
 package io.cyanlab.loinasd.wordllst.view;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -25,8 +24,8 @@ public class WLView extends LinearLayout {
 
     public void getWordlistAsList(int wordlistNum, LayoutInflater layoutInflater){
         Facade facade = Facade.getFacade();
-        wordlistName = facade.getWordlistNameByNum(wordlistNum);
-        for (int i = 0; i<facade.getWordlistLinesCountByNum(wordlistNum);i++){
+        wordlistName = facade.getWlName(wordlistNum);
+        for (int i = 0; i<facade.getLinesCount(wordlistNum); i++){
             LineView.getLine(layoutInflater, this, wordlistNum,i);
         }
     }
@@ -58,9 +57,7 @@ public class WLView extends LinearLayout {
         }
     }
 
-    public static void getWordlistAsButton(final int wordListNum,
-                                           final Activity activity, final WLView wlView,
-                                           final LayoutInflater layoutInflater, LinearLayout linearLayout) {
+    public static void getWordlistAsButton(final int wordListNum, final Activity activity, final WLView wlView, final LayoutInflater layoutInflater, LinearLayout linearLayout) {
         Facade facade = Facade.getFacade();
         Button button = new Button(activity);
 
@@ -73,7 +70,7 @@ public class WLView extends LinearLayout {
         };
 
 
-        button.setText(facade.getWordlistNameByNum(wordListNum));
+        button.setText(facade.getWlName(wordListNum));
         button.setOnClickListener(onClickListener);
         linearLayout.addView(button);
     }

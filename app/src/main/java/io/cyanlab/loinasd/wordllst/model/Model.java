@@ -10,16 +10,16 @@ public interface Model{
 
     int addWordlist(String s);
 
-    int getWordlistsNum();
+    int getWlsCount();
 
-    int getWordlistNumByName(String name);
+    int getWlNum(String name);
 
-    String getWordlistNameByNum(int wordlistNum);
+    String getWlName(int wordlistNum);
 
-    int getWordlistLinesCountByNum(int wordlistNum);
+    int getLinesCount(int wordlistNum);
 
-    ArrayList<String> getPrimByLineNum(int wordlistNum, int lineNum);
+    ArrayList<String> getPrim(int wordlistNum, int lineNum);
 
-    ArrayList<String> getTransByLineNum(int wordlistNum, int lineNum);
+    ArrayList<String> getTrans(int wordlistNum, int lineNum);
 
 }

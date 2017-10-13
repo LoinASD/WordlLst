@@ -63,11 +63,12 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
         View.OnClickListener backBut = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File f = new File(CURRENT_PATH);
-                CURRENT_PATH = f.getParentFile().getAbsolutePath();
-                f = new File(CURRENT_PATH);
-                logger.log(Level.INFO, CURRENT_PATH);
-                showDir(f);
+                if (!CURRENT_PATH.equals(ROOT_PATH)) {
+                    File f = new File(CURRENT_PATH);
+                    CURRENT_PATH = f.getParent();
+                    logger.log(Level.INFO, CURRENT_PATH);
+                    showDir(f.getParentFile());
+                }
             }
         };
         ib.setOnClickListener(backBut);

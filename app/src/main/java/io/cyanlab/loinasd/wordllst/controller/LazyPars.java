@@ -2,7 +2,6 @@ package io.cyanlab.loinasd.wordllst.controller;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.text.Editable;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
@@ -10,7 +9,6 @@ import io.cyanlab.loinasd.wordllst.model.Facade;
 import io.cyanlab.loinasd.wordllst.view.WLView;
 
 import java.util.ArrayList;
-import java.util.Scanner;
 
 
 class LazyPars {
@@ -23,7 +21,7 @@ class LazyPars {
                 String f = c.getString(c.getColumnIndex("wlId"));
                 Cursor cursor = database.query(c.getString(c.getColumnIndex("wlId")),null,null, null, null, null, null);
                 facade.addWordlist(f);
-                int wlNum = facade.getWordlistNumByName(f);
+                int wlNum = facade.getWlNum(f);
                 ArrayList<String> prim = new ArrayList<String>();
                 ArrayList<String> trans = new ArrayList<String>();
                 if (cursor.moveToFirst()){
@@ -63,7 +61,7 @@ class LazyPars {
     public static void loadWl (String wordlistName,SQLiteDatabase database){
         Facade facade = Facade.getFacade();
         Cursor cursor = database.query(wordlistName,null,null, null, null, null, null);
-        int wlNum = facade.getWordlistNumByName(wordlistName);
+        int wlNum = facade.getWlNum(wordlistName);
         facade.clearLines(wlNum);
         ArrayList<String> prim = new ArrayList<String>();
         ArrayList<String> trans = new ArrayList<String>();
