@@ -39,7 +39,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     private static  SimpleAdapter sa;
     private static final String ATTRIBUTE_NAME_TEXT = "text";
     private static final String ATTRIBUTE_NAME_IMAGE = "image";
-    private static String CURRENT_PATH = "/sdcard/storage";
+    private static String CURRENT_PATH = "/sdcard/storage/0/Download";
     private static String ROOT_PATH =
             Environment.getExternalStorageDirectory().getPath();
     LinearLayout wayLayout;

@@ -5,18 +5,31 @@ import java.io.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
+import io.cyanlab.loinasd.wordllst.activities.MainActivity;
+
 public class PDFParser {
 
     private static char cc;
     private static final String markerStream = "stream";
-    private static final String markerObj = "obj";
-    private static final String markerEndObj = "endobj";
+    //private static final String markerObj = "obj";
+    //private static final String markerEndObj = "endobj";
     private static final String markerLength = "Length";
+    private static boolean isEnd = false;
+    private static PDFParser instance;
 
+    private PDFParser(){}
+
+    public static PDFParser getParser() {
+        if(instance == null) {
+            instance = new PDFParser();
+        }
+        return instance;
+    }
 
     /*Парсит все в этой жизни, пишет в 1 поток.*/
 
-    public static int parsePdf(String file, OutputStream out) {
+    public static int parsePdf(final String file, final PipedOutputStream out) {
+        isEnd = false;
         try {
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
@@ -74,6 +87,9 @@ public class PDFParser {
                     }
                 }
             }
+            isEnd = true;
+            MainActivity.h.sendEmptyMessage(1);
+            out.close();
             return 1;
         } catch (FileNotFoundException e) {
             return 0;
@@ -82,7 +98,8 @@ public class PDFParser {
         }
     }
 
-    private static void decode(int length, InputStream in, OutputStream out) throws DataFormatException, IOException {
+    private static void decode(final int length, final InputStream in,
+                               final PipedOutputStream out) throws DataFormatException, IOException {
         byte[] output = new byte[length];
         int compressedDataLength = in.read(output);
         Inflater decompressor = new Inflater();
@@ -110,6 +127,10 @@ public class PDFParser {
             }
         }
         return isMarker;
+    }
+
+    public boolean isEnd() {
+        return isEnd;
     }
 
 }

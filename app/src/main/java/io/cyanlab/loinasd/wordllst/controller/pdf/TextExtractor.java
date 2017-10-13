@@ -5,19 +5,22 @@ import android.content.Intent;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
 import java.util.ArrayList;
 
+import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.model.Facade;
 
 
 public class TextExtractor {
 
     private static int ch;
-    private BufferedInputStream io;
+    private PipedInputStream io;
     private ArrayList<Node> nodes = new ArrayList<>();
     private CharConverter converter = new CharConverter();
     private static String lineStr;
     private static boolean gotDictionary = false;
+    private static boolean isEnd = false;
 
     private static TextExtractor instance;
 
@@ -35,8 +38,9 @@ public class TextExtractor {
 
     private TextExtractor(){}
 
-    public void extract(InputStream io) {
-        this.io = new BufferedInputStream(io);
+    public void extract(PipedInputStream io) {
+        isEnd = false;
+        this.io = io;
         ch = 0;
 
         try {
@@ -130,18 +134,23 @@ public class TextExtractor {
 
     private String readLine() throws IOException {
         StringBuilder l = new StringBuilder();
-        while (ch != -1) {
-            ch = io.read();
-            if (ch == -1) return "";
-            if ((char) ch != '\n') {
-                l.append((char) ch);
-            } else {
-                if (l.charAt(l.length() - 1) == '\r')
-                    l.deleteCharAt(l.length() - 1);
-                return l.toString();
+        while (true) {
+            if (io.available()!= 0) {
+                while (ch != -1) {
+                    ch = io.read();
+                    if (ch == -1) return "";
+                    if ((char) ch != '\n') {
+                        l.append((char) ch);
+                    } else {
+                        if (l.charAt(l.length() - 1) == '\r')
+                            l.deleteCharAt(l.length() - 1);
+                        return l.toString();
+                    }
+                }
             }
         }
-        return l.toString();
+
+        //return l.toString();
     }
 
     private void textToken() throws IOException {
@@ -164,12 +173,14 @@ public class TextExtractor {
         //------DELETE EMPTY NODES AND CONCAT NODES WITH HYPHEN---??
         Node prev = nodes.get(0);
         for (Node node: nodes) {
+            String s = node.getText();
             if (b) {
                 prev.setText(prev.getText() + node.getText());
                 b = false;
                 continue;
             }
-            if (node.getText().trim().equals("-")) {
+            if (node.getText().trim().equals("-") ||
+                    prev.getText().endsWith("/")) {
                 prev.setText(prev.getText() + node.getText());
                 b = true;
                 continue;
@@ -192,14 +203,23 @@ public class TextExtractor {
 
         Node head = nodes.get(0);
         boolean notAHead = false;
-        nodes.remove(head);
+        //nodes.remove(head);
+        ArrayList<Double> X = new ArrayList<>(), Y = new ArrayList<>();
         for (Node n : nodes) {
+            double x = n.getX();
+            double y = n.getY();
+            System.out.printf("x= %f, y= %f", x, y);
+            X.add(x); Y.add(y);
             if (n.getY() != head.getY()) notAHead = true;
             if (n.getX() < 300) left.add(n.getText());
             else right.add(n.getText());
         }
 
         //--------------------------------------------//
+        isEnd = true;
+        MainActivity.h.sendEmptyMessage(2);
         Facade.getFacade().addNewWL(head.getText(),left, right);
     }
+
+    public boolean isEnd() { return isEnd; }
 }

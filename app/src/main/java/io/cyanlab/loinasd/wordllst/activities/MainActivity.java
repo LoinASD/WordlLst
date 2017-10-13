@@ -23,6 +23,8 @@ import android.widget.ToggleButton;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_CODE_FM = 1;
     static final int HANDLE_MESSAGE_PARSED = 1;
+    static final int HANDLE_MESSAGE_EXTRACTED = 2;
     LayoutInflater wlInflater;
     WLView wlView;
     Facade facade;
@@ -45,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     DBHelper dbHelper;
     SQLiteDatabase database;
     ProgressBar pb;
-    Handler h;
+    public static StaticHandler h;
     Thread parser, extractor;
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,41 +142,42 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 pb.setVisibility(ProgressBar.VISIBLE);
                 final String file = data.getStringExtra("file");
-                parser = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        startParser(file);
-                    }
-                });
-                parser.start();
+                startParser(file);
             }
         }
     }
     
-    public void startParser(String file){
+    public void startParser(final String file){
 
-        ByteArrayOutputStream oS = new ByteArrayOutputStream();
-        int parsed = PDFParser.parsePdf(file, oS);
-        final ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
+        final PipedOutputStream pout;
+        final PipedInputStream pin;
+        try {
+            pout = new PipedOutputStream();
+            pin = new PipedInputStream(pout);
+            parser = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    int parsed = PDFParser.parsePdf(file, pout);
+                }
+            });
 
-        /*extractor = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                TextExtractor.getExtractor().extract(iS);
-            }
-        });
-        extractor.start();*/
+            extractor = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    TextExtractor.getExtractor().extract(pin);
+                }
+            });
 
-        TextExtractor.getNewExtractor().extract(iS);
+            parser.start();
+            extractor.start();
 
-        if (parsed == 1) {
-            Message m = new Message();
-            //m.setD;
-            h.sendEmptyMessage(HANDLE_MESSAGE_PARSED);
-            /*Snackbar.make(wlView, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();*/
-
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        /*Snackbar.make(wlView, "Replace with your own action", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();*//*
+
+        }*/
     }
 
     @Override
@@ -192,20 +196,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    static class StaticHandler extends Handler {
+    public static class StaticHandler extends Handler {
         WeakReference<MainActivity> wrActivity;
+        boolean parser, extractor;
 
-        public StaticHandler(MainActivity activity) {
+        private StaticHandler(MainActivity activity) {
             wrActivity = new WeakReference<>(activity);
         }
+
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             MainActivity activity = wrActivity.get();
             if (activity == null) return;
-            if (msg.what == HANDLE_MESSAGE_PARSED)
-                activity.updateLine();
+            if (msg.what == HANDLE_MESSAGE_PARSED) parser = true;
+            if (msg.what == HANDLE_MESSAGE_EXTRACTED) extractor = true;
+            if (parser && extractor) activity.updateLine();
         }
     }
 }
