@@ -1,4 +1,4 @@
-package io.cyanlab.loinasd.wordllst.controller;
+package io.cyanlab.loinasd.wordllst.activities;
 
 import android.content.Intent;
 import android.os.Environment;
