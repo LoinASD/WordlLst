@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         });
         extractor.start();*/
 
-        TextExtractor.getExtractor().extract(iS);
+        TextExtractor.getNewExtractor().extract(iS);
 
         if (parsed == 1) {
             Message m = new Message();

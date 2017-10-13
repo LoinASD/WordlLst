@@ -28,6 +28,11 @@ public class TextExtractor {
         return instance;
     }
 
+    public static TextExtractor getNewExtractor() {
+        instance = new TextExtractor();
+        return instance;
+    }
+
     private TextExtractor(){}
 
     public void extract(InputStream io) {
