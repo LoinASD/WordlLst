@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -17,6 +18,8 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -56,7 +59,18 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
         dir = new File(CURRENT_PATH);
         //-----------------------------------//
         showDir(dir);
-
+        ImageButton ib = (ImageButton)this.findViewById(R.id.backButton);
+        View.OnClickListener backBut = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                File f = new File(CURRENT_PATH);
+                CURRENT_PATH = f.getParentFile().getAbsolutePath();
+                f = new File(CURRENT_PATH);
+                logger.log(Level.INFO, CURRENT_PATH);
+                showDir(f);
+            }
+        };
+        ib.setOnClickListener(backBut);
         lw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
@@ -77,19 +91,33 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     private void showDir(File dir) {
         way.setText(dir.getName());
         files = dir.list();
-        data = new ArrayList<>(files.length);
+        Arrays.sort(files,new SortedByName());
+        ArrayList<String> usefulFiles = new ArrayList<>();
+        data = new ArrayList<>();
         Map<String, Object> m;
         File f;
         for (String file : files) {
             f = new File(dir, file);
-            if (f.isDirectory()) img = R.drawable.folder;
-            else img = R.drawable.pdf;
-
+            if (f.isDirectory())
+                if (!file.startsWith(".")) {
+                    img = R.drawable.folder;
+                    usefulFiles.add(file);
+                }
+                else {
+                    continue;
+                }
+            else {
+                if (file.endsWith(".pdf")){
+                    img = R.drawable.pdf;
+                    usefulFiles.add(file);
+                }else continue;
+            }
             m = new HashMap<>();
             m.put(ATTRIBUTE_NAME_TEXT, file);
             m.put(ATTRIBUTE_NAME_IMAGE, img);
             data.add(m);
         }
+        usefulFiles.toArray(files);
         String[] from = { ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE };
         int[] to = { R.id.fileTextView, R.id.fileImageView };
         sa = new SimpleAdapter(this, data, R.layout.file_line, from, to);
@@ -102,6 +130,17 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
             File f = new File(CURRENT_PATH);
             CURRENT_PATH = f.getParent();
             showDir(f.getParentFile());
+        }
+    }
+
+    class SortedByName implements Comparator {
+        @Override
+        public int compare(Object o1, Object o2) {
+            String str1 = (String) o1;
+            String str2 = (String) o2;
+            str1 = str1.toUpperCase();
+            str2 = str2.toUpperCase();
+            return str1.compareTo(str2);
         }
     }
 }
