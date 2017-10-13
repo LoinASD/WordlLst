@@ -51,7 +51,7 @@ public class TextExtractor {
     private void parseCMap() throws IOException {
         converter = new CharConverter();
         String[] chars;
-        int count = 0;
+        int count;
         while (ch != -1) {
             lineStr = readLine();
             if (lineStr.endsWith("beginbfchar")){
@@ -59,8 +59,6 @@ public class TextExtractor {
                 for (int i = count; i > 0; i--) {
                     lineStr = readLine();
                     chars = lineStr.split(" ");
-                    String s = chars[0].substring(1, 5);
-                    int c = Integer.parseInt(s, 16);
                     int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
                     int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
                     converter.addNewRange(c1, c1, c2);
@@ -73,8 +71,19 @@ public class TextExtractor {
                     chars = lineStr.split(" ");
                     int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
                     int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
-                    int c3 = Integer.parseInt(chars[2].substring(1, 5), 16);
-                    converter.addNewRange(c1, c2, c3);
+                    if (lineStr.contains("[")) {
+                        String[] arr = lineStr.substring(
+                                lineStr.indexOf('[') + 1, lineStr.length() - 1).split(" ");
+                        int c, dif = c1;
+                        for (String s: arr) {
+                            c = Integer.parseInt(s.substring(1, 5), 16);
+                            converter.addNewRange(dif, dif, c);
+                            dif++;
+                        }
+                    } else {
+                        int c3 = Integer.parseInt(chars[2].substring(1, 5), 16);
+                        converter.addNewRange(c1, c2, c3);
+                    }
                 }
             }
 
