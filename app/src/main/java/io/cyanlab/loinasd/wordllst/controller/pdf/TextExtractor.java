@@ -1,5 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
+import android.content.Intent;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,29 +13,42 @@ import io.cyanlab.loinasd.wordllst.model.Facade;
 public class TextExtractor {
 
     private static int ch;
-    private final BufferedInputStream io;
+    private BufferedInputStream io;
     private ArrayList<Node> nodes = new ArrayList<>();
     private CharConverter converter = new CharConverter();
     private static String lineStr;
     private static boolean gotDictionary = false;
 
-    public TextExtractor(InputStream io) throws IOException {
+    private static TextExtractor instance;
+
+    public static TextExtractor getExtractor(){
+        if(instance == null){
+            instance = new TextExtractor();
+        }
+        return instance;
+    }
+
+    private TextExtractor(){}
+
+    public void extract(InputStream io) {
         this.io = new BufferedInputStream(io);
         ch = 0;
 
-        parse();
-        if (gotDictionary){
-            for (Node node: nodes) {
-                node.convertText(converter);
+        try {
+            parse();
+            if (gotDictionary){
+                for (Node node: nodes) {
+                    node.convertText(converter);
+                }
+                nodeCollect();
+                for (Node node : nodes) {
+                    System.out.println(node.getText());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
 
-            }
-            nodeCollect();
-            for (Node node : nodes) {
-                System.out.println(node.getText());
-            }
         }
-
-
     }
 
     private void parse() throws IOException {
@@ -141,7 +156,7 @@ public class TextExtractor {
         ArrayList<Node> newNodes = new ArrayList<>();
         boolean b = false;
         nodes.trimToSize();
-        //------DELETE EMPTY NODES AND CONCAT NODES WITH HYPH---??
+        //------DELETE EMPTY NODES AND CONCAT NODES WITH HYPHEN---??
         Node prev = nodes.get(0);
         for (Node node: nodes) {
             if (b) {

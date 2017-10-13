@@ -5,6 +5,7 @@ class Node {
     private double y;
     private String rawText;
     private String text;
+    private boolean isConverted = false;
 
     Node(double x, double y){
         this.x = x;
@@ -47,10 +48,8 @@ class Node {
                 i++;
             }
         }
-
-
-
         this.text = message.toString();
+        this.isConverted = true;
     }
 
     public double getX() {
@@ -78,5 +77,9 @@ class Node {
     }
 
     public void setText(String text) {this.text = text;}
+
+    private boolean isConverted() {
+        return isConverted;
+    }
 }
 

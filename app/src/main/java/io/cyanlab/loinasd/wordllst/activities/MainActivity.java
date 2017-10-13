@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,12 +16,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.ToggleButton;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
@@ -32,15 +36,17 @@ public class MainActivity extends AppCompatActivity {
 
 
     static final int REQUEST_CODE_FM = 1;
+    static final int HANDLE_MESSAGE_PARSED = 1;
     LayoutInflater wlInflater;
     WLView wlView;
     Facade facade;
     LinearLayout scroll;
-    Button button;
     ScrollView scrollView;
     DBHelper dbHelper;
     SQLiteDatabase database;
-    ToggleButton toggleButton;
+    ProgressBar pb;
+    Handler h;
+    Thread parser, extractor;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,14 +55,16 @@ public class MainActivity extends AppCompatActivity {
         //---------------------------------------------//
         scrollView = (ScrollView)findViewById(R.id.scrollView);
         facade = Facade.getFacade();
-        //toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
         dbHelper = new DBHelper(this);
         database = dbHelper.getWritableDatabase();
         wlView = new WLView(this);
         scroll = (LinearLayout)findViewById(R.id.scroll);
+        pb = (ProgressBar) findViewById(R.id.progressBar);
+        pb.setVisibility(ProgressBar.INVISIBLE);
+        h = new StaticHandler(this);
 
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
         wlView.setOrientation(LinearLayout.VERTICAL);
         scrollView.addView(wlView, lp);
         wlInflater = getLayoutInflater();
@@ -69,45 +77,7 @@ public class MainActivity extends AppCompatActivity {
         };
         //----------------------------------------------//
 
-        /*View.OnClickListener setEditable = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                View id = wlView.getChildAt(0).findViewById(R.id.primeTV);
-                if(id != null) {
-                    switch (wlView.getChildAt(0).findViewById(R.id.primeTV).getLayoutParams().height) {
-                        case (LinearLayout.LayoutParams.MATCH_PARENT): {
-                            break;
-                        }
-                        case (LinearLayout.LayoutParams.WRAP_CONTENT): {
-                            wlView.changeWlView();
-                            break;
-                        }
-                    }
-                    wlView.removeAllViews();
-                    //wlView.getEditableWordlist(wlInflater);
-                    wlView.setOnClickListener(null);
-                } else{
-                    dbHelper.saveWl(wlView.getWordlistName(),database,wlView);
-                    wlView.removeAllViews();
-                    wlView.getWordlistAsList(facade.getWordlistNumByName(wlView.getWordlistName()),wlInflater);
-                    wlView.setOnClickListener(change);
-                }
-            }
-        };*/
-
-
-        //toggleButton.setOnClickListener(setEditable);
-        //wlView.setOnClickListener(change);
-
-/*        */
-
-
-
-
-
         //-----------Other------------------
-
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -116,14 +86,21 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-
-            }
-        });*/
-
-        //-------------------------------//
+                        });*/
+        //------------------------------//
 
         //-------MY----------------//
-        wlInflater = getLayoutInflater();        //----------------------------------//
+        wlInflater = getLayoutInflater();
+    }
+
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        //TODO restore InstanceState
+    }
+
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //TODO save InstanceState
     }
 
     @Override
@@ -160,34 +137,74 @@ public class MainActivity extends AppCompatActivity {
         if (data == null) {return;}
         if (requestCode == REQUEST_CODE_FM) {
             if (resultCode == RESULT_OK) {
-                String file = data.getStringExtra("file");
+                pb.setVisibility(ProgressBar.VISIBLE);
+                final String file = data.getStringExtra("file");
                 System.out.println(file);
-                startParser(file);
-
+                parser = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        startParser(file);
+                    }
+                });
+                parser.start();
             }
         }
     }
     
     public void startParser(String file){
+
         ByteArrayOutputStream oS = new ByteArrayOutputStream();
         int parsed = PDFParser.parsePdf(file, oS);
-        ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
+        final ByteArrayInputStream iS = new ByteArrayInputStream(oS.toByteArray());
+
+        extractor = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                TextExtractor.getExtractor().extract(iS);
+            }
+        });
+        extractor.start();
 
         if (parsed == 1) {
-            try {
-                TextExtractor textExtractor = new TextExtractor(iS);
-                scroll.removeAllViews();
-                for(int i = 0; i<facade.getWordlistsNum();i++){
-                    WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
-                }
-                /*Snackbar.make(wlView, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();*/
+            Message m = new Message();
+            //m.setD;
+            h.sendEmptyMessage(HANDLE_MESSAGE_PARSED);
+            /*Snackbar.make(wlView, "Replace with your own action", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();*/
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        if (h != null)
+            h.removeCallbacksAndMessages(null);
+        super.onDestroy();
+    }
 
+    private void updateLine(){
+        //TODO: this method for update lines in real time
+        pb.setVisibility(ProgressBar.GONE);
+        scroll.removeAllViews();
+        for(int i = 0; i<facade.getWordlistsNum();i++){
+            WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
+        }
+    }
+
+    static class StaticHandler extends Handler {
+        WeakReference<MainActivity> wrActivity;
+
+        public StaticHandler(MainActivity activity) {
+            wrActivity = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            MainActivity activity = wrActivity.get();
+            if (activity == null) return;
+            if (msg.what == HANDLE_MESSAGE_PARSED)
+                activity.updateLine();
+        }
+    }
 }
