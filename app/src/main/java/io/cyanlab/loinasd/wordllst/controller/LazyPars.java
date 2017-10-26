@@ -123,4 +123,42 @@ class LazyPars {
         cursor.close();
     }
 
+    public static void saveNewWordlist(int wLNum, SQLiteDatabase database) {
+        Facade facade = Facade.getFacade();
+        String wLName = facade.getWlName(wLNum);
+        database.execSQL("create table " + wLName + " ("
+                + "_id integer primary key autoincrement,"
+                + "prim text,"
+                + "trans text" + ");");
+
+        ContentValues values = new ContentValues();
+        values.put("wlId", wLName);
+        database.insert("WordLists", null, values);
+
+        values.clear();
+        for (int i = 0; i < facade.getLinesCount(wLNum); i++) {
+            String k = "";
+            for (int j = 0; j < facade.getPrim(wLNum, i).size(); j++) {
+                String s = facade.getPrim(wLNum, i).get(j);
+                k += s;
+                if (j != facade.getPrim(wLNum, i).size() - 1) {
+                    k += "/";
+                }
+            }
+            values.put("prim", k);
+            k = "";
+
+            for (int j = 0; j < facade.getTrans(wLNum, i).size(); j++) {
+                String s = facade.getTrans(wLNum, i).get(j);
+                k += s;
+                if (j != facade.getTrans(wLNum, i).size() - 1) {
+                    k += "/";
+                }
+            }
+            values.put("trans", k);
+            database.insert(wLName, null, values);
+        }
+
+    }
+
 }

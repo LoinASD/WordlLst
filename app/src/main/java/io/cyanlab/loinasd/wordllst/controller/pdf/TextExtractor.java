@@ -1,6 +1,8 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import android.content.Intent;
+import android.os.Bundle;
+import android.os.Message;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -9,6 +11,7 @@ import java.io.PipedInputStream;
 import java.util.ArrayList;
 
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
+import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 import io.cyanlab.loinasd.wordllst.model.Facade;
 
 
@@ -38,7 +41,7 @@ public class TextExtractor {
 
     private TextExtractor(){}
 
-    public void extract(PipedInputStream io) {
+    public int extract(PipedInputStream io, DBHelper dbHelper) {
         isEnd = false;
         this.io = io;
         ch = 0;
@@ -49,15 +52,14 @@ public class TextExtractor {
                 for (Node node: nodes) {
                     node.convertText(converter);
                 }
-                nodeCollect();
-                for (Node node : nodes) {
-                    System.out.println(node.getText());
-                }
+                int wlNum = nodeCollect(dbHelper);
+                return wlNum;
             }
         } catch (IOException e) {
             e.printStackTrace();
 
         }
+        return -1;
     }
 
     private void parse() throws IOException {
@@ -166,7 +168,7 @@ public class TextExtractor {
         nodes.add(node);
     }
 
-    private void nodeCollect() {
+    private int nodeCollect(DBHelper dbHelper) {
         ArrayList<Node> newNodes = new ArrayList<>();
         boolean b = false;
         nodes.trimToSize();
@@ -217,8 +219,29 @@ public class TextExtractor {
 
         //--------------------------------------------//
         isEnd = true;
-        MainActivity.h.sendEmptyMessage(2);
-        Facade.getFacade().addNewWL(head.getText(),left, right);
+
+
+        String[] Names = dbHelper.loadWlsNames();
+        String wlName = head.getText().trim().replaceAll(" ", "_").replaceAll(":", "");
+        boolean isNew = true;
+        for (String s : Names) {
+            if (wlName.equals(s)) isNew = false;
+        }
+        Message msg = new Message();
+        Bundle data = new Bundle();
+        data.putString("wlName", null);
+        msg.what = 2;
+
+        if (isNew) {
+            boolean isWritten = dbHelper.saveNewWL(wlName, left, right);
+            if (isWritten) {
+                data.putString("wlName", wlName);
+            }
+        }
+        msg.setData(data);
+        MainActivity.h.sendMessage(msg);
+
+        return 0;
     }
 
     public boolean isEnd() { return isEnd; }

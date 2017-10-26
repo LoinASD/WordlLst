@@ -1,12 +1,14 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -14,14 +16,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.ToggleButton;
+import android.widget.SimpleCursorAdapter;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -34,50 +33,71 @@ import io.cyanlab.loinasd.wordllst.model.Facade;
 import io.cyanlab.loinasd.wordllst.view.*;
 import io.cyanlab.loinasd.wordllst.controller.*;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
 
 
     static final int REQUEST_CODE_FM = 1;
     static final int HANDLE_MESSAGE_PARSED = 1;
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
+    static final String PRIM_COLUMN_NAME = "prim";
+    static final String TRANS_COLUMN_NAME = "trans";
+    static final int HANDLE_MESSAGE_LOADWL = 3;
+
     LayoutInflater wlInflater;
-    WLView wlView;
+    ListView wlView;
     Facade facade;
     LinearLayout scroll;
-    ScrollView scrollView;
+    //ScrollView scrollView;
     DBHelper dbHelper;
     SQLiteDatabase database;
     ProgressBar pb;
     public static StaticHandler h;
     Thread parser, extractor;
+    SimpleCursorAdapter cursorAdapter;
+    MyCursorLoader loader;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         //---------------------------------------------//
-        scrollView = (ScrollView)findViewById(R.id.scrollView);
+        wlView = (ListView) findViewById(R.id.scrollView);
         facade = Facade.getFacade();
         dbHelper = new DBHelper(this);
         database = dbHelper.getWritableDatabase();
-        wlView = new WLView(this);
+        //wlView = new ListView(this);
         scroll = (LinearLayout)findViewById(R.id.scroll);
         pb = (ProgressBar) findViewById(R.id.progressBar);
         pb.setVisibility(ProgressBar.INVISIBLE);
+        ;
         h = new StaticHandler(this);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,9);
-        wlView.setOrientation(LinearLayout.VERTICAL);
-        scrollView.addView(wlView, lp);
+        //scrollView.addView(wlView,lp);
+
+        String[] from = {PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
+        int[] to = {R.id.primeTV, R.id.translateTV};
+
+        cursorAdapter = new SimpleCursorAdapter(this, R.layout.simple_line, null, from, to, 0);
+        wlView.setAdapter(cursorAdapter);
+
+        WLView.getWLsAsButtons(this, scroll, dbHelper);
+
         wlInflater = getLayoutInflater();
         final Activity act = this;
-        final View.OnClickListener change = new View.OnClickListener() {
+        wlInflater = getLayoutInflater();
+
+
+
+
+
+        /*final View.OnClickListener change = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 wlView.changeWlView();
             }
-        };
+        };*/
         //----------------------------------------------//
 
         //-----------Other------------------
@@ -93,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         //------------------------------//
 
         //-------MY----------------//
-        wlInflater = getLayoutInflater();
+
     }
 
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
@@ -132,6 +152,12 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.clear_database) {
+            dbHelper.clearDB();
+            scroll.removeAllViews();
+            wlView.setVisibility(View.GONE);
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -141,6 +167,8 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_FM) {
             if (resultCode == RESULT_OK) {
                 pb.setVisibility(ProgressBar.VISIBLE);
+                wlView.setVisibility(View.GONE);
+                scroll.setVisibility(View.GONE);
                 final String file = data.getStringExtra("file");
                 startParser(file);
             }
@@ -164,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    TextExtractor.getExtractor().extract(pin);
+                    int wlNum = TextExtractor.getNewExtractor().extract(pin, dbHelper);
                 }
             });
 
@@ -182,24 +210,58 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        dbHelper.close();
         if (h != null)
             h.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
-    private void updateLine(){
+    private void updateLine(String wlName) {
         //TODO: this method for update lines in real time
         pb.setVisibility(ProgressBar.GONE);
+        wlView.setVisibility(View.VISIBLE);
         scroll.removeAllViews();
-        for(int i = 0; i<facade.getWlsCount();i++){
-            WLView.getWordlistAsButton(i,this,wlView,wlInflater,scroll);
+        WLView.getWLsAsButtons(this, scroll, dbHelper);
+        scroll.setVisibility(View.VISIBLE);
+
+        if (wlName != null) {
+            loadWl(wlName);
         }
     }
 
+    public void loadWl(String wlName) {
+
+        if (loader == null) {
+            loader = new MyCursorLoader(this, wlName, dbHelper);
+            getSupportLoaderManager().initLoader(0, null, this);
+        } else {
+            loader.changeWlName(wlName);
+        }
+
+        getSupportLoaderManager().getLoader(0).forceLoad();
+    }
+
+    @Override
+    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return loader;
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+        cursorAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+
+    }
+
+
+
     public static class StaticHandler extends Handler {
         WeakReference<MainActivity> wrActivity;
-        boolean parser, extractor;
-
+        volatile boolean parser, extractor;
+        volatile String wlName = null;
         private StaticHandler(MainActivity activity) {
             wrActivity = new WeakReference<>(activity);
         }
@@ -210,9 +272,37 @@ public class MainActivity extends AppCompatActivity {
             super.handleMessage(msg);
             MainActivity activity = wrActivity.get();
             if (activity == null) return;
+            if (msg.what == HANDLE_MESSAGE_LOADWL)
+                activity.loadWl(msg.getData().getString("wlName"));
             if (msg.what == HANDLE_MESSAGE_PARSED) parser = true;
-            if (msg.what == HANDLE_MESSAGE_EXTRACTED) extractor = true;
-            if (parser && extractor) activity.updateLine();
+            if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
+                extractor = true;
+                wlName = msg.getData().getString("wlName");
+            }
+            if (parser && extractor) {
+                activity.updateLine(wlName);
+            }
+        }
+    }
+
+    static class MyCursorLoader extends android.support.v4.content.CursorLoader {
+
+        DBHelper dbHelper;
+        String wlName;
+
+        public MyCursorLoader(Context context, String wlName, DBHelper dbHelper) {
+            super(context);
+            this.dbHelper = dbHelper;
+            this.wlName = wlName;
+        }
+
+        public void changeWlName(String wlName) {
+            this.wlName = wlName;
+        }
+
+        @Override
+        public Cursor loadInBackground() {
+            return dbHelper.getData(wlName);
         }
     }
 }
