@@ -96,7 +96,8 @@
                     android:id="@+id/scroll"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:background="@color/colorPrimary"
+                    android:layout_marginEnd="8dp"
+                    android:background="@color/colorButtons"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 

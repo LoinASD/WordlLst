@@ -11,25 +11,11 @@ public class PDFParser {
 
     private static char cc;
     private static final String markerStream = "stream";
-    //private static final String markerObj = "obj";
-    //private static final String markerEndObj = "endobj";
     private static final String markerLength = "Length";
-    private static boolean isEnd = false;
-    private static PDFParser instance;
-
-    private PDFParser(){}
-
-    public static PDFParser getParser() {
-        if(instance == null) {
-            instance = new PDFParser();
-        }
-        return instance;
-    }
 
     /*Парсит все в этой жизни, пишет в 1 поток.*/
 
-    public static int parsePdf(final String file, final PipedOutputStream out) {
-        isEnd = false;
+    public void parsePdf(final String file, final PipedOutputStream out) {
         try {
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
@@ -87,14 +73,12 @@ public class PDFParser {
                     }
                 }
             }
-            isEnd = true;
             MainActivity.h.sendEmptyMessage(1);
             out.close();
-            return 1;
         } catch (FileNotFoundException e) {
-            return 0;
+            MainActivity.h.sendEmptyMessage(1);
         } catch (IOException e) {
-            return 0;
+            MainActivity.h.sendEmptyMessage(1);
         }
     }
 
@@ -113,24 +97,17 @@ public class PDFParser {
     }
 
 
-
-
-    // Возвращает 1 когда нашел и 0 когда не нашел Маркер
+    // Возвращает true когда нашел и false когда не нашел Маркер
 
     private static boolean search4Marker(InputStream inputStream, String marker) throws IOException{
-        boolean isMarker = true;
         for (int i = 1; i < marker.length(); i++) {
             cc = (char) inputStream.read();
             if (cc != marker.charAt(i)) {
-                isMarker= false;
-                break;
+                return false;
             }
         }
-        return isMarker;
+        return true;
     }
 
-    public boolean isEnd() {
-        return isEnd;
-    }
 
 }

@@ -134,6 +134,8 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+    //-------Sorts the list-------
+
     class SortedByName implements Comparator {
         @Override
         public int compare(Object o1, Object o2) {

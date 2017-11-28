@@ -1,72 +1,51 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.util.ArrayList;
 
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
-import io.cyanlab.loinasd.wordllst.model.Facade;
 
 
 public class TextExtractor {
 
     private static int ch;
     private PipedInputStream io;
-    private ArrayList<Node> nodes = new ArrayList<>();
     private CharConverter converter = new CharConverter();
     private static String lineStr;
     private static boolean gotDictionary = false;
-    private static boolean isEnd = false;
+    private String newWlName;
+    private boolean isExists = false;
+    private StringBuilder text;
 
-    private static TextExtractor instance;
-
-    public static TextExtractor getExtractor(){
-        if(instance == null){
-            instance = new TextExtractor();
-        }
-        return instance;
-    }
-
-    public static TextExtractor getNewExtractor() {
-        instance = new TextExtractor();
-        return instance;
-    }
-
-    private TextExtractor(){}
-
-    public int extract(PipedInputStream io, DBHelper dbHelper) {
-        isEnd = false;
+    public void extract(PipedInputStream io, DBHelper dbHelper) {
         this.io = io;
         ch = 0;
 
         try {
-            parse();
-            if (gotDictionary){
-                for (Node node: nodes) {
-                    node.convertText(converter);
-                }
-                int wlNum = nodeCollect(dbHelper);
-                return wlNum;
+            parse(dbHelper);
+            if ((gotDictionary) && (!isExists)) {
+                convertText();
+                nodeCollect(dbHelper);
+            } else {
+                MainActivity.h.sendEmptyMessage(4);
             }
+
         } catch (IOException e) {
             e.printStackTrace();
 
         }
-        return -1;
     }
 
-    private void parse() throws IOException {
-        while (ch != -1) {
+    private void parse(DBHelper dbHelper) throws IOException {
+        while ((ch != -1) && (!isExists)) {
             lineStr = readLine();
             if (lineStr.equals("BT")) {
-                textToken();
+                textToken(dbHelper);
             } else if (lineStr.equals("begincmap")){
                 parseCMap();
             }
@@ -121,19 +100,6 @@ public class TextExtractor {
 
     }
 
-    private void getCord(Node node) throws IOException {
-        ch = io.read();
-        while ((char) ch != '[') {
-            lineStr = readLine();
-            if (lineStr.endsWith("Tm")) {
-                String[] cord = lineStr.split(" ");
-                node.setX(Double.parseDouble(cord[4]));
-                node.setY(Double.parseDouble(cord[5]));
-            }
-            ch = io.read();
-        }
-    }
-
     private String readLine() throws IOException {
         StringBuilder l = new StringBuilder();
         while (true) {
@@ -155,94 +121,169 @@ public class TextExtractor {
         //return l.toString();
     }
 
-    private void textToken() throws IOException {
-        StringBuilder message = new StringBuilder();
-        Node node = new Node();
-        getCord(node);
-        ch = io.read();
-        while ((char) ch != ']'){
-            message.append((char) ch);
-            ch = io.read();
+    private void convertText() {
+        if (text != null) {
+            text.trimToSize();
+            String hotText = new String(text);
+            int i = 0;
+            char ch = hotText.charAt(i);
+            while (i < text.length() - 1) {
+                if (ch == '<') {
+                    StringBuilder rawMes = new StringBuilder();
+                    rawMes.append(ch);
+                    StringBuilder message = new StringBuilder();
+                    ch = hotText.charAt(++i);
+                    rawMes.append(ch);
+                    while (ch != '>') {
+                        StringBuilder rawSb = new StringBuilder();
+                        for (int j = 0; j < 4; j++) {
+                            rawSb.append(ch);
+                            ch = hotText.charAt(++i);
+                            rawMes.append(ch);
+                        }
+                        rawSb.trimToSize();
+                        char rus = converter.convert(Integer.parseInt(rawSb.toString(), 16));
+                        message.append(rus);
+                    }
+                    if (message != null) {
+                        hotText = hotText.replaceAll(new String(rawMes), new String(message));
+                        i = i - rawMes.length() + message.length();
+                    }
+
+                }
+                if (!(i < hotText.length() - 1)) {
+                    break;
+                }
+                ch = hotText.charAt(++i);
+            }
+            text = new StringBuilder(hotText);
         }
-        node.setRawText(message.toString().trim());
-        nodes.add(node);
     }
 
-    private int nodeCollect(DBHelper dbHelper) {
-        ArrayList<Node> newNodes = new ArrayList<>();
-        boolean b = false;
-        nodes.trimToSize();
-        //------DELETE EMPTY NODES AND CONCAT NODES WITH HYPHEN---??
-        Node prev = nodes.get(0);
-        for (Node node: nodes) {
-            String s = node.getText();
-            if (b) {
-                prev.setText(prev.getText() + node.getText());
-                b = false;
-                continue;
+    private void textToken(DBHelper dbHelper) throws IOException {
+
+        if (newWlName != null) {
+            while ((char) ch != '[') {
+                ch = io.read();
             }
-            if (node.getText().trim().equals("-") ||
-                    prev.getText().endsWith("/")) {
-                prev.setText(prev.getText() + node.getText());
-                b = true;
-                continue;
+            while ((char) ch != ']') {
+                while (((char) ch != '(') && ((char) ch != '<')) {
+                    ch = io.read();
+                }
+                if ((char) ch == '<') {
+                    text.append((char) ch);
+                    while ((char) ch != '>') {
+                        ch = io.read();
+                        text.append((char) ch);
+                    }
+                } else {
+                    ch = io.read();
+                    while ((char) ch != ')') {
+                        text.append((char) ch);
+                        ch = io.read();
+                    }
+                }
+                ch = io.read();
             }
-            if (!node.getText().equals(" ")) {
-                newNodes.add(node);
-                prev = node;
+            text.append(" ");
+        } else {
+            StringBuilder name = new StringBuilder();
+            ch = io.read();
+            while ((char) ch != '[') {
+                ch = io.read();
             }
+            ch = io.read();
+            while ((char) ch != ']') {
+                while ((char) ch != '(') {
+                    ch = io.read();
+                    if ((char) ch == '<') {
+                        name.append((char) ch);
+                        while ((char) ch != '>') {
+                            ch = io.read();
+                            name.append((char) ch);
+                        }
+                    }
+                }
+                ch = io.read();
+                while ((char) ch != ')') {
+                    name.append((char) ch);
+                    ch = io.read();
+                }
+                ch = io.read();
+            }
+            name.trimToSize();
+            newWlName = new String(name).trim().replaceAll(" ", "_").replaceAll(":", "");
+
+            for (String s : dbHelper.loadWlsNames()) {
+                if (newWlName.equals(s)) {
+                    isExists = true;
+                }
+            }
+            text = new StringBuilder();
+
         }
-        nodes = newNodes;
-        //-------------------------------------------------//
+    }
 
-        //-------SPREADING------------------------//
-        boolean toggle = false;
-        ArrayList<String> left = new ArrayList<>(),
-                right = new ArrayList<>(),
-                center = new ArrayList<>();
 
-        //String WLname = nodes.remove(0).getText();
+    private void nodeCollect(DBHelper dbHelper) {
+        ArrayList<String> prim = new ArrayList<>();
+        ArrayList<String> trans = new ArrayList<>();
 
-        Node head = nodes.get(0);
-        boolean notAHead = false;
-        //nodes.remove(head);
-        ArrayList<Double> X = new ArrayList<>(), Y = new ArrayList<>();
-        for (Node n : nodes) {
-            double x = n.getX();
-            double y = n.getY();
-            System.out.printf("x= %f, y= %f", x, y);
-            X.add(x); Y.add(y);
-            if (n.getY() != head.getY()) notAHead = true;
-            if (n.getX() < 300) left.add(n.getText());
-            else right.add(n.getText());
+        text.trimToSize();
+
+        int end = 0;
+        char cc = text.charAt(end);
+        int lang = LangChecker.langCheck(cc);
+        while (lang != LangChecker.LANG_ENG) {
+
+            end++;
+            lang = LangChecker.langCheck(text.charAt(end));
+
         }
 
-        //--------------------------------------------//
-        isEnd = true;
+        int start = end;
 
+        boolean switcher = true;
 
-        String[] Names = dbHelper.loadWlsNames();
-        String wlName = head.getText().trim().replaceAll(" ", "_").replaceAll(":", "");
-        boolean isNew = true;
-        for (String s : Names) {
-            if (wlName.equals(s)) isNew = false;
+        while (end < text.length() - 1) {
+
+            StringBuilder node = new StringBuilder();
+            cc = text.charAt(start);
+
+            while (((lang == LangChecker.langCheck(text.charAt(start))) || (lang == -1)) && (end < text.length() - 1)) {
+                node.append(cc);
+                cc = text.charAt(++end);
+                lang = LangChecker.langCheck(text.charAt(end));
+            }
+
+            start = end;
+
+            if (switcher) {
+                prim.add(new String(node).trim());
+            } else {
+                trans.add(new String(node).trim());
+            }
+
+            switcher = !switcher;
+
         }
+
+        String wlName = newWlName;
         Message msg = new Message();
         Bundle data = new Bundle();
         data.putString("wlName", null);
         msg.what = 2;
 
-        if (isNew) {
-            boolean isWritten = dbHelper.saveNewWL(wlName, left, right);
-            if (isWritten) {
-                data.putString("wlName", wlName);
-            }
+        boolean isWritten = false;
+        if (!isExists) {
+            isWritten = dbHelper.saveNewWL(wlName, prim, trans);
         }
+        if (isWritten) {
+            data.putString("wlName", wlName);
+        }
+
         msg.setData(data);
         MainActivity.h.sendMessage(msg);
 
-        return 0;
     }
-
-    public boolean isEnd() { return isEnd; }
 }

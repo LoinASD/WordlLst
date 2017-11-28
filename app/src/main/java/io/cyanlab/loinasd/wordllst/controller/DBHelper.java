@@ -4,25 +4,22 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
-import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
-import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
-import io.cyanlab.loinasd.wordllst.model.Facade;
-import io.cyanlab.loinasd.wordllst.view.WLView;
-
+import io.cyanlab.loinasd.wordllst.R;
 
 public class DBHelper extends SQLiteOpenHelper {
     public DBHelper (Context context){
         super(context,"Hs",null,1);
     }
 
-    private Facade facade = Facade.getFacade();
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table WordLists ("
@@ -32,21 +29,13 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-    }
-
-    public void loadAllWLs(SQLiteDatabase db) {
-        LazyPars.loadWls(db);
     }
 
     @Override
-    public void onOpen(SQLiteDatabase db){
-        //LazyPars.loadWls(db);
+    public void onOpen(SQLiteDatabase db) {
     }
 
-    public void saveWl(String s, SQLiteDatabase db, WLView wlView){
-
-    }
+    //-------Returns Array of Strings with saved WL names-------//
 
     public String[] loadWlsNames() {
         Cursor cursor = this.getWritableDatabase().query("Wordlists", null, null, null, null, null, null);
@@ -60,6 +49,24 @@ public class DBHelper extends SQLiteOpenHelper {
         return Names;
     }
 
+    //-------Saves Edited Wordlist-------//
+
+    public void saveWL(String wordlistName, ListView wlView) {
+        SQLiteDatabase database = this.getWritableDatabase();
+        for (int i = 0; i < wlView.getChildCount(); i++) {
+            EditText primET = (EditText) (wlView.getChildAt(i)).findViewById(R.id.primeTV);
+            EditText transET = (EditText) (wlView.getChildAt(i)).findViewById(R.id.translateTV);
+            TextView idTV = (TextView) wlView.getChildAt(i).findViewById(R.id.idPlace);
+            int id = Integer.parseInt(idTV.getText().toString());
+            ContentValues cv = new ContentValues();
+            cv.put("prim", primET.getText().toString());
+            cv.put("trans", transET.getText().toString());
+            cv.put("_id", id);
+            database.replace(wordlistName, null, cv);
+        }
+    }
+
+    //-------Saves new Wordlist. If successful, returns true-------//
 
     public boolean saveNewWL(String wLName, ArrayList<String> prim, ArrayList<String> trans) {
         if (prim.size() == trans.size()) {
@@ -85,6 +92,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 }
                 successful = true;
                 this.getWritableDatabase().setTransactionSuccessful();
+            } catch (SQLiteException e) {
+                return false;
             } finally {
                 getWritableDatabase().endTransaction();
             }
@@ -95,10 +104,21 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-
+    //-------Returns Cursor From WL Table-------//
     public Cursor getData(String wlName) {
         return this.getWritableDatabase().query(wlName, null, null, null, null, null, null);
     }
+
+    //-------Removes Wordlist from DB-------//
+
+    public void deleteWL(String wlName) {
+        SQLiteDatabase database = getWritableDatabase();
+        database.execSQL("DROP TABLE IF EXISTS " + wlName);
+        database.delete("Wordlists", "wlId = ?", new String[]{wlName});
+        database.execSQL("VACUUM");
+    }
+
+    //-------Suppose it clears out the DB-------//
 
     public void clearDB() {
         SQLiteDatabase database = getWritableDatabase();
