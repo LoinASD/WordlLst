@@ -134,16 +134,23 @@ public class TextExtractor {
                     StringBuilder message = new StringBuilder();
                     ch = hotText.charAt(++i);
                     rawMes.append(ch);
-                    while (ch != '>') {
-                        StringBuilder rawSb = new StringBuilder();
-                        for (int j = 0; j < 4; j++) {
-                            rawSb.append(ch);
-                            ch = hotText.charAt(++i);
-                            rawMes.append(ch);
+                    if (ch != '<') {
+                        while (ch != '>') {
+                            StringBuilder rawSb = new StringBuilder();
+                            for (int j = 0; j < 4; j++) {
+                                rawSb.append(ch);
+                                ch = hotText.charAt(++i);
+                                rawMes.append(ch);
+                            }
+                            rawSb.trimToSize();
+                            char rus = 0;
+                            if (rawSb.indexOf("<") == -1) {
+                                rus = converter.convert(Integer.parseInt(rawSb.toString(), 16));
+                            } else {
+                                break;
+                            }
+                            message.append(rus);
                         }
-                        rawSb.trimToSize();
-                        char rus = converter.convert(Integer.parseInt(rawSb.toString(), 16));
-                        message.append(rus);
                     }
                     if (message != null) {
                         hotText = hotText.replaceAll(new String(rawMes), new String(message));
@@ -234,6 +241,7 @@ public class TextExtractor {
         int end = 0;
         char cc = text.charAt(end);
         int lang = LangChecker.langCheck(cc);
+
         while (lang != LangChecker.LANG_ENG) {
 
             end++;
@@ -250,8 +258,11 @@ public class TextExtractor {
             StringBuilder node = new StringBuilder();
             cc = text.charAt(start);
 
-            while (((lang == LangChecker.langCheck(text.charAt(start))) || (lang == -1)) && (end < text.length() - 1)) {
-                node.append(cc);
+
+            while (((lang == -1) || ((LangChecker.langCheck(text.charAt(start)) == 2) && ((lang == 0) || (lang == -1))) || (lang == LangChecker.langCheck(text.charAt(start)))) && (end < text.length() - 1)) {
+                if ((lang != 2) && (cc != '.')) {
+                    node.append(cc);
+                }
                 cc = text.charAt(++end);
                 lang = LangChecker.langCheck(text.charAt(end));
             }

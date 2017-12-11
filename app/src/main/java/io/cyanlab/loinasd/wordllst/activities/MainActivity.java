@@ -1,6 +1,6 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
-import android.content.ClipData;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,14 +10,20 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -33,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
 
     static final int REQUEST_CODE_FM = 1;
+    static final int REQUEST_CODE_CHANGE = 2;
+    static final int REQUEST_CODE_DELETEWL = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
@@ -44,15 +52,17 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     LinearLayout scroll;
     DBHelper dbHelper;
     SQLiteDatabase database;
-    ProgressBar pb;
+    ProgressBar pbx;
+    LinearLayout pb;
+    TextView pbText;
     public static StaticHandler h;
     Thread parser, extractor;
     SimpleCursorAdapter cursorAdapter;
     MyCursorLoader loader;
-    boolean isBeingChanged;
     boolean isDeletable;
-    boolean isChangable;
     boolean isAddable;
+    LayoutInflater inflater;
+
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,24 +71,43 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         //---------------------------------------------//
         wlView = (ListView) findViewById(R.id.scrollView);
         scroll = (LinearLayout)findViewById(R.id.scroll);
-        pb = (ProgressBar) findViewById(R.id.progressBar);
+        pb = (LinearLayout) findViewById(R.id.PB);
         pb.setVisibility(ProgressBar.INVISIBLE);
-
+        pbText = (TextView) findViewById(R.id.pbText);
+        inflater = getLayoutInflater();
 
         h = new StaticHandler(this);
 
-        dbHelper = new DBHelper(this);
+        dbHelper = DBHelper.getDBHelper(this);
         database = dbHelper.getWritableDatabase();
 
         setAdapter(R.layout.simple_line);
-        isBeingChanged = false;
+
         isDeletable = false;
-        isChangable = false;
         isAddable = true;
+
 
         getWLsAsButtons(scroll, dbHelper);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        registerForContextMenu(wlView);
+
+        wlView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                int lineId = Integer.parseInt(((Cursor) wlView.getItemAtPosition(position)).getString(((Cursor) wlView.getItemAtPosition(position)).getColumnIndex("_id")));
+                Intent changeLine = new Intent(getBaseContext(), ChangingWLActivity.class);
+                changeLine.putExtra("ID", lineId);
+                changeLine.putExtra("Name", loader.wlName);
+                changeLine.putExtra("Action", "Change");
+                startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
+                setResult(RESULT_OK, changeLine);
+
+                return false;
+            }
+        });
 
     }
 
@@ -98,65 +127,29 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        if (id == R.id.deleteWl) {
 
-        if (id == R.id.addWL) {
-            isDeletable = false;
-            isChangable = false;
-            isAddable = false;
-            Intent fileManager = new Intent(this, FileManagerActivity.class);
-            startActivityForResult(fileManager, REQUEST_CODE_FM);
-            setResult(RESULT_OK, fileManager);
-            return true;
+            Intent deleteWL = new Intent(getBaseContext(), ChangingWLActivity.class);
+            deleteWL.putExtra("Action", "Delete");
+            deleteWL.putExtra("Name", loader.wlName);
+            startActivityForResult(deleteWL, REQUEST_CODE_DELETEWL);
+            setResult(RESULT_OK, deleteWL);
+
         }
 
         if (id == R.id.clear_database) {
             isDeletable = false;
-            isChangable = false;
             isAddable = true;
             dbHelper.clearDB();
-            scroll.removeAllViews();
-            wlView.setVisibility(View.GONE);
-            loader.wlName = null;
-        }
-
-        if (id == R.id.changeWL) {
-            if ((!isBeingChanged) && (loader != null)) {
-                isBeingChanged = !isBeingChanged;
-                setAdapter(R.layout.editable_line);
-                wlView.setVisibility(View.INVISIBLE);
-                pb.setVisibility(ProgressBar.VISIBLE);
-                loadWl(loader.wlName);
-                pb.setVisibility(ProgressBar.GONE);
-                wlView.setVisibility(View.VISIBLE);
-                isDeletable = false;
-                isAddable = false;
-                scroll.setVisibility(View.INVISIBLE);
-
-            } else {
-                wlView.setVisibility(View.INVISIBLE);
-                pb.setVisibility(ProgressBar.VISIBLE);
-                dbHelper.saveWL(loader.wlName, wlView);
-                setAdapter(R.layout.simple_line);
-                loadWl(loader.wlName);
-                pb.setVisibility(ProgressBar.GONE);
-                wlView.setVisibility(View.VISIBLE);
-                isBeingChanged = !isBeingChanged;
-                scroll.setVisibility(View.VISIBLE);
-            }
-        }
-
-        if (id == R.id.deleteWl) {
-            scroll.removeAllViews();
-            dbHelper.deleteWL(loader.wlName);
-            loader.wlName = null;
-            wlView.setVisibility(View.GONE);
             getWLsAsButtons(scroll, dbHelper);
-            isDeletable = false;
-            isChangable = false;
-            isAddable = true;
+            wlView.setVisibility(View.GONE);
+            loader.wlName = null;
+        }
+
+        if (id == R.id.begin_dnd_test) {
+            Intent testWl = new Intent(getBaseContext(), DnDTestActivity.class);
+            testWl.putExtra("Name", loader.wlName);
+            startActivity(testWl);
         }
 
         invalidateOptionsMenu();
@@ -166,13 +159,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.deleteWl).setVisible(isDeletable);
-        menu.findItem(R.id.changeWL).setVisible(isChangable);
-        menu.findItem(R.id.addWL).setVisible(isAddable);
-        if (isBeingChanged) {
-            menu.findItem(R.id.changeWL).setIcon(android.R.drawable.ic_menu_save);
-        } else {
-            menu.findItem(R.id.changeWL).setIcon(android.R.drawable.ic_menu_edit);
-        }
+        menu.findItem(R.id.begin_dnd_test).setVisible(isDeletable);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -180,14 +167,35 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (data == null) {return;}
         if (requestCode == REQUEST_CODE_FM) {
             if (resultCode == RESULT_OK) {
                 pb.setVisibility(ProgressBar.VISIBLE);
+                pbText.setText("Parsing PDF...");
                 wlView.setVisibility(View.GONE);
                 scroll.setVisibility(View.GONE);
                 final String file = data.getStringExtra("file");
                 startParser(file);
+            } else {
+                scroll.removeAllViews();
+                getWLsAsButtons(scroll, dbHelper);
+                loadWl(data.getStringExtra("Name"));
+            }
+        }
+        if (requestCode == REQUEST_CODE_CHANGE) {
+            if (resultCode == RESULT_OK) {
+                loadWl(data.getStringExtra("Name"));
+            }
+        }
+
+        if (requestCode == REQUEST_CODE_DELETEWL) {
+            if (resultCode == RESULT_OK) {
+                isDeletable = false;
+                dbHelper.deleteWL(data.getStringExtra("Name"));
+                scroll.removeAllViews();
+                getWLsAsButtons(scroll, dbHelper);
+                loader.wlName = null;
+                wlView.setVisibility(View.GONE);
+                invalidateOptionsMenu();
             }
         }
     }
@@ -240,7 +248,10 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             super.handleMessage(msg);
             MainActivity activity = wrActivity.get();
             if (activity == null) return;
-            if (msg.what == HANDLE_MESSAGE_PARSED) parser = true;
+            if (msg.what == HANDLE_MESSAGE_PARSED) {
+                parser = true;
+                activity.pbText.setText("Extrackting Text...");
+            }
             if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
                 extractor = true;
                 wlName = msg.getData().getString("wlName");
@@ -260,34 +271,13 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     //-------Adapter-------//
 
     void setAdapter(int layout) {
-        String[] from;
-        int[] to;
-        switch (layout) {
-            case (R.layout.simple_line): {
-                String[] from1 = {PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
-                from = from1;
-                int[] to1 = {R.id.primeTV, R.id.translateTV};
-                to = to1;
-                break;
-            }
-            case (R.layout.editable_line): {
-                String[] from1 = {"_id", PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
-                from = from1;
-                int[] to1 = {R.id.idPlace, R.id.primeTV, R.id.translateTV};
-                to = to1;
-                break;
-            }
-            default: {
-                String[] from1 = {PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
-                from = from1;
-                int[] to1 = {R.id.primeTV, R.id.translateTV};
-                to = to1;
-            }
-        }
 
+        String[] from = {"_id", PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
+        int[] to = {R.id.idPlace, R.id.primeTV, R.id.translateTV};
         cursorAdapter = new SimpleCursorAdapter(this, layout, null, from, to, 0);
         wlView.setAdapter(cursorAdapter);
-        wlView.setClickable(false);
+
+
     }
 
     @Override
@@ -325,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         }
     }
 
+
     //-------Wordlist Load-------//
 
     private void updateLine(String wlName) {
@@ -351,11 +342,8 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         }
 
         isDeletable = true;
-        isChangable = true;
         isAddable = true;
-        if (!isBeingChanged) {
-            invalidateOptionsMenu();
-        }
+        invalidateOptionsMenu();
 
         getSupportLoaderManager().getLoader(0).forceLoad();
     }
@@ -381,6 +369,20 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             button.setOnClickListener(onClickListener);
             linearLayout.addView(button);
         }
+        ImageButton im = new ImageButton(this);
+        im.setImageResource(android.R.drawable.ic_menu_add);
+        final Activity act = this;
+        im.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isDeletable = false;
+                isAddable = false;
+                Intent fileManager = new Intent(act, FileManagerActivity.class);
+                startActivityForResult(fileManager, REQUEST_CODE_FM);
+                setResult(RESULT_OK, fileManager);
+            }
+        });
+        linearLayout.addView(im);
     }
 
     //-------Activity LiveCircle-------//

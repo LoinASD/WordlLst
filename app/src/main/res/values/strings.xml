@@ -5,4 +5,7 @@
     <string name="clear_database">Clear Database</string>
     <string name="change_wordlist">Change WordList</string>
     <string name="delete_wl">Delete Wordlist</string>
+    <string name="change_line">Edit</string>
+    <string name="begin_dnd_test">Begin Test</string>
+
 </resources>

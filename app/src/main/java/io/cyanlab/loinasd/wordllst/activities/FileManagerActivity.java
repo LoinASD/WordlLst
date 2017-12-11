@@ -5,6 +5,8 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,6 +29,7 @@ import java.util.logging.Logger;
 import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 
 public class FileManagerActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -37,6 +40,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     private static int img;
     private static ArrayAdapter<String> adapter;
     private static  SimpleAdapter sa;
+    static final int REQUEST_CODE_ADD = 1;
     private static final String ATTRIBUTE_NAME_TEXT = "text";
     private static final String ATTRIBUTE_NAME_IMAGE = "image";
     private static String CURRENT_PATH = "/sdcard/storage/0/Download";
@@ -144,6 +148,38 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
             str1 = str1.toUpperCase();
             str2 = str2.toUpperCase();
             return str1.compareTo(str2);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.line_context_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        switch (id) {
+            case (R.id.addNewWL): {
+                Intent addWL = new Intent(this, ChangingWLActivity.class);
+                addWL.putExtra("Action", "Add");
+                startActivityForResult(addWL, REQUEST_CODE_ADD);
+                setResult(RESULT_OK, addWL);
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data != null) {
+            DBHelper.getDBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+            setResult(RESULT_CANCELED, data);
+            finish();
         }
     }
 }

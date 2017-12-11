@@ -7,7 +7,7 @@
 
     <EditText
         android:id="@+id/primeTV"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:ems="10"
@@ -22,7 +22,7 @@
 
     <EditText
         android:id="@+id/translateTV"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:ems="10"
