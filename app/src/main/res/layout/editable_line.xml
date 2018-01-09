@@ -6,16 +6,23 @@
     android:orientation="horizontal">
 
     <EditText
-        android:id="@+id/primeET"
-        android:layout_width="0dp"
+        android:id="@+id/primeTV"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:ems="10"
         android:inputType="text" />
 
-    <EditText
-        android:id="@+id/transET"
+    <TextView
+        android:id="@+id/idPlace"
         android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="0"
+        android:text="TextView" />
+
+    <EditText
+        android:id="@+id/translateTV"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:ems="10"

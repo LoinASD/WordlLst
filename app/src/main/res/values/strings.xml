@@ -1,5 +1,12 @@
 <resources>
-    <string name="app_name">WordlLst</string>
+    <string name="app_name">WordList</string>
     <string name="action_settings">Settings</string>
     <string name="add_wordlist">Add WordList</string>
+    <string name="clear_database">Clear Database</string>
+    <string name="change_wordlist">Change WordList</string>
+    <string name="delete_wl">Delete Wordlist</string>
+    <string name="change_line">Edit</string>
+    <string name="begin_dnd_test">Begin Test</string>
+    <string name="begin_card_test">Begin Card Test</string>
+
 </resources>
