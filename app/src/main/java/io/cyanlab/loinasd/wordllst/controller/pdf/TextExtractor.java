@@ -1,5 +1,8 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.os.Message;
 
@@ -21,6 +24,8 @@ public class TextExtractor {
     private String newWlName;
     private boolean isExists = false;
     private StringBuilder text;
+    private int range;
+
 
     public void extract(PipedInputStream io, DBHelper dbHelper) {
         this.io = io;
@@ -54,18 +59,22 @@ public class TextExtractor {
     }
 
     private void parseCMap() throws IOException {
-        converter = new CharConverter();
         String[] chars;
         int count;
         while (ch != -1) {
             lineStr = readLine();
+            if (lineStr.endsWith("begincodespacerange")) {
+                range = readLine().split(" ")[0].length() - 2;
+
+            }
+
             if (lineStr.endsWith("beginbfchar")){
                 count = Integer.parseInt("" + lineStr.charAt(0));
                 for (int i = count; i > 0; i--) {
                     lineStr = readLine();
                     chars = lineStr.split(" ");
-                    int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
-                    int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
+                    int c1 = Integer.parseInt(chars[0].substring(1, range + 1), 16);
+                    int c2 = Integer.parseInt(chars[1].substring(1, range + 1), 16);
                     converter.addNewRange(c1, c1, c2);
                 }
             }
@@ -74,19 +83,25 @@ public class TextExtractor {
                 for (int i = count; i > 0; i--) {
                     lineStr = readLine();
                     chars = lineStr.split(" ");
-                    int c1 = Integer.parseInt(chars[0].substring(1, 5), 16);
-                    int c2 = Integer.parseInt(chars[1].substring(1, 5), 16);
+                    String strC1 = chars[0].substring(1, range + 1);
+                    String strC2 = chars[1].substring(1, range + 1);
+                    System.out.printf("%nc1 = %s; c2 = %s%n", strC1, strC2);
+                    int c1 = Integer.parseInt(strC1, 16);
+                    int c2 = Integer.parseInt(strC2, 16);
+                    System.out.printf("int: c1 = %d; c2 = %d", c1, c2);
                     if (lineStr.contains("[")) {
                         String[] arr = lineStr.substring(
                                 lineStr.indexOf('[') + 1, lineStr.length() - 1).split(" ");
                         int c, dif = c1;
                         for (String s: arr) {
-                            c = Integer.parseInt(s.substring(1, 5), 16);
+                            c = Integer.parseInt(s.substring(1, range + 1), 16);
                             converter.addNewRange(dif, dif, c);
                             dif++;
                         }
                     } else {
-                        int c3 = Integer.parseInt(chars[2].substring(1, 5), 16);
+                        String strC3 = chars[2].substring(1, range + 1);
+                        int c3 = Integer.parseInt(strC3, 16);
+                        System.out.printf("%nc3 = %s; int3: %d%n", strC3, c3);
                         converter.addNewRange(c1, c2, c3);
                     }
                 }
@@ -137,7 +152,7 @@ public class TextExtractor {
                     if (ch != '<') {
                         while (ch != '>') {
                             StringBuilder rawSb = new StringBuilder();
-                            for (int j = 0; j < 4; j++) {
+                            for (int j = 0; j < range; j++) {
                                 rawSb.append(ch);
                                 ch = hotText.charAt(++i);
                                 rawMes.append(ch);
@@ -253,30 +268,138 @@ public class TextExtractor {
 
         boolean switcher = true;
 
-        while (end < text.length() - 1) {
+        DBHelper.getInstance().getWritableDatabase().beginTransaction();
+        boolean isWritten = false;
 
-            StringBuilder node = new StringBuilder();
-            cc = text.charAt(start);
+        try {
+            boolean isBrackets = false;
+
+            SQLiteDatabase database = DBHelper.getInstance().getWritableDatabase();
+
+            database.execSQL("create table " + newWlName + " ("
+                    + "_id integer primary key autoincrement,"
+                    + "prim text,"
+                    + "trans text,"
+                    + "position integer" + ");");
+
+            ContentValues values = new ContentValues();
+            values.put("wlId", newWlName);
+            database.insert("WordLists", null, values);
+
+            values.clear();
+            int count = 0;
 
 
-            while (((lang == -1) || ((LangChecker.langCheck(text.charAt(start)) == 2) && ((lang == 0) || (lang == -1))) || (lang == LangChecker.langCheck(text.charAt(start)))) && (end < text.length() - 1)) {
-                if ((lang != 2) && (cc != '.')) {
-                    node.append(cc);
+            /*String[] words = text.toString().split(" ");
+
+            int i = 0;
+
+            while (i < words.length){
+                StringBuilder node = new StringBuilder();
+                while (i < words.length && words[i].length() == 0){
+                    i++;
                 }
-                cc = text.charAt(++end);
-                lang = LangChecker.langCheck(text.charAt(end));
+                lang = LangChecker.langCheck(words[i].charAt(0));
+                while(i < words.length && (words[i].length() == 0 || (switcher && LangChecker.langCheck(words[i].charAt(0)) != LangChecker.LANG_RUS)||(!switcher && LangChecker.langCheck(words[i].charAt(0)) != LangChecker.LANG_ENG))){
+                    node.append(words[i]+ " ");
+                    i++;
+                }
+
+                if (switcher) {
+
+                    values.put("prim", new String(node).replaceAll("/", ", ").trim());
+
+
+                } else {
+                    String nodeStr = new String(node).trim();
+
+                    nodeStr = nodeStr.substring(0,1).toUpperCase()+nodeStr.substring(1);
+                    values.put("trans", nodeStr.replaceAll("/", ", ").trim());
+                    values.put("position", count++);
+                    database.insert(newWlName, null, values);
+                    values.clear();
+                }
+
+                switcher = !switcher;
+
+            }
+            if (values.getAsString("prim") != null){
+                values.put("trans", "");
+                values.put("position", count++);
+                database.insert(newWlName, null, values);
+                values.clear();
             }
 
-            start = end;
+            for (i = 0; i< 3; i++){
+                values.put("prim", "");
+                values.put("trans", "");
+                values.put("position", count++);
+                database.insert(newWlName, null, values);
+                values.clear();
+            }*/
 
-            if (switcher) {
-                prim.add(new String(node).trim());
-            } else {
-                trans.add(new String(node).trim());
+
+            while (end < text.length() - 1) {
+
+                StringBuilder node = new StringBuilder();
+                cc = text.charAt(start);
+
+
+                while (end < text.length() - 1 &&
+                        ((switcher && LangChecker.langCheck(text.charAt(end)) != LangChecker.LANG_RUS) ||
+                                (!switcher && LangChecker.langCheck(text.charAt(end)) != LangChecker.LANG_ENG))) {
+
+                    if ((int) cc == 92) {
+                        if (!isBrackets) {
+                            isBrackets = true;
+                        } else {
+                            node.append(')');
+                            isBrackets = false;
+                        }
+                        cc = text.charAt(++end);
+                        lang = LangChecker.langCheck(text.charAt(end));
+                    }
+
+                    if ((lang != 2) && (cc != '.')) {
+                        node.append(cc);
+                    }
+                    cc = text.charAt(++end);
+                    lang = LangChecker.langCheck(text.charAt(end));
+                }
+
+                start = end;
+
+
+                if (switcher) {
+
+                    values.put("prim", new String(node).replaceAll("/", ", ").trim());
+
+
+                } else {
+                    String nodeStr = new String(node).trim();
+
+                    nodeStr = nodeStr.substring(0, 1).toUpperCase() + nodeStr.substring(1);
+                    values.put("trans", nodeStr.replaceAll("/", ", ").trim());
+                    values.put("position", count++);
+                    database.insert(newWlName, null, values);
+                    values.clear();
+                }
+
+                switcher = !switcher;
+
             }
-
-            switcher = !switcher;
-
+            if (values.getAsString("prim") != null) {
+                values.put("trans", "");
+                values.put("position", count++);
+                database.insert(newWlName, null, values);
+                values.clear();
+            }
+            database.setTransactionSuccessful();
+            isWritten = true;
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            DBHelper.getInstance().getWritableDatabase().endTransaction();
         }
 
         String wlName = newWlName;
@@ -285,16 +408,15 @@ public class TextExtractor {
         data.putString("wlName", null);
         msg.what = 2;
 
-        boolean isWritten = false;
-        if (!isExists) {
+
+        /*if (!isExists) {
             isWritten = dbHelper.saveNewWL(wlName, prim, trans);
-        }
+        }*/
         if (isWritten) {
             data.putString("wlName", wlName);
         }
 
         msg.setData(data);
         MainActivity.h.sendMessage(msg);
-
     }
 }

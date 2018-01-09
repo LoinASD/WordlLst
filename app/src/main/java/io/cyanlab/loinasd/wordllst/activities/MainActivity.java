@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     static final String PRIM_COLUMN_NAME = "prim";
     static final String TRANS_COLUMN_NAME = "trans";
 
+    public static final boolean DEBUG_MODE = true;
+
 
     ListView wlView;
     LinearLayout scroll;
@@ -148,6 +150,11 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         if (id == R.id.begin_dnd_test) {
             Intent testWl = new Intent(getBaseContext(), DnDTestActivity.class);
+            testWl.putExtra("Name", loader.wlName);
+            startActivity(testWl);
+        }
+        if (id == R.id.begin_card_test) {
+            Intent testWl = new Intent(getBaseContext(), CardTestActivity.class);
             testWl.putExtra("Name", loader.wlName);
             startActivity(testWl);
         }

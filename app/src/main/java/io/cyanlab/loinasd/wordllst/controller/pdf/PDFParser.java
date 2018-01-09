@@ -91,8 +91,8 @@ public class PDFParser {
         byte[] result = new byte[length * 10];
         int resultLength = decompressor.inflate(result);
         decompressor.end();
-        String outputString = new String(result, 0, resultLength, "UTF-8");
-        System.out.print(outputString);
+
+
         out.write(result, 0, resultLength);
     }
 

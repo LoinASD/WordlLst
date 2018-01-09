@@ -8,6 +8,10 @@
         android:title="@string/begin_dnd_test"
         app:showAsAction="never" />
     <item
+        android:id="@+id/begin_card_test"
+        android:orderInCategory="104"
+        android:title="@string/begin_card_test" />
+    <item
         android:id="@+id/deleteWl"
         android:enabled="true"
         android:icon="@android:drawable/ic_menu_delete"
@@ -17,7 +21,7 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/clear_database"
-        android:orderInCategory="104"
+        android:orderInCategory="105"
         android:title="@string/clear_database"
         app:showAsAction="never" />
 </menu>

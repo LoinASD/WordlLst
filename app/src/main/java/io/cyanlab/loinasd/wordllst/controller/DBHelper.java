@@ -25,6 +25,10 @@ public class DBHelper extends SQLiteOpenHelper {
         super(context,"Hs",null,1);
     }
 
+    public static DBHelper getInstance() {
+        return instance;
+    }
+
     public static DBHelper getDBHelper(Context context) {
         if (instance == null) {
             return instance = new DBHelper(context);
