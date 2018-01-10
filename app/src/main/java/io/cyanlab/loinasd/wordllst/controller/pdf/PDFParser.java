@@ -73,12 +73,12 @@ public class PDFParser {
                     }
                 }
             }
-            MainActivity.h.sendEmptyMessage(1);
+            //MainActivity.h.sendEmptyMessage(1);
             out.close();
         } catch (FileNotFoundException e) {
-            MainActivity.h.sendEmptyMessage(1);
+            //MainActivity.h.sendEmptyMessage(1);
         } catch (IOException e) {
-            MainActivity.h.sendEmptyMessage(1);
+           // MainActivity.h.sendEmptyMessage(1);
         }
     }
 

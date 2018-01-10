@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         wlView = (ListView) findViewById(R.id.scrollView);
         scroll = (LinearLayout)findViewById(R.id.scroll);
         pb = (LinearLayout) findViewById(R.id.PB);
-        pb.setVisibility(ProgressBar.INVISIBLE);
+//        pb.setVisibility(ProgressBar.INVISIBLE);
         pbText = (TextView) findViewById(R.id.pbText);
         inflater = getLayoutInflater();
 
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         isAddable = true;
 
 
-        getWLsAsButtons(scroll, dbHelper);
+        //getWLsAsButtons(scroll, dbHelper);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             isDeletable = false;
             isAddable = true;
             dbHelper.clearDB();
-            getWLsAsButtons(scroll, dbHelper);
+           // getWLsAsButtons(scroll, dbHelper);
             wlView.setVisibility(View.GONE);
             loader.wlName = null;
         }
@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
                 startParser(file);
             } else {
                 scroll.removeAllViews();
-                getWLsAsButtons(scroll, dbHelper);
+               // getWLsAsButtons(scroll, dbHelper);
                 loadWl(data.getStringExtra("Name"));
             }
         }
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
                 isDeletable = false;
                 dbHelper.deleteWL(data.getStringExtra("Name"));
                 scroll.removeAllViews();
-                getWLsAsButtons(scroll, dbHelper);
+                //getWLsAsButtons(scroll, dbHelper);
                 loader.wlName = null;
                 wlView.setVisibility(View.GONE);
                 invalidateOptionsMenu();
@@ -336,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         if (wlName != null) {
             loadWl(wlName);
         }
-        getWLsAsButtons(scroll, dbHelper);
+        //getWLsAsButtons(scroll, dbHelper);
         scroll.setVisibility(View.VISIBLE);
     }
 
@@ -358,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
     //-------Wordlists As Buttons-------//
 
-    void getWLsAsButtons(LinearLayout linearLayout, DBHelper dbHelper) {
+    /*void getWLsAsButtons(LinearLayout linearLayout, DBHelper dbHelper) {
 
 
         final String[] wlNames = dbHelper.loadWlsNames();
@@ -381,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         ImageButton im = new ImageButton(this);
         im.setImageResource(android.R.drawable.ic_menu_add);
 
-    }
+    }*/
 
     //-------Activity LiveCycle-------//
 

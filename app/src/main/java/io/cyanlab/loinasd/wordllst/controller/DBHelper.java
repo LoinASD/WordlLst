@@ -7,6 +7,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -40,7 +41,9 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table WordLists ("
-                + "wlId text"+ ");");
+                + "wlId text,"+
+                "_id integer primary key autoincrement"+
+                ");");
 
     }
 
@@ -183,6 +186,15 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Cursor getRow(String wlName, int id) {
         return this.getWritableDatabase().query(wlName, null, "_id = " + id, null, null, null, null);
+    }
+
+    @Nullable
+    public Cursor getLists(){
+        try {
+            return getReadableDatabase().query("Wordlists",null,null,null,null,null,null);
+        } catch (SQLiteException e) {
+            return null;
+        }
     }
 
     //-------Removes Wordlist from DB-------//

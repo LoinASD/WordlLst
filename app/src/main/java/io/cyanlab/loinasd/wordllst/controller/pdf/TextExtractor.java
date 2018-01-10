@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.os.Message;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -37,7 +38,7 @@ public class TextExtractor {
                 convertText();
                 nodeCollect(dbHelper);
             } else {
-                MainActivity.h.sendEmptyMessage(4);
+                //MainActivity.h.sendEmptyMessage(4);
             }
 
         } catch (IOException e) {
@@ -416,7 +417,7 @@ public class TextExtractor {
             data.putString("wlName", wlName);
         }
 
-        msg.setData(data);
-        MainActivity.h.sendMessage(msg);
+        //msg.setData(data);
+        //MainActivity.h.sendMessage(msg);
     }
 }

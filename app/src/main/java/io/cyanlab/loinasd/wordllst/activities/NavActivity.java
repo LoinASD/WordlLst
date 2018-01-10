@@ -28,6 +28,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -42,9 +43,11 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_FM;
 
 public class NavActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener{
 
-    static final int SHOW_WL = 1, SHOW_TEST = 2;
+    static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LISTS = 3;
+    Thread parser, extractor;
+    DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +55,7 @@ public class NavActivity extends AppCompatActivity
         setContentView(R.layout.activity_nav);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        dbHelper = DBHelper.getDBHelper(this);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -87,7 +91,7 @@ public class NavActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.nav, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -101,6 +105,10 @@ public class NavActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }
+        if (id == R.id.clear_database) {
+            dbHelper.clearDB();
+            // getWLsAsButtons(scroll, dbHelper);
         }
 
         return super.onOptionsItemSelected(item);
@@ -146,6 +154,46 @@ public class NavActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_FM) {
+            if (resultCode == RESULT_OK) {
+                final String file = data.getStringExtra("file");
+                startParser(file);
+            }
+        }
+    }
+
+    public void startParser(final String file){
+
+        final PipedOutputStream pout;
+        final PipedInputStream pin;
+        try {
+            pout = new PipedOutputStream();
+            pin = new PipedInputStream(pout);
+            parser = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    new PDFParser().parsePdf(file, pout);
+                }
+            });
+
+            extractor = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    new TextExtractor().extract(pin, dbHelper);
+                }
+            });
+
+            parser.start();
+            extractor.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
    /* static final int REQUEST_CODE_FM = 1;
@@ -283,40 +331,7 @@ public class NavActivity extends AppCompatActivity
 
     //-------FileManager-------//
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE_FM) {
-            if (resultCode == RESULT_OK) {
-                pb.setVisibility(ProgressBar.VISIBLE);
-                pbText.setText("Parsing PDF...");
-                wlView.setVisibility(View.GONE);
-                scroll.setVisibility(View.GONE);
-                final String file = data.getStringExtra("file");
-                startParser(file);
-            } else {
-                scroll.removeAllViews();
-                getWLsAsButtons(scroll, dbHelper);
-                loadWl(data.getStringExtra("Name"));
-            }
-        }
-        if (requestCode == REQUEST_CODE_CHANGE) {
-            if (resultCode == RESULT_OK) {
-                loadWl(data.getStringExtra("Name"));
-            }
-        }
 
-        if (requestCode == REQUEST_CODE_DELETEWL) {
-            if (resultCode == RESULT_OK) {
-                isDeletable = false;
-                dbHelper.deleteWL(data.getStringExtra("Name"));
-                scroll.removeAllViews();
-                getWLsAsButtons(scroll, dbHelper);
-                loader.wlName = null;
-                wlView.setVisibility(View.GONE);
-                invalidateOptionsMenu();
-            }
-        }
-    }
 
     //-------Parser & Extractor-------//
 
@@ -436,7 +451,7 @@ public class NavActivity extends AppCompatActivity
 
     //-------Wordlist Load-------//
 
-    private void updateLine(String wlName) {
+   /* private void updateLine(String wlName) {
         //TODO: this method for update lines in real time
         pb.setVisibility(ProgressBar.GONE);
         wlView.setVisibility(View.VISIBLE);
