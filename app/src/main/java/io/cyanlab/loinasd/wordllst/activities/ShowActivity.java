@@ -44,25 +44,7 @@ public class ShowActivity extends AppCompatActivity{
 
     private void showWL() {
 
-        final String[] wlNames = dbHelper.loadWlsNames();
 
-        for (int i = 0; i < wlNames.length; i++) {
-
-            Button button = new Button(this);
-            final int k = i;
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    updateLine(wlNames[k]);
-
-                }
-            };
-            button.setText(wlNames[i]);
-            button.setOnClickListener(onClickListener);
-            linearLayout.addView(button);
-        }
-        ImageButton im = new ImageButton(this);
-        im.setImageResource(android.R.drawable.ic_menu_add);
         View.OnClickListener wlListenner = new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -148,7 +148,7 @@ public class NavActivity extends AppCompatActivity
         return true;
     }
 
-    static final int REQUEST_CODE_FM = 1;
+   /* static final int REQUEST_CODE_FM = 1;
     static final int REQUEST_CODE_CHANGE = 2;
     static final int REQUEST_CODE_DELETEWL = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
@@ -501,5 +501,5 @@ public class NavActivity extends AppCompatActivity
         if (h != null)
             h.removeCallbacksAndMessages(null);
         super.onDestroy();
-    }
+    }*/
 }
