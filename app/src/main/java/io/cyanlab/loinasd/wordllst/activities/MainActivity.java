@@ -99,7 +99,8 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
-                int lineId = Integer.parseInt(((Cursor) wlView.getItemAtPosition(position)).getString(((Cursor) wlView.getItemAtPosition(position)).getColumnIndex("_id")));
+                int lineId = Integer.parseInt(((Cursor) wlView.getItemAtPosition(position))
+                        .getString(((Cursor) wlView.getItemAtPosition(position)).getColumnIndex("_id")));
                 Intent changeLine = new Intent(getBaseContext(), ChangingWLActivity.class);
                 changeLine.putExtra("ID", lineId);
                 changeLine.putExtra("Name", loader.wlName);

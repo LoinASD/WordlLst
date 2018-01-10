@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_create"
+            android:icon="@drawable/ic_description_black_24dp"
+            android:title="Create" />
+        <item
+            android:id="@+id/nav_add"
+            android:icon="@android:drawable/ic_input_add"
+            android:title="Add" />
+        <item
+            android:id="@+id/nav_test"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Start Test..." />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Settings" />
+    </group>
+
+    <item android:title="Wordlists">
+        <menu>
+            <group android:id="@+id/nav_wl_group" />
+        </menu>
+    </item>
+
+</menu>
