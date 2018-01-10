@@ -43,6 +43,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="io.cyanlab.loinasd.wordllst.activities.MainActivity" />
         </activity>
+        <activity android:name=".activities.ShowActivity"></activity>
     </application>
 
 </manifest>

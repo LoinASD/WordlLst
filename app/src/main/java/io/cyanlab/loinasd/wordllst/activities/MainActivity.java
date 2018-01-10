@@ -364,6 +364,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         final String[] wlNames = dbHelper.loadWlsNames();
 
         for (int i = 0; i < wlNames.length; i++) {
+
             Button button = new Button(this);
             final int k = i;
             View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -379,21 +380,10 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         }
         ImageButton im = new ImageButton(this);
         im.setImageResource(android.R.drawable.ic_menu_add);
-        final Activity act = this;
-        im.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isDeletable = false;
-                isAddable = false;
-                Intent fileManager = new Intent(act, FileManagerActivity.class);
-                startActivityForResult(fileManager, REQUEST_CODE_FM);
-                setResult(RESULT_OK, fileManager);
-            }
-        });
-        linearLayout.addView(im);
+
     }
 
-    //-------Activity LiveCircle-------//
+    //-------Activity LiveCycle-------//
 
     @Override
     protected void onDestroy() {

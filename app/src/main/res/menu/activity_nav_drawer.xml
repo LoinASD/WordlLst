@@ -5,6 +5,10 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_wl_show"
+            android:icon="?android:attr/listChoiceIndicatorSingle"
+            android:title="Show WordLists" />
+        <item
             android:id="@+id/nav_create"
             android:icon="@drawable/ic_description_black_24dp"
             android:title="Create" />
@@ -22,7 +26,7 @@
             android:title="Settings" />
     </group>
 
-    <item android:title="Wordlists">
+    <item android:title="Resent">
         <menu>
             <group android:id="@+id/nav_wl_group" />
         </menu>
