@@ -177,7 +177,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (data != null) {
-            DBHelper.getDBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+            new DBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
             setResult(RESULT_CANCELED, data);
             finish();
         }

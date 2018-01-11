@@ -1,16 +1,11 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -20,15 +15,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ImageButton;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -43,26 +33,102 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_FM;
 
 public class NavActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener{
+        implements NavigationView.OnNavigationItemSelectedListener, ShowFragment.onListSelectedListener{
 
-    static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LISTS = 3;
+    static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LISTS = 3, SHOW_LINES = 4;
+
+    static final String MODE_LISTS = "Lists";
+    static final String MODE_LINES = "Lines";
+
+    static final int HANDLE_MESSAGE_PARSED = 1;
+    static final int HANDLE_MESSAGE_EXTRACTED = 2;
+    static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+    static final int HANDLE_MESSAGE_LOAD_LIST = 3;
+
     Thread parser, extractor;
     DBHelper dbHelper;
+    android.support.v4.app.Fragment lists;
+    android.support.v4.app.Fragment lines;
+    LinearLayout fab_tab;
+    LinearLayout progBut;
+    public static StaticHandler h;
+
+    private boolean isFabExpanded;
+
+
+    public static String LIST_NAME;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
+
+        h = new StaticHandler(this);
         setContentView(R.layout.activity_nav);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        dbHelper = DBHelper.getDBHelper(this);
+        dbHelper = new DBHelper(this);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        Bundle data = new Bundle();
+        data.putInt("MODE", SHOW_WL);
+        lists = new ShowFragment();
+        lists.setArguments(data);
+
+        Bundle dataLines = new Bundle();
+        dataLines.putInt("MODE", SHOW_LINES);
+        lines = new ShowFragment();
+        lines.setArguments(dataLines);
+
+
+        fab_tab = (LinearLayout)findViewById(R.id.fab_tab);
+        progBut = (LinearLayout)findViewById(R.id.PB);
+        progBut.setVisibility(View.INVISIBLE);
+        final AppCompatActivity activity = this;
+
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_main);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Animation scaleAnimation;
+                /*Animation mainAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_main_hide);
+                view.startAnimation(mainAnimation);*/
+                if (!isFabExpanded){
+
+                    scaleAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
+                    fab_tab.findViewById(R.id.fab_other_test).setVisibility(View.VISIBLE);
+                    fab_tab.findViewById(R.id.fab_card_test).setVisibility(View.VISIBLE);
+
+                }else {
+                    scaleAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
+                    fab_tab.findViewById(R.id.fab_other_test).setVisibility(View.INVISIBLE);
+                    fab_tab.findViewById(R.id.fab_card_test).setVisibility(View.INVISIBLE);
+                }
+
+                activity.findViewById(R.id.fab_card_test).startAnimation(scaleAnimation);
+                scaleAnimation.setStartOffset(100);
+                activity.findViewById(R.id.fab_other_test).startAnimation(scaleAnimation);
+                isFabExpanded = !isFabExpanded;
+            }
+        });
+
+        fab_tab.findViewById(R.id.fab_card_test).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent testWl = new Intent(getBaseContext(), CardTestActivity.class);
+                testWl.putExtra("Name", LIST_NAME);
+                startActivity(testWl);
+            }
+        });
+        fab_tab.findViewById(R.id.fab_other_test).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent testWl = new Intent(getBaseContext(), DnDTestActivity.class);
+                testWl.putExtra("Name", LIST_NAME);
+                startActivity(testWl);
             }
         });
 
@@ -75,6 +141,8 @@ public class NavActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        navigationView.setCheckedItem(R.id.nav_wl_show);
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment, lists, MODE_LISTS).commit();
 
     }
 
@@ -83,8 +151,10 @@ public class NavActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
+        } else if(lists.isHidden()) {
+            loadLists();
+        }else {
+                super.onBackPressed();
         }
     }
 
@@ -130,7 +200,7 @@ public class NavActivity extends AppCompatActivity
                 setResult(RESULT_OK, fileManager);
                 break;
             case R.id.nav_test:
-                 show = new Intent(act, ShowActivity.class);
+                show = new Intent(act, ShowFragment.class);
                 show.putExtra("action", SHOW_TEST);
                 startActivity(show);
                 break;
@@ -143,9 +213,9 @@ public class NavActivity extends AppCompatActivity
 
             case R.id.nav_wl_show:
 
-                show = new Intent(act, ShowActivity.class);
-                show.putExtra("action", SHOW_WL);
-                startActivity(show);
+                loadLists();
+
+
                 break;
 
             default: break;
@@ -162,6 +232,9 @@ public class NavActivity extends AppCompatActivity
             if (resultCode == RESULT_OK) {
                 final String file = data.getStringExtra("file");
                 startParser(file);
+                progBut.setVisibility(View.VISIBLE);
+                ((TextView)progBut.findViewById(R.id.pbText)).setText("Parsing...");
+                findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
             }
         }
     }
@@ -196,7 +269,96 @@ public class NavActivity extends AppCompatActivity
 
     }
 
-   /* static final int REQUEST_CODE_FM = 1;
+    @Override
+    protected void onDestroy() {
+
+        if (h != null)
+            h.removeCallbacksAndMessages(null);
+
+        super.onDestroy();
+    }
+
+    public void loadLists(){
+        if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS).isHidden()) {
+            android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS) != null) {
+                transaction.show(lists);
+            }else {
+                transaction.add(R.id.fragment, lists, MODE_LISTS);
+            }
+            if (getSupportFragmentManager().findFragmentByTag(MODE_LINES)!=null){
+                transaction.hide(lines);
+            }
+            getSupportFragmentManager().popBackStack();
+            transaction.commit();
+        }
+    }
+
+    public void loadLines(){
+
+        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        if (getSupportFragmentManager().findFragmentByTag(MODE_LINES) == null) {
+            transaction.add(R.id.fragment, lines, MODE_LINES);
+        }else
+            transaction.show(lines);
+        if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS) != null){
+            transaction.hide(lists);
+        }
+        transaction.commit();
+
+    }
+
+    public void showFabTab(){
+        fab_tab.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onListSelected(String name) {
+        LIST_NAME = name;
+        loadLines();
+    }
+
+
+    public static class StaticHandler extends Handler {
+        WeakReference<NavActivity> wrActivity;
+        volatile boolean parser, extractor;
+        volatile String wlName = null;
+        private StaticHandler(NavActivity activity) {
+            wrActivity = new WeakReference<>(activity);
+        }
+
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            NavActivity activity = wrActivity.get();
+            if (activity == null) return;
+            if (msg.what == HANDLE_MESSAGE_PARSED) {
+                parser = true;
+                ((TextView)activity.findViewById(R.id.pbText)).setText("Extrackting Text...");
+            }
+            if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
+                extractor = true;
+                wlName = msg.getData().getString("wlName");
+
+                activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
+                activity.progBut.setVisibility(View.INVISIBLE);
+            }
+            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
+                parser = true;
+                extractor = true;
+            }
+
+            if (parser && extractor) {
+                LIST_NAME = wlName;
+                activity.loadLines();
+            }
+        }
+    }
+
+
+
+    /* static final int REQUEST_CODE_FM = 1;
     static final int REQUEST_CODE_CHANGE = 2;
     static final int REQUEST_CODE_DELETEWL = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
@@ -459,13 +621,13 @@ public class NavActivity extends AppCompatActivity
 
 
         if (wlName != null) {
-            loadWl(wlName);
+            load(wlName);
         }
         getWLsAsButtons(scroll, dbHelper);
         scroll.setVisibility(View.VISIBLE);
     }
 
-    public void loadWl(String wlName) {
+    public void load(String wlName) {
 
         if (loader == null) {
             loader = new MainActivity.MyCursorLoader(this, wlName, dbHelper);

@@ -1,6 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import android.content.ContentValues;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import java.io.PipedInputStream;
 import java.util.ArrayList;
 
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
+import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 
 
@@ -269,19 +271,28 @@ public class TextExtractor {
 
         boolean switcher = true;
 
-        DBHelper.getInstance().getWritableDatabase().beginTransaction();
+        dbHelper.getWritableDatabase().beginTransaction();
         boolean isWritten = false;
 
         try {
             boolean isBrackets = false;
 
-            SQLiteDatabase database = DBHelper.getInstance().getWritableDatabase();
+            SQLiteDatabase database = dbHelper.getWritableDatabase();
+            boolean isNameFits = false;
+            int k = 1;
 
-            database.execSQL("create table " + newWlName + " ("
-                    + "_id integer primary key autoincrement,"
-                    + "prim text,"
-                    + "trans text,"
-                    + "position integer" + ");");
+            while (!isNameFits) {
+                try {
+                    database.execSQL("create table " + newWlName + " ("
+                            + "_id integer primary key autoincrement,"
+                            + "prim text,"
+                            + "trans text,"
+                            + "position integer" + ");");
+                    isNameFits = true;
+                } catch (SQLException e) {
+                    newWlName = "New_Wordlist"+ (k++);
+                }
+            }
 
             ContentValues values = new ContentValues();
             values.put("wlId", newWlName);
@@ -400,7 +411,7 @@ public class TextExtractor {
         } catch (SQLiteException e) {
             e.printStackTrace();
         } finally {
-            DBHelper.getInstance().getWritableDatabase().endTransaction();
+            dbHelper.getWritableDatabase().endTransaction();
         }
 
         String wlName = newWlName;
@@ -417,7 +428,7 @@ public class TextExtractor {
             data.putString("wlName", wlName);
         }
 
-        //msg.setData(data);
-        //MainActivity.h.sendMessage(msg);
+        msg.setData(data);
+        NavActivity.h.sendMessage(msg);
     }
 }

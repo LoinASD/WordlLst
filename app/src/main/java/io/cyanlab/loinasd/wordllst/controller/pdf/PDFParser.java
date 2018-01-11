@@ -6,6 +6,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
+import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 
 public class PDFParser {
 
@@ -73,7 +74,7 @@ public class PDFParser {
                     }
                 }
             }
-            //MainActivity.h.sendEmptyMessage(1);
+            NavActivity.h.sendEmptyMessage(1);
             out.close();
         } catch (FileNotFoundException e) {
             //MainActivity.h.sendEmptyMessage(1);

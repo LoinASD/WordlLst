@@ -20,22 +20,8 @@ import io.cyanlab.loinasd.wordllst.R;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    private static DBHelper instance;
-
-    private DBHelper(Context context) {
+    public DBHelper(Context context) {
         super(context,"Hs",null,1);
-    }
-
-    public static DBHelper getInstance() {
-        return instance;
-    }
-
-    public static DBHelper getDBHelper(Context context) {
-        if (instance == null) {
-            return instance = new DBHelper(context);
-        } else {
-            return instance;
-        }
     }
 
     @Override
@@ -221,5 +207,10 @@ public class DBHelper extends SQLiteOpenHelper {
         database.execSQL("DROP TABLE IF EXISTS Wordlists");
         database.execSQL("VACUUM");
         onCreate(database);
+    }
+
+    @Override
+    public synchronized void close() {
+        super.close();
     }
 }

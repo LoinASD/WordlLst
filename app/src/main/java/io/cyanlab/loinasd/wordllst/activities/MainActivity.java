@@ -41,9 +41,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     static final int REQUEST_CODE_FM = 1;
     static final int REQUEST_CODE_CHANGE = 2;
     static final int REQUEST_CODE_DELETEWL = 3;
-    static final int HANDLE_MESSAGE_PARSED = 1;
-    static final int HANDLE_MESSAGE_EXTRACTED = 2;
-    static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+
     static final String PRIM_COLUMN_NAME = "prim";
     static final String TRANS_COLUMN_NAME = "trans";
 
@@ -57,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     ProgressBar pbx;
     LinearLayout pb;
     TextView pbText;
-    public static StaticHandler h;
     Thread parser, extractor;
     SimpleCursorAdapter cursorAdapter;
     MyCursorLoader loader;
@@ -78,9 +75,8 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         pbText = (TextView) findViewById(R.id.pbText);
         inflater = getLayoutInflater();
 
-        h = new StaticHandler(this);
 
-        dbHelper = DBHelper.getDBHelper(this);
+        dbHelper = new DBHelper(this);
         database = dbHelper.getWritableDatabase();
 
         setAdapter(R.layout.simple_line);
@@ -242,38 +238,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
     //-------MessageHandler-------//
 
-    public static class StaticHandler extends Handler {
-        WeakReference<MainActivity> wrActivity;
-        volatile boolean parser, extractor;
-        volatile String wlName = null;
-        private StaticHandler(MainActivity activity) {
-            wrActivity = new WeakReference<>(activity);
-        }
 
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            MainActivity activity = wrActivity.get();
-            if (activity == null) return;
-            if (msg.what == HANDLE_MESSAGE_PARSED) {
-                parser = true;
-                activity.pbText.setText("Extrackting Text...");
-            }
-            if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
-                extractor = true;
-                wlName = msg.getData().getString("wlName");
-            }
-            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
-                parser = true;
-                extractor = true;
-            }
-
-            if (parser && extractor) {
-                activity.updateLine(wlName);
-            }
-        }
-    }
 
 
     //-------Adapter-------//
@@ -388,8 +353,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     @Override
     protected void onDestroy() {
         dbHelper.close();
-        if (h != null)
-            h.removeCallbacksAndMessages(null);
+
         super.onDestroy();
     }
 }

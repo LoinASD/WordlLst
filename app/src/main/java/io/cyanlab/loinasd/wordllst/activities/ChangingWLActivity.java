@@ -25,10 +25,12 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
     int lineID;
     String wlName;
     boolean isAdding;
+    DBHelper dbHelper;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        dbHelper = new DBHelper(this);
 
         switch (getIntent().getStringExtra("Action")) {
             case ("Change"): {
@@ -38,7 +40,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 lineID = getIntent().getIntExtra("ID", -1);
                 wlName = getIntent().getStringExtra("Name");
 
-                Cursor cursor = DBHelper.getDBHelper(this).getRow(wlName, lineID);
+                Cursor cursor = dbHelper.getRow(wlName, lineID);
                 cursor.moveToFirst();
                 ((EditText) findViewById(R.id.primET)).setText(cursor.getString(cursor.getColumnIndex("prim")));
                 ((EditText) findViewById(R.id.transET)).setText(cursor.getString(cursor.getColumnIndex("trans")));
@@ -86,14 +88,14 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
             case (R.id.saveBut): {
                 try {
                     if (!isAdding) {
-                        DBHelper.getDBHelper(this).saveWLRow(wlName, lineID,
+                        dbHelper.saveWLRow(wlName, lineID,
                                 ((EditText) findViewById(R.id.primET)).getText().toString(),
                                 ((EditText) findViewById(R.id.transET)).getText().toString());
                     } else {
-                        Cursor cursor = DBHelper.getDBHelper(this).getRow(wlName, lineID);
+                        Cursor cursor = dbHelper.getRow(wlName, lineID);
                         cursor.moveToFirst();
                         int order = cursor.getInt(cursor.getColumnIndex("position"));
-                        DBHelper.getDBHelper(this).saveNewWLRow(wlName, order,
+                        dbHelper.saveNewWLRow(wlName, order,
                                 ((EditText) findViewById(R.id.primET)).getText().toString(),
                                 ((EditText) findViewById(R.id.transET)).getText().toString());
                     }
@@ -125,12 +127,12 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
             }
             case (R.id.delLineBut): {
                 if (!isAdding) {
-                    DBHelper.getDBHelper(this).deleteLine(wlName, lineID);
+                    dbHelper.deleteLine(wlName, lineID);
                 } else {
-                    Cursor cursor = DBHelper.getDBHelper(this).getRow(wlName, lineID);
+                    Cursor cursor = dbHelper.getRow(wlName, lineID);
                     cursor.moveToFirst();
                     int order = cursor.getInt(cursor.getColumnIndex("position")) + 1;
-                    DBHelper.getDBHelper(this).saveNewWLRow(wlName, order,
+                    dbHelper.saveNewWLRow(wlName, order,
                             ((EditText) findViewById(R.id.primET)).getText().toString(),
                             ((EditText) findViewById(R.id.transET)).getText().toString());
                 }
