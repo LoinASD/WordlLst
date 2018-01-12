@@ -34,7 +34,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     onListSelectedListener listener;
 
-    android.widget.SimpleCursorAdapter cursorAdapter;
+    SimpleCursorAdapter cursorAdapter;
     ListView main;
     static DBHelper dbHelper;
     private MyCallBack callBack;
@@ -99,7 +99,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     public void loadLists(){
 
-        setAdapter(R.layout.test_line);
+        setAdapter(R.layout.lists_line);
         if (getActivity().getLoaderManager().getLoader(0) == null) {
             getActivity().getLoaderManager().initLoader(0, null, callBack);
         }
@@ -108,10 +108,11 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String wlName = ((TextView)view.findViewById(R.id.name_line)).getText().toString();
-                listener.onListSelected(wlName);
+                listener.onListSelected(wlName, view);
             }
         });
     }
+
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -198,7 +199,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     break;
                 }
 
-                case R.layout.test_line: {
+                case R.layout.lists_line: {
                     String[] from = {"wlId"};
                     int[] to = {R.id.name_line};
                     cursorAdapter = new SimpleCursorAdapter(getActivity(), layout, null, from, to, 0);
@@ -261,7 +262,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         public void onLoaderReset(Loader<Cursor> loader) {}
     }
 
-    public interface onListSelectedListener {void onListSelected(String name);}
+    public interface onListSelectedListener {void onListSelected(String name, View view);}
 
 
 }

@@ -9,8 +9,12 @@
     <ListView
         android:id="@+id/scrollView"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_weight="9"
+        android:background="@android:color/background_light"
+        android:divider="@android:drawable/divider_horizontal_dark"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"

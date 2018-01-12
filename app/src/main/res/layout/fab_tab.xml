@@ -12,10 +12,10 @@
         android:id="@+id/fab_other_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
+        android:layout_margin="3dp"
         android:clickable="true"
         android:visibility="gone"
-        app:fabSize="mini"
+        app:fabSize="normal"
         app:srcCompat="@android:drawable/ic_menu_agenda" />
 
     <android.support.design.widget.FloatingActionButton
@@ -23,21 +23,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="5dp"
+        android:layout_margin="3dp"
         android:clickable="true"
         android:visibility="gone"
-        app:fabSize="mini"
+        app:fabSize="normal"
         app:srcCompat="@android:drawable/ic_input_get" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_main"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
+        android:layout_margin="3dp"
         android:layout_marginBottom="0dp"
         android:clickable="true"
         android:visibility="visible"
-        app:fabSize="mini"
+        app:fabSize="normal"
         app:srcCompat="@drawable/up" />
 
 </LinearLayout>

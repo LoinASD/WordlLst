@@ -21,6 +21,5 @@
         android:layout_margin="20dp"
         android:layout_weight="4"
         android:text="TextView"
-        android:textAlignment="center"
         android:textSize="18sp" />
 </LinearLayout>

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorButtons"
     tools:context="io.cyanlab.loinasd.wordllst.activities.NavActivity">
 
     <LinearLayout
@@ -50,9 +51,9 @@
             layout="@layout/fab_tab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@+id/fragment"
             android:layout_marginBottom="0dp"
             android:layout_marginRight="0dp"
+            app:layout_constraintBottom_toBottomOf="@+id/fragment"
             app:layout_constraintRight_toRightOf="parent" />
 
     </android.support.constraint.ConstraintLayout>

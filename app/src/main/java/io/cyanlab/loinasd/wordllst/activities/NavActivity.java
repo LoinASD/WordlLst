@@ -1,5 +1,9 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.TimeInterpolator;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,9 +19,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.view.ViewPropertyAnimator;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
+import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -35,7 +45,7 @@ import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_F
 public class NavActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ShowFragment.onListSelectedListener{
 
-    static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LISTS = 3, SHOW_LINES = 4;
+    static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LINES = 4;
 
     static final String MODE_LISTS = "Lists";
     static final String MODE_LINES = "Lines";
@@ -43,7 +53,6 @@ public class NavActivity extends AppCompatActivity
     static final int HANDLE_MESSAGE_PARSED = 1;
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
-    static final int HANDLE_MESSAGE_LOAD_LIST = 3;
 
     Thread parser, extractor;
     DBHelper dbHelper;
@@ -93,24 +102,37 @@ public class NavActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Animation scaleAnimation;
+                Animation scaleAnimation1;
+                Animation scaleAnimation2;
                 /*Animation mainAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_main_hide);
                 view.startAnimation(mainAnimation);*/
+                int vis;
+                int img;
+                View fab1;
+                View fab2;
                 if (!isFabExpanded){
 
-                    scaleAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
-                    fab_tab.findViewById(R.id.fab_other_test).setVisibility(View.VISIBLE);
-                    fab_tab.findViewById(R.id.fab_card_test).setVisibility(View.VISIBLE);
+                    scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
+                    scaleAnimation2 = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
+                    fab2 = fab_tab.findViewById(R.id.fab_other_test);
+                    fab1 = fab_tab.findViewById(R.id.fab_card_test);
+                    vis = View.VISIBLE;
+                    img = android.R.drawable.ic_menu_close_clear_cancel;
 
                 }else {
-                    scaleAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
-                    fab_tab.findViewById(R.id.fab_other_test).setVisibility(View.INVISIBLE);
-                    fab_tab.findViewById(R.id.fab_card_test).setVisibility(View.INVISIBLE);
+                    scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
+                    scaleAnimation2 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
+                    fab2 = fab_tab.findViewById(R.id.fab_card_test);
+                    fab1 = fab_tab.findViewById(R.id.fab_other_test);
+                    vis = View.INVISIBLE;
+                    img = R.drawable.up;
                 }
-
-                activity.findViewById(R.id.fab_card_test).startAnimation(scaleAnimation);
-                scaleAnimation.setStartOffset(100);
-                activity.findViewById(R.id.fab_other_test).startAnimation(scaleAnimation);
+                fab1.startAnimation(scaleAnimation1);
+                fab1.setVisibility(vis);
+                scaleAnimation2.setStartOffset(100);
+                fab2.startAnimation(scaleAnimation2);
+                fab2.setVisibility(vis);
+                fab.setImageResource(img);
                 isFabExpanded = !isFabExpanded;
             }
         });
@@ -152,7 +174,38 @@ public class NavActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else if(lists.isHidden()) {
-            loadLists();
+
+            ObjectAnimator animator = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,0f,90f).setDuration(550);
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+
+                    loadLists();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            animator.start();
+
+
+            ObjectAnimator animator2 = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,-90f,0f).setDuration(550);
+            animator2.setInterpolator(new AccelerateInterpolator());
+            animator2.setStartDelay(550);
+            animator2.start();
+
         }else {
                 super.onBackPressed();
         }
@@ -313,9 +366,73 @@ public class NavActivity extends AppCompatActivity
     }
 
     @Override
-    public void onListSelected(String name) {
+    public void onListSelected(String name, View view) {
+
         LIST_NAME = name;
-        loadLines();
+        final ListView main = (ListView) lists.getView().findViewById(R.id.scrollView);
+
+        int i = 0;
+        int pos = main.getChildCount();
+        int diff = 0;
+        while (i != pos){
+            if (main.getChildAt(i) != view) {
+                final int k = i;
+
+                ObjectAnimator animator = ObjectAnimator.ofFloat(main.getChildAt(i),View.ALPHA,1f,0f);
+                animator.setStartDelay((i-diff)*150);
+                animator.setDuration(300);
+                animator.start();
+                main.getChildAt(i).animate().scaleX(1f).scaleXBy(0f).setDuration(300).setStartDelay((i-diff)*150).start();
+            }else {
+                diff = 1;
+            }
+            i++;
+        }
+
+        int delay =main.getChildCount()*150;
+
+
+        ObjectAnimator animator = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,0f,90f).setDuration(550);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+
+                loadLines();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animator.setStartDelay(delay+700);
+        animator.start();
+
+
+        ObjectAnimator animator2 = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,-90f,0f).setDuration(550);
+        animator2.setInterpolator(new AccelerateInterpolator());
+        animator2.setStartDelay(delay+700 + 550);
+        animator2.start();
+
+        //ObjectAnimator.ofFloat(view,View.SCALE_X,0f,1f).setDuration(700).start();
+
+
+
+
+
+
+
+
     }
 
 
