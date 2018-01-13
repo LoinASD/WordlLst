@@ -4,15 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_nav_constraint"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorWhite">
 
     <ListView
         android:id="@+id/scrollView"
+        style="@style/AppTheme.ListView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_weight="9"
+        android:animateLayoutChanges="true"
         android:background="@android:color/background_light"
         android:divider="@android:drawable/divider_horizontal_dark"
+        android:layoutAnimation="@anim/list_anim"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
         app:layout_constraintBottom_toBottomOf="parent"

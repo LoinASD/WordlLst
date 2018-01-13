@@ -21,10 +21,10 @@
         android:layout_marginRight="8dp"
         android:layout_marginTop="10dp"
         android:layout_weight="5"
-        android:gravity="fill_vertical|start"
-        android:longClickable="true"
-        android:maxLines="5"
+        android:gravity="center_vertical|start"
+        android:longClickable="false"
         android:text="1"
+        android:textAlignment="center"
         android:textSize="14sp"
         android:textStyle="bold" />
 
@@ -43,9 +43,9 @@
         android:layout_marginBottom="10dp"
         android:layout_marginTop="10dp"
         android:layout_weight="5"
-        android:gravity="left|center_vertical"
-        android:maxLines="5"
+        android:gravity="center_vertical|end"
         android:text="2"
+        android:textAlignment="center"
         android:textSize="14sp"
         android:textStyle="bold" />
 

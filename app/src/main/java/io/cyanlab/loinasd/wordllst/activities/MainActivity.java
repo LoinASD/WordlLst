@@ -284,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         @Override
         public Cursor loadInBackground() {
-            return dbHelper.getData(wlName);
+            return dbHelper.getData(wlName, 0);
         }
     }
 

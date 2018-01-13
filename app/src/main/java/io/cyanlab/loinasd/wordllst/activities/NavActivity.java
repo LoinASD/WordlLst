@@ -1,9 +1,7 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
 import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.animation.TimeInterpolator;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,13 +17,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.view.ViewPropertyAnimator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
-import android.view.animation.Interpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -50,9 +45,11 @@ public class NavActivity extends AppCompatActivity
     static final String MODE_LISTS = "Lists";
     static final String MODE_LINES = "Lines";
 
+    static final int REQUEST_CODE_ADD = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+    static final int REQUEST_CODE_CHANGE = 5;
 
     Thread parser, extractor;
     DBHelper dbHelper;
@@ -63,7 +60,6 @@ public class NavActivity extends AppCompatActivity
     public static StaticHandler h;
 
     private boolean isFabExpanded;
-
 
     public static String LIST_NAME;
 
@@ -91,6 +87,7 @@ public class NavActivity extends AppCompatActivity
         dataLines.putInt("MODE", SHOW_LINES);
         lines = new ShowFragment();
         lines.setArguments(dataLines);
+
 
 
         fab_tab = (LinearLayout)findViewById(R.id.fab_tab);
@@ -168,6 +165,7 @@ public class NavActivity extends AppCompatActivity
 
     }
 
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -175,7 +173,10 @@ public class NavActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else if(lists.isHidden()) {
 
-            ObjectAnimator animator = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,0f,90f).setDuration(550);
+            final ListView main = (ListView) lines.getView().findViewById(R.id.scrollView);
+            int duration = 500;
+
+            ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
             animator.addListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {
@@ -186,6 +187,7 @@ public class NavActivity extends AppCompatActivity
                 public void onAnimationEnd(Animator animation) {
 
                     loadLists();
+                    main.animate().alpha(1).setDuration(100).start();
                 }
 
                 @Override
@@ -199,12 +201,6 @@ public class NavActivity extends AppCompatActivity
                 }
             });
             animator.start();
-
-
-            ObjectAnimator animator2 = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,-90f,0f).setDuration(550);
-            animator2.setInterpolator(new AccelerateInterpolator());
-            animator2.setStartDelay(550);
-            animator2.start();
 
         }else {
                 super.onBackPressed();
@@ -259,6 +255,11 @@ public class NavActivity extends AppCompatActivity
                 break;
 
             case  R.id.nav_create:
+            case (R.id.addNewWL):
+                Intent addWL = new Intent(this, ChangingWLActivity.class);
+                addWL.putExtra("Action", "Add");
+                startActivityForResult(addWL, REQUEST_CODE_ADD);
+                setResult(RESULT_OK, addWL);
                 break;
 
             case R.id.nav_settings:
@@ -288,6 +289,11 @@ public class NavActivity extends AppCompatActivity
                 progBut.setVisibility(View.VISIBLE);
                 ((TextView)progBut.findViewById(R.id.pbText)).setText("Parsing...");
                 findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
+            }
+        }
+        if (data != null) {
+            if (requestCode == REQUEST_CODE_ADD) {
+                new DBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
             }
         }
     }
@@ -332,6 +338,7 @@ public class NavActivity extends AppCompatActivity
     }
 
     public void loadLists(){
+
         if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS).isHidden()) {
             android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS) != null) {
@@ -342,12 +349,14 @@ public class NavActivity extends AppCompatActivity
             if (getSupportFragmentManager().findFragmentByTag(MODE_LINES)!=null){
                 transaction.hide(lines);
             }
-            getSupportFragmentManager().popBackStack();
             transaction.commit();
         }
+
+
     }
 
     public void loadLines(){
+
 
         android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         if (getSupportFragmentManager().findFragmentByTag(MODE_LINES) == null) {
@@ -358,6 +367,7 @@ public class NavActivity extends AppCompatActivity
             transaction.hide(lists);
         }
         transaction.commit();
+
 
     }
 
@@ -379,20 +389,21 @@ public class NavActivity extends AppCompatActivity
                 final int k = i;
 
                 ObjectAnimator animator = ObjectAnimator.ofFloat(main.getChildAt(i),View.ALPHA,1f,0f);
-                animator.setStartDelay((i-diff)*150);
-                animator.setDuration(300);
+                animator.setStartDelay((i - diff) * 125);
+                animator.setDuration(250);
                 animator.start();
-                main.getChildAt(i).animate().scaleX(1f).scaleXBy(0f).setDuration(300).setStartDelay((i-diff)*150).start();
+                main.getChildAt(i).animate().scaleX(1f).scaleXBy(0.0f).setDuration(250).setStartDelay((i - diff) * 125).start();
             }else {
                 diff = 1;
             }
             i++;
         }
 
-        int delay =main.getChildCount()*150;
+        int delay = main.getChildCount() * 125;
 
+        int duration = 500;
 
-        ObjectAnimator animator = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,0f,90f).setDuration(550);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
         animator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -403,6 +414,7 @@ public class NavActivity extends AppCompatActivity
             public void onAnimationEnd(Animator animation) {
 
                 loadLines();
+                main.animate().alpha(1).setDuration(100).start();
             }
 
             @Override
@@ -415,14 +427,9 @@ public class NavActivity extends AppCompatActivity
 
             }
         });
-        animator.setStartDelay(delay+700);
+        animator.setStartDelay(delay);
         animator.start();
 
-
-        ObjectAnimator animator2 = ObjectAnimator.ofFloat(findViewById(R.id.fragment),View.ROTATION_Y,-90f,0f).setDuration(550);
-        animator2.setInterpolator(new AccelerateInterpolator());
-        animator2.setStartDelay(delay+700 + 550);
-        animator2.start();
 
         //ObjectAnimator.ofFloat(view,View.SCALE_X,0f,1f).setDuration(700).start();
 

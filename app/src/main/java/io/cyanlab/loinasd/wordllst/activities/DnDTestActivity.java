@@ -82,7 +82,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drag_n_drop_test);
         wlName = getIntent().getStringExtra("Name");
-        data = new DBHelper(this).getData(wlName);
+        data = new DBHelper(this).getData(wlName, 0);
         listView = ((ListView) findViewById(R.id.prims));
         listView.setOnItemClickListener(this);
         shuffled = new String[8];

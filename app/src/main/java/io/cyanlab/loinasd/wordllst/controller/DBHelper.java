@@ -65,7 +65,7 @@ public class DBHelper extends SQLiteOpenHelper {
             cv.put("trans", trans);
             cv.put("position", order);
 
-            for (int i = getData(wlName).getCount(); i > order; i--) {
+            for (int i = getData(wlName, 0).getCount(); i > order; i--) {
                 ContentValues contentValues = new ContentValues();
                 contentValues.put("position", i);
                 getWritableDatabase().update(wlName, contentValues, "position = " + (i - 1), null);
@@ -157,9 +157,9 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     //-------Returns Cursor From WL Table-------//
-    public Cursor getData(String wlName) {
+    public Cursor getData(String wlName, int pos) {
 
-        Cursor cursor = getWritableDatabase().query(wlName, null, null, null, null, null, "position ASC");
+        Cursor cursor = getWritableDatabase().query(wlName, null, "position < " + (pos + 40), null, null, null, "position ASC");
         if (cursor.getCount() == 0) {
             ContentValues cv = new ContentValues();
             cv.put("prim", "");

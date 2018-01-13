@@ -33,7 +33,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_test);
         wlName = getIntent().getStringExtra("Name");
-        data = new DBHelper(this).getData(wlName);
+        data = new DBHelper(this).getData(wlName, 0);
         findViewById(R.id.card).setOnClickListener(this);
         loadLine();
     }
