@@ -17,6 +17,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
@@ -34,9 +35,15 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     private static final String PRIM_COLUMN_NAME = "prim";
     private static final String TRANS_COLUMN_NAME = "trans";
-    private static int lastNum;
+    private int STATE;
+
+    public static final int RIGHT_ANSWERS_TO_COMPLETE = 3;
+
+    public static final int NEEDS_UPD = 2;
+    public static final int DONT_NEEDS_UPD = 1;
 
     onListSelectedListener listener;
+    onStateChangedListener stateListener;
 
     SimpleCursorAdapter cursorAdapter;
     ListView main;
@@ -50,6 +57,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         MODE = args.getInt("MODE");
 
+        STATE = NEEDS_UPD;
+
         super.setArguments(args);
     }
 
@@ -58,13 +67,76 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.content_nav,null);
-        if (main == null) {
-            main = (ListView)v.findViewById(R.id.scrollView);
-        }
+        main = (ListView) v.findViewById(R.id.scrollView);
+        callBack = new MyCallBack();
+        switch (MODE) {
 
-        if (callBack == null) {
-            callBack = new MyCallBack();
+            case SHOW_LINES:
+                setAdapter(R.layout.simple_line);
+                (getActivity()).getLoaderManager().initLoader(1, null, callBack);
+                getActivity().getLoaderManager().getLoader(1).forceLoad();
+
+                main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                        int lineId = Integer.parseInt(((Cursor) main.getItemAtPosition(position))
+                                .getString(((Cursor) main.getItemAtPosition(position)).getColumnIndex("_id")));
+                        Intent changeLine = new Intent(getContext(), ChangingWLActivity.class);
+                        changeLine.putExtra("ID", lineId).putExtra("Name", LIST_NAME).putExtra("Action", "Change");
+                        startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
+
+                        setState(NEEDS_UPD);
+
+                        return false;
+                    }
+                });
+
+                main.setOnScrollListener(new AbsListView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(AbsListView view, int scrollState) {
+                        if (scrollState != SCROLL_STATE_IDLE && MODE == SHOW_LINES) {
+                            getActivity().getLoaderManager().getLoader(1).forceLoad();
+                        }
+                    }
+
+                    @Override
+                    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                    }
+                });
+
+                break;
+            case SHOW_WL:
+                setAdapter(R.layout.lists_line);
+                (getActivity()).getLoaderManager().initLoader(0, null, callBack);
+                getActivity().getLoaderManager().getLoader(0).forceLoad();
+
+                main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        String wlName = ((TextView) view.findViewById(R.id.name_line)).getText().toString();
+                        listener.onListSelected(wlName, view);
+                    }
+                });
+
+                main.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                    @Override
+                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        loadProgress();
+                    }
+                });
+
+                try {
+                    listener = (onListSelectedListener) getActivity();
+                    stateListener = (onStateChangedListener) getActivity();
+                } catch (ClassCastException e) {
+                    e.printStackTrace();
+                }
+
+                break;
+
         }
+        dbHelper = ((NavActivity) getActivity()).dbHelper;
+
         return v;
     }
 
@@ -95,45 +167,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public void load() {
 
 
-        setAdapter(R.layout.simple_line);
-        if (getActivity().getLoaderManager().getLoader(1) == null) {
-            (getActivity()).getLoaderManager().initLoader(1, null, callBack);
-        }
-        getActivity().getLoaderManager().getLoader(1).forceLoad();
-
-        main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                int lineId = Integer.parseInt(((Cursor) main.getItemAtPosition(position))
-                        .getString(((Cursor) main.getItemAtPosition(position)).getColumnIndex("_id")));
-                Intent changeLine = new Intent(getContext(), ChangingWLActivity.class);
-                changeLine.putExtra("ID", lineId);
-                changeLine.putExtra("Name", LIST_NAME);
-                changeLine.putExtra("Action", "Change");
-                startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
-                getActivity().setResult(getActivity().RESULT_OK, changeLine);
-
-                return false;
-            }
-        });
     }
 
     public void loadLists(){
 
 
-        setAdapter(R.layout.lists_line);
-        if (getActivity().getLoaderManager().getLoader(0) == null) {
-            getActivity().getLoaderManager().initLoader(0, null, callBack);
-        }
-        getActivity().getLoaderManager().getLoader(0).forceLoad();
 
-        main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String wlName = ((TextView)view.findViewById(R.id.name_line)).getText().toString();
-                listener.onListSelected(wlName, view);
-            }
-        });
     }
 
 
@@ -145,18 +184,19 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             main.scheduleLayoutAnimation();
             switch (MODE){
                 case SHOW_WL:
-                    loadLists();
+                    getActivity().getLoaderManager().getLoader(0).forceLoad();
                     break;
 
                 case SHOW_TEST:
                     showTest();
                     break;
                 case SHOW_LINES:
-                    load();
+                    getActivity().getLoaderManager().getLoader(1).forceLoad();
                     break;
 
                 default: break;
             }
+
         }
         if (MODE == SHOW_LINES) {
             if (hidden) {
@@ -165,60 +205,52 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
             }
         }
+        STATE = NEEDS_UPD;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (MODE == SHOW_WL) {
-            try {
-                listener = (onListSelectedListener) getActivity();
-            }catch (ClassCastException e){
-                e.printStackTrace();
-            }
-        }
-
-        dbHelper = ((NavActivity)getActivity()).dbHelper;
-
-    }
 
     @Override
     public void onResume() {
+
+        if (STATE == NEEDS_UPD && !isHidden()) {
+            switch (MODE) {
+                case SHOW_WL:
+                    getActivity().getLoaderManager().getLoader(0).forceLoad();
+                    break;
+
+                case SHOW_TEST:
+                    showTest();
+                    break;
+                case SHOW_LINES:
+                    ((NavActivity) getActivity()).showFabTab();
+                    getActivity().getLoaderManager().getLoader(1).forceLoad();
+                    STATE = DONT_NEEDS_UPD;
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
+
+
+        if (MODE == SHOW_LINES) {
+            getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
+        }
+
+
         super.onResume();
 
+    }
 
-        switch (MODE){
-            case SHOW_WL:
-                loadLists();
-                break;
-
-            case SHOW_TEST:
-                showTest();
-                break;
-            case SHOW_LINES:
-                ((NavActivity)getActivity()).showFabTab();
-                load();
-                break;
-
-            default: break;
+    public void loadProgress() {
+        for (int i = 0; i < main.getChildCount(); i++) {
+            int progress = dbHelper.countWeight(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString());
+            int max = dbHelper.getData(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString(), 0).getCount() * RIGHT_ANSWERS_TO_COMPLETE;
+            ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setProgress(max - progress);
+            ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setMax(max);
+            ((TextView) main.getChildAt(i).findViewById(R.id.percents)).setText(((max - progress) * 100 / max) + "%");
         }
-        if (MODE == SHOW_WL) {
-
-        }
-        main.setOnScrollListener(new AbsListView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-                if (MODE == SHOW_LINES) {
-
-                    getActivity().getLoaderManager().getLoader(1).forceLoad();
-                }
-            }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-            }
-        });
-
     }
 
 
@@ -230,14 +262,14 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             switch (layout){
 
                 case R.layout.simple_line: {
-                    String[] from = {"_id", PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
-                    int[] to = {R.id.idPlace, R.id.primeTV, R.id.translateTV};
+                    String[] from = {PRIM_COLUMN_NAME, TRANS_COLUMN_NAME};
+                    int[] to = {R.id.primeTV, R.id.translateTV};
                     cursorAdapter = new SimpleCursorAdapter(getActivity(), layout, null, from, to, 0);
                     break;
                 }
 
                 case R.layout.lists_line: {
-                    String[] from = {"wlId"};
+                    String[] from = {"wlName"};
                     int[] to = {R.id.name_line};
                     cursorAdapter = new SimpleCursorAdapter(getActivity(), layout, null, from, to, 0);
                     break;
@@ -256,6 +288,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         if (MODE == SHOW_LINES) {
             getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
         }
+
     }
 
     static class MyCursorLoader extends CursorLoader {
@@ -298,13 +331,30 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             cursorAdapter.swapCursor(data);
+
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {}
     }
 
+
     public interface onListSelectedListener {void onListSelected(String name, View view);}
 
+    //-----State-----//
+
+    public int getState() {
+        return STATE;
+    }
+
+    public void setState(int state) {
+        if (STATE == DONT_NEEDS_UPD) {
+            STATE = state;
+        }
+    }
+
+    public interface onStateChangedListener {
+        void onStateChanged(int newState);
+    }
 
 }

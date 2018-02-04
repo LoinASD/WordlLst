@@ -98,9 +98,8 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
             data.moveToFirst();
             int id = -1;
             int idIndex = data.getColumnIndex("_id");
-            int positionIndex = data.getColumnIndex("position");
             do {
-                if (lineNum == data.getInt(positionIndex)) {
+                if (lineNum == data.getInt(idIndex)) {
                     id = data.getInt(idIndex);
                     break;
                 }

@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         }
 
-        if (id == R.id.clear_database) {
+       /* if (id == R.id.clear_database) {
             isDeletable = false;
             isAddable = true;
             dbHelper.clearDB();
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             testWl.putExtra("Name", loader.wlName);
             startActivity(testWl);
         }
-
+*/
         invalidateOptionsMenu();
         return super.onOptionsItemSelected(item);
     }
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.deleteWl).setVisible(isDeletable);
-        menu.findItem(R.id.begin_dnd_test).setVisible(isDeletable);
+        //menu.findItem(R.id.begin_dnd_test).setVisible(isDeletable);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -183,17 +183,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             }
         }
 
-        if (requestCode == REQUEST_CODE_DELETEWL) {
-            if (resultCode == RESULT_OK) {
-                isDeletable = false;
-                dbHelper.deleteWL(data.getStringExtra("Name"));
-                scroll.removeAllViews();
-                //getWLsAsButtons(scroll, dbHelper);
-                loader.wlName = null;
-                wlView.setVisibility(View.GONE);
-                invalidateOptionsMenu();
-            }
-        }
+
     }
 
     //-------Parser & Extractor-------//

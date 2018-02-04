@@ -19,6 +19,16 @@
     <style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:colorBackground">@color/colorPrimary</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <item name="android:windowBackground">@color/colorPrimary</item>
+        <item name="colorButtonNormal">@color/colorAccent</item>
+        <item name="android:textAppearanceButton">@style/AppTheme.Dialog.TextAppearance</item>
+        <item name="editTextColor">@color/colorAccent</item>
+        <item name="imageButtonStyle">@style/AppTheme.ImageButton</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
@@ -34,4 +44,19 @@
         <item name="android:listSelector">@color/colorWhite</item>
     </style>
 
+    <style name="AppTheme.ImageButton" parent="android:Widget.ImageButton">
+        <item name="android:background">@drawable/image_button_background</item>
+    </style>
+
+    <style name="AppTheme.Dialog.TextAppearance" parent="TextAppearance.AppCompat.Widget.Button">
+        <item name="android:textColor">@color/colorWhite</item>
+    </style>
+
+    <style name="AppTheme.MenuItem.TextAppearance" parent="android:TextAppearance.Holo.Widget.IconMenu.Item">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="AppTheme.ProgressBar.Horizontal" parent="Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:secondaryProgressTint">@color/colorAccent</item>
+    </style>
 </resources>

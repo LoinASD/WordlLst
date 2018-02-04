@@ -24,7 +24,7 @@
         android:pointerIcon="none"
         app:headerLayout="@layout/nav_header_nav"
         app:itemIconTint="@color/colorAccent"
-        app:itemTextAppearance="@android:style/TextAppearance.Holo.Widget.IconMenu.Item"
+        app:itemTextAppearance="@style/AppTheme.MenuItem.TextAppearance"
         app:itemTextColor="@color/colorAccent"
         app:menu="@menu/activity_nav_drawer" />
 

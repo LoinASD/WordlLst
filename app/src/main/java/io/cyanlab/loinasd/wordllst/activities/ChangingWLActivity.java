@@ -49,7 +49,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 findViewById(R.id.saveBut).setOnClickListener(this);
                 findViewById(R.id.delLineBut).setOnClickListener(this);
                 findViewById(R.id.clearBut).setOnClickListener(this);
-                findViewById(R.id.addBut).setOnClickListener(this);
+                //findViewById(R.id.addBut).setOnClickListener(this);
                 break;
             }
             case ("Delete"): {
@@ -74,6 +74,21 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 findViewById(R.id.cancelBut).setOnClickListener(this);
                 break;
             }
+            case ("AddLine"): {
+                setContentView(io.cyanlab.loinasd.wordllst.R.layout.activity_changing_line);
+
+                isAdding = true;
+                wlName = getIntent().getStringExtra("Name");
+
+                findViewById(R.id.primET).refreshDrawableState();
+                findViewById(R.id.transET).refreshDrawableState();
+                findViewById(R.id.saveBut).setOnClickListener(this);
+                findViewById(R.id.delLineBut).setOnClickListener(this);
+                ((ImageButton) findViewById(R.id.delLineBut)).setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+                findViewById(R.id.clearBut).setOnClickListener(this);
+                //findViewById(R.id.addBut).setOnClickListener(this);
+                break;
+            }
         }
 
         //-----------------------------------------//
@@ -92,10 +107,8 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                                 ((EditText) findViewById(R.id.primET)).getText().toString(),
                                 ((EditText) findViewById(R.id.transET)).getText().toString());
                     } else {
-                        Cursor cursor = dbHelper.getRow(wlName, lineID);
-                        cursor.moveToFirst();
-                        int order = cursor.getInt(cursor.getColumnIndex("position"));
-                        dbHelper.saveNewWLRow(wlName, order,
+
+                        dbHelper.saveNewWLRow(wlName,
                                 ((EditText) findViewById(R.id.primET)).getText().toString(),
                                 ((EditText) findViewById(R.id.transET)).getText().toString());
                     }
@@ -106,7 +119,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 }
                 break;
             }
-            case (R.id.addBut): {
+            /*case (R.id.addBut): {
                 if (!isAdding) {
                     isAdding = true;
                     ((ImageButton) findViewById(R.id.delLineBut)).setImageResource(android.R.drawable.arrow_down_float);
@@ -119,22 +132,19 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     ((ImageButton) findViewById(R.id.addBut)).setImageResource(android.R.drawable.ic_menu_add);
                 }
                 return;
-            }
+            }*/
             case (R.id.delBut): {
-                setResult(RESULT_OK,
-                        new Intent().putExtra("Name", wlName));
+                dbHelper.deleteWL(wlName);
+
+                setResult(RESULT_OK);
                 break;
             }
             case (R.id.delLineBut): {
                 if (!isAdding) {
                     dbHelper.deleteLine(wlName, lineID);
                 } else {
-                    Cursor cursor = dbHelper.getRow(wlName, lineID);
-                    cursor.moveToFirst();
-                    int order = cursor.getInt(cursor.getColumnIndex("position")) + 1;
-                    dbHelper.saveNewWLRow(wlName, order,
-                            ((EditText) findViewById(R.id.primET)).getText().toString(),
-                            ((EditText) findViewById(R.id.transET)).getText().toString());
+                    setResult(RESULT_CANCELED);
+                    finish();
                 }
                 setResult(RESULT_OK,
                         new Intent().putExtra("Name", wlName));

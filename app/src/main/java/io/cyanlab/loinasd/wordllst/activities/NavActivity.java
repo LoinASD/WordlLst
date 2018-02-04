@@ -3,6 +3,7 @@ package io.cyanlab.loinasd.wordllst.activities;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,7 +22,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -33,6 +36,7 @@ import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_CHANGE;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_FM;
 
 public class NavActivity extends AppCompatActivity
@@ -48,6 +52,7 @@ public class NavActivity extends AppCompatActivity
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
     static final int REQUEST_CODE_CHANGE = 5;
+    static final int REQUEST_CODE_DELETEWL = 3;
 
     Thread parser, extractor;
     DBHelper dbHelper;
@@ -56,6 +61,8 @@ public class NavActivity extends AppCompatActivity
     LinearLayout fab_tab;
     LinearLayout progBut;
     public static StaticHandler h;
+
+    private boolean isDeletable;
 
     private boolean isFabExpanded;
 
@@ -105,6 +112,7 @@ public class NavActivity extends AppCompatActivity
                 int img;
                 View fab1;
                 View fab2;
+                View sideFab = fab_tab.findViewById(R.id.fab_add_line);
                 if (!isFabExpanded){
 
                     scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
@@ -113,6 +121,7 @@ public class NavActivity extends AppCompatActivity
                     fab1 = fab_tab.findViewById(R.id.fab_card_test);
                     vis = View.VISIBLE;
                     img = android.R.drawable.ic_menu_close_clear_cancel;
+                    sideFab.startAnimation(scaleAnimation1);
 
                 }else {
                     scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
@@ -120,8 +129,10 @@ public class NavActivity extends AppCompatActivity
                     fab2 = fab_tab.findViewById(R.id.fab_card_test);
                     fab1 = fab_tab.findViewById(R.id.fab_other_test);
                     vis = View.INVISIBLE;
-                    img = R.drawable.up;
+                    img = R.drawable.ic_tests_24dp;
+                    sideFab.startAnimation(scaleAnimation2);
                 }
+                sideFab.setVisibility(vis);
                 fab1.startAnimation(scaleAnimation1);
                 fab1.setVisibility(vis);
                 scaleAnimation2.setStartOffset(100);
@@ -148,6 +159,15 @@ public class NavActivity extends AppCompatActivity
                 startActivity(testWl);
             }
         });
+        fab_tab.findViewById(R.id.fab_add_line).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent addLine = new Intent(getBaseContext(), ChangingWLActivity.class);
+                addLine.putExtra("Name", LIST_NAME);
+                addLine.putExtra("Action", "AddLine");
+                startActivityForResult(addLine, REQUEST_CODE_CHANGE);
+            }
+        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -160,6 +180,7 @@ public class NavActivity extends AppCompatActivity
 
         navigationView.setCheckedItem(R.id.nav_wl_show);
         getSupportFragmentManager().beginTransaction().add(R.id.fragment, lists, MODE_LISTS).commit();
+
 
     }
 
@@ -220,15 +241,37 @@ public class NavActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.item_about) {
             return true;
         }
-        if (id == R.id.clear_database) {
-            dbHelper.clearDB();
+        if (id == R.id.deleteWl) {
+            Intent delWL = new Intent(this, ChangingWLActivity.class);
+            delWL.putExtra("Action", "Delete");
+            delWL.putExtra("Name", LIST_NAME);
+            startActivityForResult(delWL, REQUEST_CODE_DELETEWL);
+            setResult(RESULT_OK, delWL);
+            ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
             // getWLsAsButtons(scroll, dbHelper);
         }
 
+        if (id == R.id.clear_db) {
+
+            dbHelper.clearDB();
+            loadLists();
+            isDeletable = false;
+
+            ((ShowFragment) lines).setState(ShowFragment.NEEDS_UPD);
+            ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
+        }
+        invalidateOptionsMenu();
+
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.deleteWl).setVisible(isDeletable);
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -246,13 +289,9 @@ public class NavActivity extends AppCompatActivity
                 startActivityForResult(fileManager, REQUEST_CODE_FM);
                 setResult(RESULT_OK, fileManager);
                 break;
-            case R.id.nav_test:
-                show = new Intent(act, ShowFragment.class);
-                show.putExtra("action", SHOW_TEST);
-                startActivity(show);
-                break;
 
             case  R.id.nav_create:
+
             case (R.id.addNewWL):
                 Intent addWL = new Intent(this, ChangingWLActivity.class);
                 addWL.putExtra("Action", "Add");
@@ -289,9 +328,22 @@ public class NavActivity extends AppCompatActivity
                 findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
             }
         }
+        if (requestCode == REQUEST_CODE_DELETEWL) {
+            if (resultCode == RESULT_OK) {
+
+                LIST_NAME = null;
+                ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
+
+
+                LIST_NAME = null;
+                loadLists();
+
+            }
+        }
         if (data != null) {
             if (requestCode == REQUEST_CODE_ADD) {
-                new DBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+                dbHelper.saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+                ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
             }
         }
     }
@@ -328,7 +380,7 @@ public class NavActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-
+        dbHelper.close();
         if (h != null)
             h.removeCallbacksAndMessages(null);
 
@@ -336,6 +388,9 @@ public class NavActivity extends AppCompatActivity
     }
 
     public void loadLists(){
+
+        isDeletable = false;
+        invalidateOptionsMenu();
 
         if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS).isHidden()) {
             android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -347,13 +402,19 @@ public class NavActivity extends AppCompatActivity
             if (getSupportFragmentManager().findFragmentByTag(MODE_LINES)!=null){
                 transaction.hide(lines);
             }
-            transaction.commit();
+            transaction.commitAllowingStateLoss();
+
+
         }
+
 
 
     }
 
     public void loadLines(){
+
+        isDeletable = true;
+        invalidateOptionsMenu();
 
 
         android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -382,6 +443,9 @@ public class NavActivity extends AppCompatActivity
         int i = 0;
         int pos = main.getChildCount();
         int diff = 0;
+        int delay = main.getChildCount() * 125;
+
+        int duration = 500;
         while (i != pos){
             if (main.getChildAt(i) != view) {
                 final int k = i;
@@ -390,16 +454,13 @@ public class NavActivity extends AppCompatActivity
                 animator.setStartDelay((i - diff) * 125);
                 animator.setDuration(250);
                 animator.start();
-                main.getChildAt(i).animate().scaleX(1f).scaleXBy(0.0f).setDuration(250).setStartDelay((i - diff) * 125).start();
             }else {
                 diff = 1;
             }
             i++;
         }
 
-        int delay = main.getChildCount() * 125;
 
-        int duration = 500;
 
         ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
         animator.addListener(new Animator.AnimatorListener() {
@@ -412,7 +473,11 @@ public class NavActivity extends AppCompatActivity
             public void onAnimationEnd(Animator animation) {
 
                 loadLines();
-                main.animate().alpha(1).setDuration(100).start();
+                main.animate().alpha(1f).setDuration(100).start();
+                for (int i = 0; i < main.getChildCount(); i++) {
+                    main.getChildAt(i).setAlpha(1f);
+                }
+
             }
 
             @Override
@@ -463,17 +528,24 @@ public class NavActivity extends AppCompatActivity
                 extractor = true;
                 wlName = msg.getData().getString("wlName");
 
-                activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
-                activity.progBut.setVisibility(View.INVISIBLE);
+
             }
             if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
-                parser = true;
-                extractor = true;
+                parser = false;
+                extractor = false;
+
+                Toast.makeText(activity, "Wordlist with equal name already exists", Toast.LENGTH_SHORT).show();
+
+                activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
+                activity.progBut.setVisibility(View.INVISIBLE);
             }
 
             if (parser && extractor) {
                 LIST_NAME = wlName;
                 activity.loadLines();
+
+                activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
+                activity.progBut.setVisibility(View.INVISIBLE);
             }
         }
     }
