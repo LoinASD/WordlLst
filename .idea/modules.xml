@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/WordlLst.iml" filepath="$PROJECT_DIR$/WordlLst.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/WordlLst.iml" filepath="$PROJECT_DIR$/.idea/WordlLst.iml" />
+      <module fileurl="file://C:\Users\User\StudioProjects\WordlLst\WordlLst.iml" filepath="C:\Users\User\StudioProjects\WordlLst\WordlLst.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\User\StudioProjects\WordlLst\app\app.iml" filepath="C:\Users\User\StudioProjects\WordlLst\app\app.iml" />
     </modules>
   </component>
 </project>

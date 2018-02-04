@@ -7,8 +7,34 @@
     <color name="colorAccent1">#ff4081</color>
     <color name="colorAccent">#80bf44</color>
     <color name="colorButtons">#e7e7e7</color>
-    <color name="colorTrue">#76ef00</color>
-    <color name="colorFalse">#B22222</color>
+    <color name="colorTrue">#91B859</color>
+    <color name="colorFalse">#E53935</color>
     <color name="colorWhite">#ffffff</color>
     <color name="colorAccentLowAlpha">#2f80bf44</color>
+
+    <color name="MaterialBackground">#263238</color>
+    <color name="MaterialDarkerBackground">#2d3238</color>
+
+    <color name="MaterialRed">#FF5370</color>
+    <color name="MaterialDarkerRed">#E53935</color>
+    <color name="MaterialPink">#f07178</color>
+    <color name="MaterialDarkerPink">#FF5370</color>
+    <color name="MaterialOrange">#F78C6C</color>
+    <color name="MaterialDarkerOrange">#F76D47</color>
+    <color name="MaterialYellow">#FFCB6B</color>
+    <color name="MaterialDarkerYellow">#F76D47</color>
+    <color name="MaterialGreen">#C3E88D</color>
+    <color name="MaterialDarkerGreen">#91B859</color>
+    <color name="MaterialPaleBlue">#B2CCD6</color>
+    <color name="MaterialDarkerPaleBlue">#8796B0</color>
+    <color name="MaterialCyan">#89DDFF</color>
+    <color name="MaterialDarkerCyan">#39ADB5</color>
+    <color name="MaterialBlue">#82AAFF</color>
+    <color name="MaterialDarkerBlue">#6182B8</color>
+    <color name="MaterialPurple">#C792EA</color>
+    <color name="MaterialDarkerPurple">#7C4DFF</color>
+    <color name="MaterialViolet">#bb80b3</color>
+    <color name="MaterialDarkerViolet">#945EB8</color>
+    <color name="MaterialBrown">#ab7967</color>
+    <color name="MaterialDarkerBrown">#ab7967</color>
 </resources>
