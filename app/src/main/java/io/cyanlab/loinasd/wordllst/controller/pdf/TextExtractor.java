@@ -6,13 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.os.Message;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
-import java.util.ArrayList;
 
-import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 
@@ -26,19 +23,31 @@ public class TextExtractor {
     private static boolean gotDictionary = false;
     private String newWlName;
     private boolean isExists = false;
-    private StringBuilder text;
+    //private StringBuilder text;
     private int range;
+    private DBHelper dbHelper;
+    private int proggress;
+
+    private void updateProgress() {
+        proggress++;
+    }
 
 
     public void extract(PipedInputStream io, DBHelper dbHelper) {
+        /**
+         * This Method extracts Nodes with text from PipedInputStream
+         * Works with DBHelper
+         * This is Main Method
+         */
+
         this.io = io;
-        ch = 0;
+        this.dbHelper = dbHelper;
 
         try {
-            parse(dbHelper);
+            parse();
             if ((gotDictionary) && (!isExists)) {
                 convertText();
-                nodeCollect(dbHelper);
+                nodeCollect();
             } else {
                 //MainActivity.h.sendEmptyMessage(4);
             }
@@ -49,11 +58,14 @@ public class TextExtractor {
         }
     }
 
-    private void parse(DBHelper dbHelper) throws IOException {
+    private void parse() throws IOException {
+        /**
+         * This Method find Text blocks in tags BT abd ET
+         */
         while ((ch != -1) && (!isExists)) {
             lineStr = readLine();
             if (lineStr.equals("BT")) {
-                textToken(dbHelper);
+                textToken();
             } else if (lineStr.equals("begincmap")){
                 parseCMap();
             }
@@ -62,13 +74,19 @@ public class TextExtractor {
     }
 
     private void parseCMap() throws IOException {
+
+        /**
+         * This Method parse a charMap in the end of PDF file
+         */
+
         String[] chars;
         int count;
         while (ch != -1) {
             lineStr = readLine();
             if (lineStr.endsWith("begincodespacerange")) {
-                range = readLine().split(" ")[0].length() - 2;
 
+                // range looks like <0000> <FFFF>
+                range = readLine().split(" ")[0].length() - 2;
             }
 
             if (lineStr.endsWith("beginbfchar")){
@@ -119,6 +137,12 @@ public class TextExtractor {
     }
 
     private String readLine() throws IOException {
+
+        /**
+         * This is lightweight realisation of Reader`s readline;
+         * Checks inputStream in lines
+         */
+
         StringBuilder l = new StringBuilder();
         while (true) {
             if (io.available()!= 0) {
@@ -185,76 +209,87 @@ public class TextExtractor {
         }
     }
 
-    private void textToken(DBHelper dbHelper) throws IOException {
+    private void skipToRectangleBracket() throws IOException {
 
-        if (newWlName != null) {
-            while ((char) ch != '[') {
+        while ((char) ch != '[') {
+            ch = io.read();
+        }
+    }
+
+    private String extractRawText() throws IOException {
+        /**
+         * This Method returns a String with rew text
+         */
+        StringBuilder text = new StringBuilder();
+        while ((char) ch != ']') {
+            while (((char) ch != '(') && ((char) ch != '<')) {
+                // skip all text out brackets
                 ch = io.read();
             }
-            while ((char) ch != ']') {
-                while (((char) ch != '(') && ((char) ch != '<')) {
+            if ((char) ch == '<') {
+                text.append((char) ch);
+                while ((char) ch != '>') {
                     ch = io.read();
-                }
-                if ((char) ch == '<') {
                     text.append((char) ch);
-                    while ((char) ch != '>') {
-                        ch = io.read();
-                        text.append((char) ch);
-                    }
-                } else {
-                    ch = io.read();
-                    while ((char) ch != ')') {
-                        text.append((char) ch);
-                        ch = io.read();
-                    }
                 }
-                ch = io.read();
-            }
-            text.append(" ");
-        } else {
-            StringBuilder name = new StringBuilder();
-            ch = io.read();
-            while ((char) ch != '[') {
-                ch = io.read();
-            }
-            ch = io.read();
-            while ((char) ch != ']') {
-                while ((char) ch != '(') {
-                    ch = io.read();
-                    if ((char) ch == '<') {
-                        name.append((char) ch);
-                        while ((char) ch != '>') {
-                            ch = io.read();
-                            name.append((char) ch);
-                        }
-                    }
-                }
+            } else {
                 ch = io.read();
                 while ((char) ch != ')') {
-                    name.append((char) ch);
+                    text.append((char) ch);
                     ch = io.read();
                 }
-                ch = io.read();
             }
-            name.trimToSize();
-            newWlName = new String(name).trim().replaceAll(" ", "_").replaceAll(":", "");
+            ch = io.read();
+        }
+        return text.toString();
+    }
+
+    private void getCord(Node node) throws IOException {
+        ch = io.read();
+        while ((char) ch != '[') {
+            lineStr = readLine();
+            if (lineStr.endsWith("Tm")) {
+                String[] cord = lineStr.split(" ");
+                node.setX(Double.parseDouble(cord[4]));
+                node.setY(Double.parseDouble(cord[5]));
+            }
+            ch = io.read();
+        }
+    }
+
+    private void textToken() throws IOException {
+
+        /**
+         * This Method extract text and gives it to Node
+         */
+
+        if (newWlName != null) {
+            skipToRectangleBracket();
+            Node node = new Node();
+            node.setRawText(extractRawText());
+
+        } else {
+            String name;
+            ch = io.read();
+            skipToRectangleBracket();
+            ch = io.read();
+            name = extractRawText();
+            newWlName = name.trim().replaceAll(" ", "_").replaceAll(":", "");
 
             for (String s : dbHelper.loadWlsNames()) {
                 if (newWlName.equals(s)) {
                     isExists = true;
                 }
             }
-            text = new StringBuilder();
-
         }
     }
 
 
-    private void nodeCollect(DBHelper dbHelper) {
-        ArrayList<String> prim = new ArrayList<>();
-        ArrayList<String> trans = new ArrayList<>();
+    private void nodeCollect() {
 
-        text.trimToSize();
+        /*
+          This method take all nodes, convert text and sort
+         */
 
         int end = 0;
         char cc = text.charAt(end);
@@ -300,55 +335,6 @@ public class TextExtractor {
 
             values.clear();
             int count = 0;
-
-
-            /*String[] words = text.toString().split(" ");
-
-            int i = 0;
-
-            while (i < words.length){
-                StringBuilder node = new StringBuilder();
-                while (i < words.length && words[i].length() == 0){
-                    i++;
-                }
-                lang = LangChecker.langCheck(words[i].charAt(0));
-                while(i < words.length && (words[i].length() == 0 || (switcher && LangChecker.langCheck(words[i].charAt(0)) != LangChecker.LANG_RUS)||(!switcher && LangChecker.langCheck(words[i].charAt(0)) != LangChecker.LANG_ENG))){
-                    node.append(words[i]+ " ");
-                    i++;
-                }
-
-                if (switcher) {
-
-                    values.put("prim", new String(node).replaceAll("/", ", ").trim());
-
-
-                } else {
-                    String nodeStr = new String(node).trim();
-
-                    nodeStr = nodeStr.substring(0,1).toUpperCase()+nodeStr.substring(1);
-                    values.put("trans", nodeStr.replaceAll("/", ", ").trim());
-                    values.put("position", count++);
-                    database.insert(newWlName, null, values);
-                    values.clear();
-                }
-
-                switcher = !switcher;
-
-            }
-            if (values.getAsString("prim") != null){
-                values.put("trans", "");
-                values.put("position", count++);
-                database.insert(newWlName, null, values);
-                values.clear();
-            }
-
-            for (i = 0; i< 3; i++){
-                values.put("prim", "");
-                values.put("trans", "");
-                values.put("position", count++);
-                database.insert(newWlName, null, values);
-                values.clear();
-            }*/
 
 
             while (end < text.length() - 1) {

@@ -1,11 +1,14 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
-import android.app.Activity;import android.os.Environment;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedOutputStream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 
 public class PDFParser {
@@ -20,11 +23,11 @@ public class PDFParser {
         try {
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
-            while ((bufInput.available() != 0)) {
+            while (bufInput.available() != 0) {
                 cc = (char) bufInput.read();
                 int streamLength = 0;
                 boolean isFonts = false;
-                while ((cc != '>') && (!isFonts)&&(bufInput.available()>0)) {
+                while ((cc != '>') && (!isFonts) && (bufInput.available() > 0)) {
                     cc = (char) bufInput.read();
                     if (cc == markerLength.charAt(0)) {
                         boolean isLength = search4Marker(bufInput,markerLength);

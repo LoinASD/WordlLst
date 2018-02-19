@@ -1,24 +1,17 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -28,12 +21,11 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
-import io.cyanlab.loinasd.wordllst.controller.*;
 
 public class MainActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -216,14 +208,22 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             parser = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    long timeStart = System.currentTimeMillis();
                     new PDFParser().parsePdf(file, pout);
+                    long timeStop = System.currentTimeMillis();
+
+                    System.out.printf("Parser works %d ms", timeStop - timeStart);
                 }
             });
 
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    long timeStart = System.currentTimeMillis();
                     new TextExtractor().extract(pin, dbHelper);
+                    long timeStop = System.currentTimeMillis();
+
+                    System.out.printf("Parser works %d ms", timeStop - timeStart);
                 }
             });
 
@@ -321,32 +321,6 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         getSupportLoaderManager().getLoader(0).forceLoad();
     }
 
-    //-------Wordlists As Buttons-------//
-
-    /*void getWLsAsButtons(LinearLayout linearLayout, DBHelper dbHelper) {
-
-
-        final String[] wlNames = dbHelper.loadWlsNames();
-
-        for (int i = 0; i < wlNames.length; i++) {
-
-            Button button = new Button(this);
-            final int k = i;
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    updateLine(wlNames[k]);
-
-                }
-            };
-            button.setText(wlNames[i]);
-            button.setOnClickListener(onClickListener);
-            linearLayout.addView(button);
-        }
-        ImageButton im = new ImageButton(this);
-        im.setImageResource(android.R.drawable.ic_menu_add);
-
-    }*/
 
     //-------Activity LiveCycle-------//
 
