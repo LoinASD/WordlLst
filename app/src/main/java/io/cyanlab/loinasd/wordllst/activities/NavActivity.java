@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -17,10 +16,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.animation.AccelerateInterpolator;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -32,8 +30,8 @@ import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
-import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
 
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_FM;
 
@@ -315,7 +313,7 @@ public class NavActivity extends AppCompatActivity
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    new TextExtractor().extract(pin, dbHelper);
+                    new Delegator().extract(pin, dbHelper);
                 }
             });
 
@@ -638,7 +636,7 @@ public class NavActivity extends AppCompatActivity
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    new TextExtractor().extract(pin, dbHelper);
+                    new Delegator().extract(pin, dbHelper);
                 }
             });
 

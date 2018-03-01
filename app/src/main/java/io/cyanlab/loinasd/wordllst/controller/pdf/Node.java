@@ -5,6 +5,7 @@ class Node {
     private double y;
     private String rawText;
     private String text;
+    private boolean isHead = false;
 
     Node(double x, double y){
         this.x = x;
@@ -48,6 +49,18 @@ class Node {
 
 
         this.text = message.toString();
+    }
+
+    public boolean isHead() {
+        return isHead;
+    }
+
+    public void setHead(boolean head) {
+        isHead = head;
+    }
+
+    public String getRawText() {
+        return rawText;
     }
 
     public double getX() {

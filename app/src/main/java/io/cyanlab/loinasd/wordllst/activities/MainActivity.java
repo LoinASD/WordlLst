@@ -24,8 +24,8 @@ import java.io.PipedOutputStream;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
-import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
 
 public class MainActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
                 @Override
                 public void run() {
                     long timeStart = System.currentTimeMillis();
-                    new TextExtractor().extract(pin, dbHelper);
+                    new Delegator().extract(pin, dbHelper);
                     long timeStop = System.currentTimeMillis();
 
                     System.out.printf("Parser works %d ms", timeStop - timeStart);
