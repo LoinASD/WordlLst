@@ -163,4 +163,10 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
         }
         finish();
     }
+
+    @Override
+    protected void onDestroy() {
+        dbHelper.close();
+        super.onDestroy();
+    }
 }

@@ -217,7 +217,7 @@ public class DBHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
         database.delete("Wordlists", "_id = " + id, null);
-
+        cursor.close();
     }
 
     public void deleteLine(String wlName, int lineId) {

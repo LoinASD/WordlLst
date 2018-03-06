@@ -2,6 +2,7 @@ package io.cyanlab.loinasd.wordllst.activities;
 
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -10,9 +11,14 @@ import android.database.Cursor;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.DragEvent;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
@@ -41,6 +47,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     public static final int NEEDS_UPD = 2;
     public static final int DONT_NEEDS_UPD = 1;
+    public boolean isWakening;
 
     onListSelectedListener listener;
     onStateChangedListener stateListener;
@@ -81,8 +88,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                         int lineId = Integer.parseInt(((Cursor) main.getItemAtPosition(position))
                                 .getString(((Cursor) main.getItemAtPosition(position)).getColumnIndex("_id")));
-                        Intent changeLine = new Intent(getContext(), ChangingWLActivity.class);
-                        changeLine.putExtra("ID", lineId).putExtra("Name", LIST_NAME).putExtra("Action", "Change");
+                        Intent changeLine = new Intent(getContext(), ChangingWLActivity.class).
+                                putExtra("ID", lineId).
+                                putExtra("Name", LIST_NAME).
+                                putExtra("Action", "Change");
                         startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
 
                         setState(NEEDS_UPD);
@@ -121,7 +130,23 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 main.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
                     @Override
                     public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                        loadProgress();
+                        if (!isWakening) {
+                            loadProgress();
+
+
+                            for (int i = 0; i < main.getChildCount(); i++) {
+
+                                main.getChildAt(i).setOnDragListener(new View.OnDragListener() {
+                                    @Override
+                                    public boolean onDrag(View v, DragEvent event) {
+
+                                        return false;
+                                    }
+                                });
+                            }
+
+
+                        }
                     }
                 });
 
@@ -140,42 +165,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         return v;
     }
 
-    private void showWL() {
-
-
-
-
-    }
-
-    private void showTest() {
-        View.OnClickListener testListenner = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        };
-        main.setOnClickListener(testListenner);
-
-    }
-
-    private void showNothing() {
-
-    }
-
-    //-----Loading List------//
-
-    public void load() {
-
-
-    }
-
-    public void loadLists(){
-
-
-
-    }
-
-
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
@@ -185,10 +174,11 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             switch (MODE){
                 case SHOW_WL:
                     getActivity().getLoaderManager().getLoader(0).forceLoad();
+                    isWakening = true;
                     break;
 
                 case SHOW_TEST:
-                    showTest();
+
                     break;
                 case SHOW_LINES:
                     getActivity().getLoaderManager().getLoader(1).forceLoad();
@@ -213,13 +203,14 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public void onResume() {
 
         if (STATE == NEEDS_UPD && !isHidden()) {
+            main.scheduleLayoutAnimation();
             switch (MODE) {
                 case SHOW_WL:
                     getActivity().getLoaderManager().getLoader(0).forceLoad();
                     break;
 
                 case SHOW_TEST:
-                    showTest();
+
                     break;
                 case SHOW_LINES:
                     ((NavActivity) getActivity()).showFabTab();
@@ -247,7 +238,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         for (int i = 0; i < main.getChildCount(); i++) {
             int progress = dbHelper.countWeight(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString());
             int max = dbHelper.getData(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString(), 0).getCount() * RIGHT_ANSWERS_TO_COMPLETE;
-            ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setProgress(max - progress);
+            ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setProgress(max - progress + RIGHT_ANSWERS_TO_COMPLETE);
             ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setMax(max);
             ((TextView) main.getChildAt(i).findViewById(R.id.percents)).setText(((max - progress) * 100 / max) + "%");
         }
@@ -331,7 +322,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             cursorAdapter.swapCursor(data);
-
+            if (MODE == SHOW_WL) {
+                isWakening = false;
+            }
         }
 
         @Override
