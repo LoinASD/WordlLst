@@ -7,6 +7,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -16,31 +17,21 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.activities.NavActivity;
+import io.cyanlab.loinasd.wordllst.activities.ShowFragment;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    private static DBHelper instance;
-
-    private DBHelper(Context context) {
+    public DBHelper(Context context) {
         super(context,"Hs",null,1);
-    }
-
-    public static DBHelper getInstance() {
-        return instance;
-    }
-
-    public static DBHelper getDBHelper(Context context) {
-        if (instance == null) {
-            return instance = new DBHelper(context);
-        } else {
-            return instance;
-        }
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table WordLists ("
-                + "wlId text"+ ");");
+                + "_id integer primary key autoincrement," +
+                "wlName text" +
+                ");");
 
     }
 
@@ -57,7 +48,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public String[] loadWlsNames() {
         Cursor cursor = this.getWritableDatabase().query("Wordlists", null, null, null, null, null, null);
         cursor.moveToFirst();
-        int colId = cursor.getColumnIndex("wlId");
+        int colId = cursor.getColumnIndex("wlName");
         String[] Names = new String[cursor.getCount()];
         for (int i = 0; i < cursor.getCount(); i++) {
             Names[i] = cursor.getString(colId);
@@ -68,19 +59,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
     //-------Saves Edited Wordlist-------//
 
-    public void saveNewWLRow(String wlName, int order, String prim, String trans) {
+    public void saveNewWLRow(String wlName, String prim, String trans) {
         getWritableDatabase().beginTransaction();
         try {
             ContentValues cv = new ContentValues();
             cv.put("prim", prim);
             cv.put("trans", trans);
-            cv.put("position", order);
+            cv.put("weight", ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
 
-            for (int i = getData(wlName).getCount(); i > order; i--) {
-                ContentValues contentValues = new ContentValues();
-                contentValues.put("position", i);
-                getWritableDatabase().update(wlName, contentValues, "position = " + (i - 1), null);
-            }
             getWritableDatabase().insert(wlName, null, cv);
             getWritableDatabase().setTransactionSuccessful();
         } finally {
@@ -120,11 +106,10 @@ public class DBHelper extends SQLiteOpenHelper {
                 database.execSQL("create table " + wLName + " ("
                         + "_id integer primary key autoincrement,"
                         + "prim text,"
-                        + "trans text,"
-                        + "position integer" + ");");
+                        + "trans text" + ");");
 
                 ContentValues values = new ContentValues();
-                values.put("wlId", wLName);
+                values.put("wlName", wLName);
                 database.insert("WordLists", null, values);
 
                 values.clear();
@@ -132,7 +117,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 for (int i = 0; i < prim.size(); i++) {
                     values.put("prim", prim.get(i).replaceAll("/", ", "));
                     values.put("trans", trans.get(i).replaceAll("/", ", "));
-                    values.put("position", i);
                     database.insert(wLName, null, values);
                 }
                 successful = true;
@@ -156,10 +140,10 @@ public class DBHelper extends SQLiteOpenHelper {
                     + "_id integer primary key autoincrement,"
                     + "prim text,"
                     + "trans text,"
-                    + "position integer" + ");");
+                    + "weight integer" + ");");
 
             ContentValues values = new ContentValues();
-            values.put("wlId", wLName);
+            values.put("wlName", wLName);
             database.insert("WordLists", null, values);
         } catch (SQLException e) {
             return false;
@@ -168,14 +152,37 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     //-------Returns Cursor From WL Table-------//
-    public Cursor getData(String wlName) {
 
-        Cursor cursor = getWritableDatabase().query(wlName, null, null, null, null, null, "position ASC");
+    public int countWeight(String name) {
+
+        Cursor data = getData(name, 0);
+
+        int weightIndex = data.getColumnIndex("weight");
+        int weight = 0;
+        if (data.moveToFirst()) {
+            do {
+                weight += data.getInt(weightIndex);
+
+            } while (data.moveToNext());
+        }
+
+        return weight;
+    }
+
+    public Cursor getData(String wlName, int pos) {
+
+        Cursor cursor;
+
+        if (pos == 0) {
+            cursor = getWritableDatabase().query(wlName, null, null, null, null, null, null);
+        } else
+            cursor = getWritableDatabase().query(wlName, null, "_id < " + (pos + 40), null, null, null, null);
+
+
         if (cursor.getCount() == 0) {
             ContentValues cv = new ContentValues();
             cv.put("prim", "");
             cv.put("trans", "");
-            cv.put("position", 0);
             getWritableDatabase().insert(wlName, null, cv);
         }
         return cursor;
@@ -185,13 +192,32 @@ public class DBHelper extends SQLiteOpenHelper {
         return this.getWritableDatabase().query(wlName, null, "_id = " + id, null, null, null, null);
     }
 
+    @Nullable
+    public Cursor getLists(){
+        try {
+            return getReadableDatabase().query("Wordlists",null,null,null,null,null,null);
+        } catch (SQLiteException e) {
+            return null;
+        }
+    }
+
     //-------Removes Wordlist from DB-------//
 
     public void deleteWL(String wlName) {
         SQLiteDatabase database = getWritableDatabase();
         database.execSQL("DROP TABLE IF EXISTS " + wlName);
-        database.delete("Wordlists", "wlId = ?", new String[]{wlName});
-        database.execSQL("VACUUM");
+
+        String[] args = {wlName};
+        int id = 0;
+        Cursor cursor = getLists();
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getString(cursor.getColumnIndex("wlName")).equals(wlName))
+                    id = cursor.getInt(cursor.getColumnIndex("_id"));
+            } while (cursor.moveToNext());
+        }
+        database.delete("Wordlists", "_id = " + id, null);
+        cursor.close();
     }
 
     public void deleteLine(String wlName, int lineId) {
@@ -209,5 +235,10 @@ public class DBHelper extends SQLiteOpenHelper {
         database.execSQL("DROP TABLE IF EXISTS Wordlists");
         database.execSQL("VACUUM");
         onCreate(database);
+    }
+
+    @Override
+    public synchronized void close() {
+        super.close();
     }
 }

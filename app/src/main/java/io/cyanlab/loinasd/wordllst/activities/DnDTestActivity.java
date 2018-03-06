@@ -82,7 +82,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drag_n_drop_test);
         wlName = getIntent().getStringExtra("Name");
-        data = DBHelper.getDBHelper(this).getData(wlName);
+        data = new DBHelper(this).getData(wlName, 0);
         listView = ((ListView) findViewById(R.id.prims));
         listView.setOnItemClickListener(this);
         shuffled = new String[8];
@@ -98,9 +98,8 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
             data.moveToFirst();
             int id = -1;
             int idIndex = data.getColumnIndex("_id");
-            int positionIndex = data.getColumnIndex("position");
             do {
-                if (lineNum == data.getInt(positionIndex)) {
+                if (lineNum == data.getInt(idIndex)) {
                     id = data.getInt(idIndex);
                     break;
                 }

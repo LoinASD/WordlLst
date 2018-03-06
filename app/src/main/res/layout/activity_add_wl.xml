@@ -18,7 +18,7 @@
             android:id="@+id/imageView2"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            app:srcCompat="@drawable/ic_description_black_24dp" />
+            app:srcCompat="@drawable/ic_description_white_24dp" />
 
         <TextView
             android:id="@+id/textView"
@@ -39,7 +39,8 @@
         android:layout_weight="1"
         android:ems="20"
         android:inputType="textMultiLine"
-        android:textAlignment="center" />
+        android:textAlignment="center"
+        android:textColor="@color/colorAccent" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -49,9 +50,11 @@
 
         <ImageButton
             android:id="@+id/saveBut"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="50dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="10dp"
             android:layout_weight="1"
+            android:background="@drawable/image_button_background"
             app:srcCompat="@android:drawable/ic_menu_save" />
 
         <ImageButton
@@ -59,6 +62,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/image_button_background"
             app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
     </LinearLayout>
 </LinearLayout>

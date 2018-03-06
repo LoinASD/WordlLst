@@ -1,24 +1,17 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -28,12 +21,11 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
-import io.cyanlab.loinasd.wordllst.controller.pdf.TextExtractor;
-import io.cyanlab.loinasd.wordllst.controller.*;
 
 public class MainActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -41,9 +33,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     static final int REQUEST_CODE_FM = 1;
     static final int REQUEST_CODE_CHANGE = 2;
     static final int REQUEST_CODE_DELETEWL = 3;
-    static final int HANDLE_MESSAGE_PARSED = 1;
-    static final int HANDLE_MESSAGE_EXTRACTED = 2;
-    static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+
     static final String PRIM_COLUMN_NAME = "prim";
     static final String TRANS_COLUMN_NAME = "trans";
 
@@ -57,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     ProgressBar pbx;
     LinearLayout pb;
     TextView pbText;
-    public static StaticHandler h;
     Thread parser, extractor;
     SimpleCursorAdapter cursorAdapter;
     MyCursorLoader loader;
@@ -74,13 +63,12 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         wlView = (ListView) findViewById(R.id.scrollView);
         scroll = (LinearLayout)findViewById(R.id.scroll);
         pb = (LinearLayout) findViewById(R.id.PB);
-        pb.setVisibility(ProgressBar.INVISIBLE);
+//        pb.setVisibility(ProgressBar.INVISIBLE);
         pbText = (TextView) findViewById(R.id.pbText);
         inflater = getLayoutInflater();
 
-        h = new StaticHandler(this);
 
-        dbHelper = DBHelper.getDBHelper(this);
+        dbHelper = new DBHelper(this);
         database = dbHelper.getWritableDatabase();
 
         setAdapter(R.layout.simple_line);
@@ -89,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         isAddable = true;
 
 
-        getWLsAsButtons(scroll, dbHelper);
+        //getWLsAsButtons(scroll, dbHelper);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
@@ -99,7 +87,8 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
-                int lineId = Integer.parseInt(((Cursor) wlView.getItemAtPosition(position)).getString(((Cursor) wlView.getItemAtPosition(position)).getColumnIndex("_id")));
+                int lineId = Integer.parseInt(((Cursor) wlView.getItemAtPosition(position))
+                        .getString(((Cursor) wlView.getItemAtPosition(position)).getColumnIndex("_id")));
                 Intent changeLine = new Intent(getBaseContext(), ChangingWLActivity.class);
                 changeLine.putExtra("ID", lineId);
                 changeLine.putExtra("Name", loader.wlName);
@@ -139,11 +128,11 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         }
 
-        if (id == R.id.clear_database) {
+       /* if (id == R.id.clear_database) {
             isDeletable = false;
             isAddable = true;
             dbHelper.clearDB();
-            getWLsAsButtons(scroll, dbHelper);
+           // getWLsAsButtons(scroll, dbHelper);
             wlView.setVisibility(View.GONE);
             loader.wlName = null;
         }
@@ -158,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             testWl.putExtra("Name", loader.wlName);
             startActivity(testWl);
         }
-
+*/
         invalidateOptionsMenu();
         return super.onOptionsItemSelected(item);
     }
@@ -166,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.deleteWl).setVisible(isDeletable);
-        menu.findItem(R.id.begin_dnd_test).setVisible(isDeletable);
+        //menu.findItem(R.id.begin_dnd_test).setVisible(isDeletable);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -184,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
                 startParser(file);
             } else {
                 scroll.removeAllViews();
-                getWLsAsButtons(scroll, dbHelper);
+               // getWLsAsButtons(scroll, dbHelper);
                 loadWl(data.getStringExtra("Name"));
             }
         }
@@ -194,17 +183,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             }
         }
 
-        if (requestCode == REQUEST_CODE_DELETEWL) {
-            if (resultCode == RESULT_OK) {
-                isDeletable = false;
-                dbHelper.deleteWL(data.getStringExtra("Name"));
-                scroll.removeAllViews();
-                getWLsAsButtons(scroll, dbHelper);
-                loader.wlName = null;
-                wlView.setVisibility(View.GONE);
-                invalidateOptionsMenu();
-            }
-        }
+
     }
 
     //-------Parser & Extractor-------//
@@ -219,14 +198,22 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             parser = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    long timeStart = System.currentTimeMillis();
                     new PDFParser().parsePdf(file, pout);
+                    long timeStop = System.currentTimeMillis();
+
+                    System.out.printf("Parser works %d ms", timeStop - timeStart);
                 }
             });
 
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    new TextExtractor().extract(pin, dbHelper);
+                    long timeStart = System.currentTimeMillis();
+                    new Delegator().extract(pin, dbHelper);
+                    long timeStop = System.currentTimeMillis();
+
+                    System.out.printf("Parser works %d ms", timeStop - timeStart);
                 }
             });
 
@@ -241,38 +228,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
     //-------MessageHandler-------//
 
-    public static class StaticHandler extends Handler {
-        WeakReference<MainActivity> wrActivity;
-        volatile boolean parser, extractor;
-        volatile String wlName = null;
-        private StaticHandler(MainActivity activity) {
-            wrActivity = new WeakReference<>(activity);
-        }
 
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            MainActivity activity = wrActivity.get();
-            if (activity == null) return;
-            if (msg.what == HANDLE_MESSAGE_PARSED) {
-                parser = true;
-                activity.pbText.setText("Extrackting Text...");
-            }
-            if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
-                extractor = true;
-                wlName = msg.getData().getString("wlName");
-            }
-            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
-                parser = true;
-                extractor = true;
-            }
-
-            if (parser && extractor) {
-                activity.updateLine(wlName);
-            }
-        }
-    }
 
 
     //-------Adapter-------//
@@ -318,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         @Override
         public Cursor loadInBackground() {
-            return dbHelper.getData(wlName);
+            return dbHelper.getData(wlName, 0);
         }
     }
 
@@ -335,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         if (wlName != null) {
             loadWl(wlName);
         }
-        getWLsAsButtons(scroll, dbHelper);
+        //getWLsAsButtons(scroll, dbHelper);
         scroll.setVisibility(View.VISIBLE);
     }
 
@@ -355,50 +311,13 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         getSupportLoaderManager().getLoader(0).forceLoad();
     }
 
-    //-------Wordlists As Buttons-------//
 
-    void getWLsAsButtons(LinearLayout linearLayout, DBHelper dbHelper) {
-
-
-        final String[] wlNames = dbHelper.loadWlsNames();
-
-        for (int i = 0; i < wlNames.length; i++) {
-            Button button = new Button(this);
-            final int k = i;
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    updateLine(wlNames[k]);
-
-                }
-            };
-            button.setText(wlNames[i]);
-            button.setOnClickListener(onClickListener);
-            linearLayout.addView(button);
-        }
-        ImageButton im = new ImageButton(this);
-        im.setImageResource(android.R.drawable.ic_menu_add);
-        final Activity act = this;
-        im.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isDeletable = false;
-                isAddable = false;
-                Intent fileManager = new Intent(act, FileManagerActivity.class);
-                startActivityForResult(fileManager, REQUEST_CODE_FM);
-                setResult(RESULT_OK, fileManager);
-            }
-        });
-        linearLayout.addView(im);
-    }
-
-    //-------Activity LiveCircle-------//
+    //-------Activity LiveCycle-------//
 
     @Override
     protected void onDestroy() {
         dbHelper.close();
-        if (h != null)
-            h.removeCallbacksAndMessages(null);
+
         super.onDestroy();
     }
 }
