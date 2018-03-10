@@ -1,5 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
+import android.support.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -54,8 +56,8 @@ public class Delegator {
 
     private void parse() throws IOException {
         /**
-         * This Method find Text blocks in tags BT abd ET
-         * also this method find cmap
+         * This Method finds Text blocks within tags BT and ET
+         * also this method finds cmap
          */
 
         int buff;
@@ -103,7 +105,7 @@ public class Delegator {
     private void parseCMap() throws IOException {
 
         /**
-         * This Method parse a charMap in the end of PDF file
+         * This Method parses a charMap in the end of PDF file
          */
 
         String[] chars;
@@ -179,7 +181,7 @@ public class Delegator {
                     if ((char) ch != '\n') {
                         l.append((char) ch);
                     } else {
-                        if (l.charAt(l.length() - 1) == '\r')
+                        if (l.length() > 0 && l.charAt(l.length() - 1) == '\r')
                             l.deleteCharAt(l.length() - 1);
                         return l.toString();
                     }
@@ -194,6 +196,9 @@ public class Delegator {
         /*
           This method take all nodes, convert text and sort
          */
+
+
+        WordList list = new WordList()
 
     }
 
@@ -242,18 +247,20 @@ public class Delegator {
             return text.toString();
         }
 
-        private void getCord(Node node) throws IOException {
+        @Nullable
+        private Node getCord() throws IOException {
             // Get current coordinates
             ch = io.read();
+            Node node = null;
             while ((char) ch != '[') {
                 lineStr = readLine();
                 if (lineStr.endsWith("Tm")) {
                     String[] cord = lineStr.split(" ");
-                    node.setX(Double.parseDouble(cord[4]));
-                    node.setY(Double.parseDouble(cord[5]));
+                    node = new Node(Double.parseDouble(cord[4]), Double.parseDouble(cord[5]));
                 }
                 ch = io.read();
             }
+            return node;
         }
 
         private void textToken() throws IOException {
@@ -262,8 +269,8 @@ public class Delegator {
              * This Method extract text and gives it to Node
              */
 
+            //Node node = getCord();
             Node node = new Node();
-            getCord(node);
             node.setRawText(extractRawText());
             if (newWlName == null) {
                 node.setHead(true);
