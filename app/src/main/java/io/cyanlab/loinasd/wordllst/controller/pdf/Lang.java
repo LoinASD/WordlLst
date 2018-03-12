@@ -5,5 +5,5 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
  */
 
 public enum Lang {
-    ENG, RUS, NUM, UNDEFIND
+    ENG, RUS, NUM, UNDEFINED, BRACE
 }

@@ -15,7 +15,8 @@ class LangChecker {
             return Lang.RUS;
         } else if ((cc >= UNICODE_RANGE_NUMERIC[0]) && (cc <= UNICODE_RANGE_NUMERIC[1])) {
             return Lang.NUM;
-        }
-        return Lang.UNDEFIND;
+        } else if (cc == '<')
+            return Lang.BRACE;
+        return Lang.UNDEFINED;
     }
 }
