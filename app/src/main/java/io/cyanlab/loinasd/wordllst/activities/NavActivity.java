@@ -47,9 +47,11 @@ public class NavActivity extends AppCompatActivity
     static final String MODE_LISTS = "Lists";
     static final String MODE_LINES = "Lines";
 
+    public static String WL_NAME = "wlName";
+
     static final int REQUEST_CODE_ADD = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
-    static final int HANDLE_MESSAGE_EXTRACTED = 2;
+    public static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
     static final int REQUEST_CODE_CHANGE = 5;
     static final int REQUEST_CODE_DELETEWL = 3;
@@ -526,7 +528,7 @@ public class NavActivity extends AppCompatActivity
             }
             if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
                 extractor = true;
-                wlName = msg.getData().getString("wlName");
+                wlName = msg.getData().getString(WL_NAME);
 
 
             }
@@ -542,7 +544,9 @@ public class NavActivity extends AppCompatActivity
 
             if (parser && extractor) {
                 LIST_NAME = wlName;
-                activity.loadLines();
+
+                Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_SHORT).show();
+                //activity.loadLines();
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBut.setVisibility(View.INVISIBLE);

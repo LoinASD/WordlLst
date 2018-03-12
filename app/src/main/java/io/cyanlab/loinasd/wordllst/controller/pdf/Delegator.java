@@ -1,5 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
+import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.Nullable;
 
 import java.io.IOException;
@@ -8,6 +10,8 @@ import java.io.PipedOutputStream;
 import java.sql.SQLOutput;
 import java.util.ArrayList;
 
+import io.cyanlab.loinasd.wordllst.activities.MainActivity;
+import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 
 
@@ -28,6 +32,7 @@ public class Delegator {
     private ArrayList<Node> trans = new ArrayList<>();
     private Node waitingNode;
     private Lang waitingNodeLang;
+    TextExtractor extractor = new TextExtractor();
 
     private void updateProgress() {
         proggress++;
@@ -46,6 +51,11 @@ public class Delegator {
 
         try {
             parse();
+            if (gotDictionary && !isExists) {
+                nodeCollect();
+            } else {
+                //MainActivity.h.sendEmptyMessage(4);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -67,33 +77,7 @@ public class Delegator {
             if (ch == 'B') {
                 ch = io.read();
                 if (ch == 'T') {
-                    io.read();
-                    final PipedOutputStream nodeOut;
-                    final PipedInputStream nodeIn;
-                    Thread bundle;
-                    try {
-                        int buff;
-                        boolean isDone = false;
-                        nodeOut = new PipedOutputStream();
-                        nodeIn = new PipedInputStream(nodeOut);
-
-                        bundle = new Thread(new TextExtractor(nodeIn));
-                        bundle.start();
-                        while (!isDone) {
-                            nodeOut.write(ch);
-                            ch = io.read();
-                            if (ch == 'E') {
-                                buff = ch;
-                                ch = io.read();
-                                if (ch == 'T')
-                                    isDone = true;
-                                else
-                                    nodeOut.write(buff);
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    extractor.textToken();
                 }
             } else if (ch =='b'){
                 String line = readLine();
@@ -198,6 +182,8 @@ public class Delegator {
           This method take all prims, convert text and sort
          */
 
+        (waitingNodeLang == Lang.ENG ? prims : trans).add(waitingNode);
+
 
         for (Node node : trans) {
             node.convertText(converter);
@@ -206,24 +192,22 @@ public class Delegator {
 
         WordList list = new WordList(prims, trans);
 
+        Message message = new Message();
+
+        message.what = NavActivity.HANDLE_MESSAGE_EXTRACTED;
+
+        Bundle data = new Bundle();
+
+        data.putString(NavActivity.WL_NAME, newWlName);
+
+        message.setData(data);
+
+        NavActivity.h.handleMessage(message);
+
+
     }
 
-    private class TextExtractor implements Runnable{
-
-        PipedInputStream io;
-        TextExtractor(final PipedInputStream io) {
-            this.io = io;
-        }
-
-        @Override
-        public void run() {
-            try {
-                textToken();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
+    private class TextExtractor {
 
         private Lang getStringLang(String text) {
             int i = 0;
@@ -332,12 +316,6 @@ public class Delegator {
                 }
 
 
-            }
-
-            if (ch == -1 && gotDictionary && !isExists) {
-                nodeCollect();
-            } else {
-                //MainActivity.h.sendEmptyMessage(4);
             }
 
 
