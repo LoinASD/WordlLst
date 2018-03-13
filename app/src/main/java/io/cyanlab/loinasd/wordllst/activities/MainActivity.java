@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
                 @Override
                 public void run() {
                     long timeStart = System.currentTimeMillis();
-                    new Delegator().extract(pin, dbHelper);
+                    new Delegator().extract(pin);
                     long timeStop = System.currentTimeMillis();
 
                     System.out.printf("Parser works %d ms", timeStop - timeStart);

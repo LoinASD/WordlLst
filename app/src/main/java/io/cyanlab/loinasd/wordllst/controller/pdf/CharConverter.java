@@ -11,8 +11,6 @@ class CharConverter {
         int res;
         for (Range range : ranges) {
 
-            System.out.println(range.getBegin() + " " + range.getEnd());
-
             if (c >= range.getBegin() && c <= range.getEnd()) {
                 res = range.getNewRange() + (c - range.getBegin());
                 return (char) res;

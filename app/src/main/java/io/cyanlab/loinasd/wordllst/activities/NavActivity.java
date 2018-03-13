@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.Dialog;
+import android.arch.persistence.room.Room;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,10 +31,14 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.database.FilledList;
+import io.cyanlab.loinasd.wordllst.controller.database.LocalDatabase;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_CHANGE;
@@ -52,7 +57,8 @@ public class NavActivity extends AppCompatActivity
     static final int REQUEST_CODE_ADD = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
     public static final int HANDLE_MESSAGE_EXTRACTED = 2;
-    static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+    public static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+    static final int HANDLE_MESSAGE_DELETED = 5;
     static final int REQUEST_CODE_CHANGE = 5;
     static final int REQUEST_CODE_DELETEWL = 3;
 
@@ -69,6 +75,8 @@ public class NavActivity extends AppCompatActivity
     private boolean isFabExpanded;
 
     public static String LIST_NAME;
+
+    public static LocalDatabase database;
 
 
 
@@ -176,6 +184,16 @@ public class NavActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        Thread loadDB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (database == null)
+                    database = Room.databaseBuilder(getApplicationContext(), LocalDatabase.class, "base").build();
+            }
+        });
+
+        loadDB.run();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -333,12 +351,17 @@ public class NavActivity extends AppCompatActivity
         if (requestCode == REQUEST_CODE_DELETEWL) {
             if (resultCode == RESULT_OK) {
 
-                LIST_NAME = null;
-                ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
+                Thread deleteWL = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
+                        NavActivity.database.listDao().deleteList(LIST_NAME);
+                        h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
+                    }
+                });
+                deleteWL.start();
 
 
-                LIST_NAME = null;
-                loadLists();
 
             }
         }
@@ -367,10 +390,10 @@ public class NavActivity extends AppCompatActivity
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    new Delegator().extract(pin, dbHelper);
+                    new Delegator().extract(pin);
                 }
             });
-
+            parser.setPriority(Thread.MAX_PRIORITY);
             parser.start();
             extractor.start();
 
@@ -541,12 +564,27 @@ public class NavActivity extends AppCompatActivity
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBut.setVisibility(View.INVISIBLE);
             }
+            if (msg.what == HANDLE_MESSAGE_DELETED) {
+
+                ((ShowFragment) activity.lists).setState(ShowFragment.NEEDS_UPD);
+                activity.loadLists();
+
+                LIST_NAME = null;
+
+                return;
+
+            }
 
             if (parser && extractor) {
+
+                parser = false;
+                extractor = false;
+
                 LIST_NAME = wlName;
 
-                Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_SHORT).show();
-                //activity.loadLines();
+                Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_LONG).show();
+                activity.loadLines();
+
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBut.setVisibility(View.INVISIBLE);

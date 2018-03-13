@@ -2,59 +2,61 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import android.os.Bundle;
 import android.os.Message;
-import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 
-import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.database.FilledList;
 
 
 public class Delegator {
 
-    private static int ch;
+    private int ch;
     private PipedInputStream io;
-    private CharConverter converter = new CharConverter();
+    private CharConverter converter;
     private static String lineStr;
-    private static boolean gotDictionary = false;
+    private static boolean gotDictionary;
     private String newWlName;
-    private boolean isExists = false;
+    private boolean isExists;
     //private StringBuilder text;
     private int range;
     private DBHelper dbHelper;
     private int proggress;
-    private ArrayList<Node> prims = new ArrayList<>();
-    private ArrayList<Node> trans = new ArrayList<>();
+    private ArrayList<Node> nodes;
     private Node waitingNode;
     private Lang waitingNodeLang;
-    TextExtractor extractor = new TextExtractor();
+    TextExtractor extractor;
+    private int waitingNodeLine;
 
     private void updateProgress() {
         proggress++;
     }
 
 
-    public void extract(final PipedInputStream io, DBHelper dbHelper) {
+    public void extract(final PipedInputStream io) {
         /**
          * This Method extracts Nodes with text from PipedInputStream
          * Works with DBHelper
          * This is Main Method
          */
 
+
         this.io = io;
-        this.dbHelper = dbHelper;
+        nodes = new ArrayList<>();
+        extractor = new TextExtractor();
+        converter = new CharConverter();
+        gotDictionary = false;
+        isExists = false;
 
         try {
             parse();
             if (gotDictionary && !isExists) {
                 nodeCollect();
             } else {
-                //MainActivity.h.sendEmptyMessage(4);
+                NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
             }
 
         } catch (IOException e) {
@@ -182,15 +184,32 @@ public class Delegator {
           This method take all prims, convert text and sort
          */
 
-        (waitingNodeLang == Lang.ENG ? prims : trans).add(waitingNode);
+        nodes.add(waitingNode);
 
+        WordList list = new WordList();
+        list.setWlName(newWlName);
 
-        for (Node node : trans) {
-            node.convertText(converter);
+        ThreadGroup group = new ThreadGroup("Converting");
+
+        for (final Node node : nodes) {
+
+            Thread thread = new Thread(group, new Runnable() {
+                @Override
+                public void run() {
+                    node.convertText(converter);
+                }
+            });
+
+            thread.start();
         }
 
+        while (group.activeCount() > 0) {
+        }
 
-        WordList list = new WordList(prims, trans);
+        NavActivity.database.nodeDao().insertAll(nodes);
+        NavActivity.database.listDao().insertList(list);
+
+
 
         Message message = new Message();
 
@@ -202,12 +221,14 @@ public class Delegator {
 
         message.setData(data);
 
-        NavActivity.h.handleMessage(message);
+        NavActivity.h.sendMessage(message);
 
 
     }
 
     private class TextExtractor {
+
+        private Lang curLang;
 
         private Lang getStringLang(String text) {
             int i = 0;
@@ -238,14 +259,18 @@ public class Delegator {
                     ch = io.read();
                 }
                 if ((char) ch == '<') {
+                    curLang = Lang.BRACE;
                     text.append((char) ch);
                     while ((char) ch != '>') {
                         ch = io.read();
                         text.append((char) ch);
                     }
                 } else {
+                    curLang = Lang.UNDEFINED;
                     ch = io.read();
                     while ((char) ch != ')') {
+                        if (curLang != Lang.ENG && LangChecker.langCheck((char) ch) == Lang.ENG)
+                            curLang = Lang.ENG;
                         text.append((char) ch);
                         ch = io.read();
                     }
@@ -282,43 +307,61 @@ public class Delegator {
             //Node node = new Node();
             //getCord4Node(node);
 
-            System.out.printf("kek");
             String text = extractRawText();
 
-            System.out.println(text);
             if (newWlName == null) {
                 newWlName = text.trim().replaceAll(" ", "_").replaceAll(":", "");
 
-                for (String s : dbHelper.loadWlsNames()) {
+                for (String s : NavActivity.database.listDao().loadNames()) {
                     if (newWlName.equals(s)) {
                         isExists = true;
                     }
                 }
             } else {
 
-                Lang nodeLang = getStringLang(text);
-
-
-                if (waitingNode == null) {
-                    waitingNode = new Node();
-                    waitingNode.setText(text);
-                    waitingNodeLang = nodeLang;
-                } else {
-                    if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.BRACE : Lang.ENG)) {
-
-                        (nodeLang == Lang.ENG ? trans : prims).add(waitingNode);
-                        waitingNode = new Node();
-                        waitingNode.setText(text);
-                        waitingNodeLang = nodeLang;
-
-                    } else
-                        waitingNode.setText(waitingNode.getText().concat(text));
-                }
-
+                delegateText(text);
 
             }
 
 
+        }
+
+        private void delegateText(String text) {
+
+            Lang nodeLang = curLang;
+
+            System.out.println(text + "\t" + curLang);
+
+            if (waitingNode == null) {
+
+                waitingNode = new Node();
+                waitingNode.setWlName(newWlName);
+                waitingNode.setPrimText(text);
+                waitingNodeLang = Lang.ENG;
+
+            } else {
+                if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.BRACE : Lang.ENG)) {
+
+
+                    waitingNode.setWlName(newWlName);
+                    if (nodeLang == Lang.ENG) {
+
+                        nodes.add(waitingNode);
+
+                        waitingNode = new Node();
+
+                        waitingNode.setPrimText(text);
+
+                    } else waitingNode.setTransText(text);
+                    waitingNodeLang = nodeLang;
+
+                } else {
+                    if (waitingNodeLang == Lang.ENG)
+                        waitingNode.setPrimText(waitingNode.getPrimText().concat(text));
+                    else waitingNode.setTransText(waitingNode.getTransText().concat(text));
+                }
+
+            }
         }
     }
 }

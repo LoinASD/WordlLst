@@ -1,35 +1,67 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
-class Node {
-    private double x;
-    private double y;
-    private String text;
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
 
-    Node() {}
+@Entity
+public class Node {
+
+    @Ignore
+    private double x;
+    @Ignore
+    private double y;
+
+    public String getWlName() {
+        return wlName;
+    }
+
+    public void setWlName(String wlName) {
+        this.wlName = wlName;
+    }
+
+    @ColumnInfo(name = "nodeWLName")
+    private String wlName;
+
+    @PrimaryKey
+    public Integer id;
+
+    private String primText;
+
+    public String getTransText() {
+        return transText;
+    }
+
+    public void setTransText(String transText) {
+        this.transText = transText;
+    }
+
+    private String transText;
 
     public void convertText(CharConverter converter) {
         char cc;
         StringBuilder message = new StringBuilder();
-        if (text.charAt(0) == '(') {
-            String[] stringarr = text.split("[(]");
+        if (transText.charAt(0) == '(') {
+            String[] stringarr = transText.split("[(]");
             for (String s : stringarr) {
                 s= s.split("[)]")[0];
                 message.append(s);
             }
-        } else if (text.charAt(0) == '<') {
+        } else if (transText.charAt(0) == '<') {
             int i = 0;
 
-            while (i < text.length()) {
-                cc = text.charAt(i);
+            while (i < transText.length()) {
+                cc = transText.charAt(i);
                 if (cc == '<') {
-                    cc = text.charAt(++i);
+                    cc = transText.charAt(++i);
                     StringBuilder numChar;
 
                     while (cc != '>') {
                         numChar = new StringBuilder();
                         for (int j = 0; j < 4; j++) { // 4 - char`s length in HEX
                             numChar.append(cc);
-                            cc = text.charAt(++i);
+                            cc = transText.charAt(++i);
                         }
                         int c = Integer.parseInt(numChar.toString(), 16);
                         message.append(converter.convert(c));
@@ -40,8 +72,7 @@ class Node {
         }
 
 
-
-        this.text = message.toString();
+        this.transText = message.toString();
     }
 
     public double getX() {
@@ -52,8 +83,8 @@ class Node {
         return y;
     }
 
-    public String getText() {
-        return text;
+    public String getPrimText() {
+        return primText;
     }
 
     public void setX(double x) {
@@ -64,7 +95,9 @@ class Node {
         this.y = y;
     }
 
-    public void setText(String text) {this.text = text;}
+    public void setPrimText(String primText) {
+        this.primText = primText;
+    }
 
 
 }
