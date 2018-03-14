@@ -11,6 +11,7 @@ import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -37,8 +38,6 @@ import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_WL;
 
 public class ShowFragment extends android.support.v4.app.Fragment {
 
-    private static final String PRIM_COLUMN_NAME = "prim";
-    private static final String TRANS_COLUMN_NAME = "trans";
     private int STATE;
 
     public static final int RIGHT_ANSWERS_TO_COMPLETE = 3;
@@ -74,7 +73,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.content_nav,null);
-        main = (ListView) v.findViewById(R.id.scrollView);
+        main = v.findViewById(R.id.scrollView);
         h = new FragHandler(this);
         switch (MODE) {
 
@@ -86,11 +85,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        int lineId = Integer.parseInt(((Cursor) main.getItemAtPosition(position))
-                                .getString(((Cursor) main.getItemAtPosition(position)).getColumnIndex("_id")));
                         Intent changeLine = new Intent(getContext(), ChangingWLActivity.class).
-                                putExtra("ID", lineId).
-                                putExtra("Name", LIST_NAME).
+                                putExtra("Node", (Node) adapter.getItem(position)).
                                 putExtra("Action", "Change");
                         startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
 
@@ -100,18 +96,19 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     }
                 });
 
-                /*main.setOnScrollListener(new AbsListView.OnScrollListener() {
+                main.setOnScrollListener(new AbsListView.OnScrollListener() {
                     @Override
                     public void onScrollStateChanged(AbsListView view, int scrollState) {
-                        if (scrollState != SCROLL_STATE_IDLE && MODE == SHOW_LINES) {
-                            getActivity().getLoaderManager().getLoader(1).forceLoad();
-                        }
+
                     }
 
                     @Override
                     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                        if (totalItemCount - firstVisibleItem - visibleItemCount < 20) {
+                            //adapter.loadFromDB();
+                        }
                     }
-                });*/
+                });
 
                 break;
             case SHOW_WL:
@@ -134,16 +131,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                             //loadProgress();
 
 
-                            for (int i = 0; i < main.getChildCount(); i++) {
 
-                                main.getChildAt(i).setOnDragListener(new View.OnDragListener() {
-                                    @Override
-                                    public boolean onDrag(View v, DragEvent event) {
-
-                                        return false;
-                                    }
-                                });
-                            }
 
 
                         }
@@ -205,7 +193,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public void onResume() {
 
         if (STATE == NEEDS_UPD && !isHidden()) {
-            main.scheduleLayoutAnimation();
+            //main.scheduleLayoutAnimation();
             adapter.loadFromDB();
             switch (MODE) {
                 case SHOW_WL:
@@ -311,7 +299,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
     }
 
-    ;
+
 
     private class WLAdapter extends BaseAdapter {
 
@@ -329,8 +317,17 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             inflater = getLayoutInflater();
         }
 
+        private void colorLines() {
+            for (int i = 0; i < main.getChildCount(); i++) {
+                if (i % 2 == 0) {
+                    main.getChildAt(i).setBackgroundColor(getResources().getColor(R.color.colorAccentLowAlpha));
+                } else
+                    main.getChildAt(i).setBackgroundColor(getResources().getColor(R.color.colorWhite));
+            }
+        }
 
-        public void loadFromDB() {
+
+        void loadFromDB() {
             switch (MODE) {
 
                 case (SHOW_WL): {
@@ -382,9 +379,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             } else {
                 ((TextView) v.findViewById(R.id.primeTV)).setText(((Node) getItem(i)).getPrimText());
                 ((TextView) v.findViewById(R.id.translateTV)).setText(((Node) getItem(i)).getTransText());
-                if (i % 2 == 0)
-                    v.setBackgroundColor(getResources().getColor(R.color.MaterialGreen));
             }
+
 
             return v;
         }

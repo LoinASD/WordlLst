@@ -4,6 +4,7 @@ import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
+import android.arch.persistence.room.Update;
 
 import java.util.List;
 
@@ -21,12 +22,19 @@ public interface NodeDao {
     @Query("SELECT * FROM node WHERE nodeWLName = :wlName")
     List<Node> getNodes(String wlName);
 
+    @Query("SELECT * FROM node WHERE (nodeWLName = :wlName & id < :last)")
+    List<Node> getNodes(String wlName, int last);
+
+
     @Transaction
     @Insert
     void insertAll(List<Node> nodes);
 
     @Insert
     long insertNode(Node node);
+
+    @Update
+    void updateNode(Node node);
 
     @Transaction
     @Query("DELETE FROM node WHERE nodeWLName = :wlName")
