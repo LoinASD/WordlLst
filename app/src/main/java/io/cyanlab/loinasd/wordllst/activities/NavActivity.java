@@ -59,6 +59,7 @@ public class NavActivity extends AppCompatActivity
     public static final int HANDLE_MESSAGE_EXTRACTED = 2;
     public static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
     static final int HANDLE_MESSAGE_DELETED = 5;
+    public static final int HANDLE_MESSAGE_EXISTS = 6;
     static final int REQUEST_CODE_CHANGE = 5;
     static final int REQUEST_CODE_DELETEWL = 3;
 
@@ -555,11 +556,21 @@ public class NavActivity extends AppCompatActivity
 
 
             }
-            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
+            if (msg.what == HANDLE_MESSAGE_EXISTS) {
                 parser = false;
                 extractor = false;
 
                 Toast.makeText(activity, "Wordlist with equal name already exists", Toast.LENGTH_SHORT).show();
+
+                activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
+                activity.progBut.setVisibility(View.INVISIBLE);
+            }
+
+            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
+                parser = false;
+                extractor = false;
+
+                Toast.makeText(activity, "No dictionary found", Toast.LENGTH_SHORT).show();
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBut.setVisibility(View.INVISIBLE);

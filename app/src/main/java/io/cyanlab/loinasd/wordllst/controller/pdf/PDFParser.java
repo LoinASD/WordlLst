@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PipedOutputStream;
 import java.util.logging.Logger;
 import java.util.zip.DataFormatException;
@@ -19,12 +20,20 @@ public class PDFParser {
     private static final String markerLength = "Length";
     private Logger log = Logger.getLogger(PDFParser.class.getName());
 
-    /*Парсит все в этой жизни, пишет в 1 поток.*/
+    private OutputStream outputStream;
+    private Thread decoder;
 
+    /**
+     * Парсит все в этой жизни из файла @file, пишет в @out поток.
+     *
+     * @param file
+     * @param out
+     */
     public void parsePdf(final String file, final PipedOutputStream out) {
         try {
+            outputStream = out;
+            BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file),2048);
             long startTime = System.currentTimeMillis();
-            BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
             while (bufInput.available() != 0) {
                 cc = (char) bufInput.read();
@@ -35,46 +44,49 @@ public class PDFParser {
                     if (cc == markerLength.charAt(0)) {
                         boolean isLength = search4Marker(bufInput,markerLength);
                         if (isLength) {
-                            StringBuffer res = new StringBuffer(6);
+                            StringBuilder res = new StringBuilder();
                             bufInput.read();
                             cc = (char) bufInput.read();
                             while ((cc != '>') && (cc != '/')) {
                                 res.append(cc);
                                 cc = (char) bufInput.read();
                             }
-                            if (cc == '/') {
+                            try {
+                                streamLength = Integer.parseInt(res.toString());
+                            } catch (NumberFormatException e) {
                                 isFonts = true;
-                            } else {
-                                try {
-                                    streamLength = Integer.parseInt(res.toString());
-                                } catch (NumberFormatException e) {
-                                    isFonts = true;
-                                }
+                            }
+                            if (cc == '/') {
+                                bufInput.skip(streamLength);
+                                continue;
                             }
                         }
                     }
                     if (cc == '>') cc = (char) bufInput.read();
                 }
-                        
-                if ((isFonts) || (streamLength <= 0)) {
-                    continue;
-                } else {
+
+                if ((streamLength > 0)) {
                     boolean isStream = false;
-                    while ((!isStream)&&(bufInput.available()>0)) {
+                    while ((!isStream) && (bufInput.available() > 0)) {
                         if (cc == markerStream.charAt(0)) {
                             isStream = search4Marker(bufInput, markerStream);
                         }
                         if (!isStream) cc = (char) bufInput.read();
                     }
-                    if (!isStream) {
-                        continue;
-                    } else{
+                    if (isStream) {
                         bufInput.read();
                         bufInput.read();
+                        System.out.println(streamLength);
                         //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
                         try {
-                            decode(streamLength, bufInput, out);
+                            if (decoder != null) {
+                                decoder.join();
+                            }
+                            decode(streamLength, bufInput);
                         } catch (DataFormatException e) {
+                            System.out.println("Ошибка расшифровки GZIPa");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                             log.warning("Ошибка расшифровки GZIPa");
                             //System.out.println("Ошибка расшифровки GZIPa");
                         }
@@ -88,22 +100,22 @@ public class PDFParser {
         } catch (FileNotFoundException e) {
             //MainActivity.h.sendEmptyMessage(1);
         } catch (IOException e) {
-           // MainActivity.h.sendEmptyMessage(1);
+            // MainActivity.h.sendEmptyMessage(1);
         }
     }
 
-    private static void decode(final int length, final InputStream in,
-                               final PipedOutputStream out) throws DataFormatException, IOException {
+    /**
+     * @param length
+     * @param in
+     * @throws DataFormatException
+     * @throws IOException
+     */
+    private void decode(final int length, final InputStream in) throws DataFormatException, IOException {
         byte[] output = new byte[length];
         int compressedDataLength = in.read(output);
-        Inflater decompressor = new Inflater();
-        decompressor.setInput(output, 0, compressedDataLength);
-        byte[] result = new byte[length * 10];
-        int resultLength = decompressor.inflate(result);
-        decompressor.end();
+        decoder = new Thread(new UnGzipper(output, compressedDataLength));
+        decoder.start();
 
-
-        out.write(result, 0, resultLength);
     }
 
 
@@ -117,6 +129,46 @@ public class PDFParser {
             }
         }
         return true;
+    }
+
+    /**
+     * Исполняемый класс, который декодит текст и пишет его в
+     *
+     * @outputStream
+     **/
+
+    private class UnGzipper implements Runnable {
+
+        private byte[] output;
+        private int compressedDataLength;
+
+        UnGzipper(byte[] output, int compressedDataLength) {
+            this.output = output;
+            this.compressedDataLength = compressedDataLength;
+        }
+
+        @Override
+        public void run() {
+            Inflater decompressor = new Inflater();
+            ;
+            decompressor.setInput(output, 0, compressedDataLength);
+
+            byte[] result = new byte[compressedDataLength * 10];
+            int resultLength = 0;
+            try {
+                resultLength = decompressor.inflate(result);
+            } catch (DataFormatException e) {
+                e.printStackTrace();
+            }
+
+            decompressor.end();
+
+            try {
+                outputStream.write(result, 0, resultLength);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 

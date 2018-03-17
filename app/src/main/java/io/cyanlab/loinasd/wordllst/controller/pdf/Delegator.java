@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.database.FilledList;
 
 
 public class Delegator {
@@ -29,7 +30,15 @@ public class Delegator {
     private Node waitingNode;
     private Lang waitingNodeLang;
     TextExtractor extractor;
-    private int waitingNodeLine;
+
+    final private int COINS_TO_SET_X = 4;
+
+    private double EngX;
+    private int EngXcount;
+
+    private double RusX;
+    private int RusXcount;
+
     private static Logger log = Logger.getLogger(Delegator.class.getName());
 
     private void updateProgress() {
@@ -56,6 +65,8 @@ public class Delegator {
             parse();
             if (gotDictionary && !isExists) {
                 nodeCollect();
+            } else if (isExists) {
+                NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_EXISTS);
             } else {
                 NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
             }
@@ -85,9 +96,12 @@ public class Delegator {
                     extractor.textToken();
                 }
             } else if (ch =='b'){
-                String line = readLine();
-                if (line.equals("egincmap"))
-                    parseCMap();
+                ch = io.read();
+                if (ch == 'e') {
+                    String line = readLine();
+                    if (line.equals("gincmap"))
+                        parseCMap();
+                }
             }
         }
     }
@@ -332,8 +346,6 @@ public class Delegator {
         private void delegateText(String text) {
 
             Lang nodeLang = curLang;
-
-            //System.out.println(text + "\t" + curLang);
 
             if (waitingNode == null) {
 
