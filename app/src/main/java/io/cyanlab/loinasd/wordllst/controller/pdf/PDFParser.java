@@ -13,6 +13,7 @@ import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 
+
 public class PDFParser {
 
     private static char cc;
@@ -26,8 +27,8 @@ public class PDFParser {
     /**
      * Парсит все в этой жизни из файла @file, пишет в @out поток.
      *
-     * @param file
-     * @param out
+     * @param file - файл для чтения
+     * @param out - поток для записи
      */
     public void parsePdf(final String file, final PipedOutputStream out) {
         try {
@@ -95,22 +96,23 @@ public class PDFParser {
             }
             NavActivity.h.sendEmptyMessage(1);
             out.close();
-            //System.out.printf("PDFParser works %d ms", System.currentTimeMillis() - startTime);
             log.warning("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
         } catch (FileNotFoundException e) {
-            //MainActivity.h.sendEmptyMessage(1);
+            NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
         } catch (IOException e) {
-            // MainActivity.h.sendEmptyMessage(1);
+            NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
         }
     }
 
     /**
-     * @param length
-     * @param in
-     * @throws DataFormatException
-     * @throws IOException
+     * Метод, расшифровывающий @length байт из потока @in и пишущий расшифрованные данные в @outputStream
+     *
+     * @param length - длина зашифрованной части файла в байтах
+     * @param in - входной поток
+     * @throws DataFormatException выбрасывается в случае, если данные находятся в другой кодировке
+     * @throws IOException выбрасывается при ошибках ввода/вывода
      */
-    private void decode(final int length, final InputStream in) throws DataFormatException, IOException {
+    private void decode(int length, InputStream in) throws DataFormatException, IOException {
         byte[] output = new byte[length];
         int compressedDataLength = in.read(output);
         decoder = new Thread(new UnGzipper(output, compressedDataLength));
@@ -119,7 +121,14 @@ public class PDFParser {
     }
 
 
-    // Возвращает true когда нашел и false когда не нашел Маркер
+    /**
+     * Возвращает true когда нашел и false когда не нашел @marker в @inputStream
+     *
+     * @param inputStream - входной поток
+     * @param marker      - Маркер
+     * @return true когда нашел и false когда не нашел @marker
+     * @throws IOException выбрасывается при ошибках ввода/вывода
+     */
 
     private static boolean search4Marker(InputStream inputStream, String marker) throws IOException{
         for (int i = 1; i < marker.length(); i++) {
@@ -133,8 +142,7 @@ public class PDFParser {
 
     /**
      * Исполняемый класс, который декодит текст и пишет его в
-     *
-     * @outputStream
+     *@outputStream
      **/
 
     private class UnGzipper implements Runnable {
@@ -150,7 +158,6 @@ public class PDFParser {
         @Override
         public void run() {
             Inflater decompressor = new Inflater();
-            ;
             decompressor.setInput(output, 0, compressedDataLength);
 
             byte[] result = new byte[compressedDataLength * 10];

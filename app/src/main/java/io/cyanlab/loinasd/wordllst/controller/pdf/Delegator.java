@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
-import io.cyanlab.loinasd.wordllst.controller.database.FilledList;
 
 
 public class Delegator {
@@ -29,15 +28,16 @@ public class Delegator {
     private ArrayList<Node> nodes;
     private Node waitingNode;
     private Lang waitingNodeLang;
-    TextExtractor extractor;
+    private TextExtractor extractor;
 
-    final private int COINS_TO_SET_X = 4;
+    final private int COINS_TO_SET_X = 10;
 
-    private double EngX;
-    private int EngXcount;
+    private double engX;
 
-    private double RusX;
-    private int RusXcount;
+    private boolean isRusXSet;
+    private double rusX;
+    private int rusXCoins;
+    private int rusXErr;
 
     private static Logger log = Logger.getLogger(Delegator.class.getName());
 
@@ -245,6 +245,74 @@ public class Delegator {
 
     private class TextExtractor {
 
+        double x;
+
+        final int xArea = 20;
+
+        ArrayList<TextPlusX> textBuffer = new ArrayList<>();
+
+        private void handleX(double X) {
+            if (rusX != 0.0) {
+                if (rusX == X) {
+                    rusXCoins++;
+                    rusXErr--;
+                } else {
+                    rusXErr++;
+                }
+                if (rusXCoins == COINS_TO_SET_X) {
+                    isRusXSet = true;
+                    loadBuffer();
+                }
+                if (rusXErr == COINS_TO_SET_X) {
+                    rusXErr = 0;
+                    rusXCoins = 0;
+                    rusX = X;
+                }
+            } else {
+                rusX = X;
+            }
+        }
+
+        private void loadBuffer() {
+            for (TextPlusX textPlusX : textBuffer) {
+
+                if (waitingNode == null) {
+
+                    waitingNode = new Node();
+                    waitingNode.setWlName(newWlName);
+                    waitingNode.setPrimText(textPlusX.getText());
+                    waitingNodeLang = Lang.ENG;
+
+                    continue;
+                }
+
+                Lang nodeLang = (textPlusX.getX() >= engX && textPlusX.getX() < rusX - xArea) ? Lang.ENG : Lang.RUS;
+
+                if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.RUS : Lang.ENG)) {
+
+                    waitingNode.setWlName(newWlName);
+                    if (nodeLang == Lang.ENG) {
+
+                        nodes.add(waitingNode);
+
+                        waitingNode = new Node();
+
+                        waitingNode.setPrimText(textPlusX.getText());
+
+                    } else waitingNode.setTransText(textPlusX.getText());
+                    waitingNodeLang = nodeLang;
+
+                } else {
+                    if (waitingNodeLang == Lang.ENG)
+                        waitingNode.setPrimText(waitingNode.getPrimText().concat(textPlusX.getText()));
+                    else
+                        waitingNode.setTransText(waitingNode.getTransText().concat(textPlusX.getText()));
+                }
+            }
+
+
+        }
+
         private Lang curLang;
 
         private Lang getStringLang(String text) {
@@ -299,20 +367,23 @@ public class Delegator {
 
         }
 
-        private void getCord4Node(Node node) throws IOException {
+        private double getNodeX() {
             // Get current coordinates and pass it to node
 
-            ch = io.read();
-            while ((char) ch != '[') {
-                lineStr = readLine();
-                if (lineStr.endsWith("Tm")) {
-                    String[] cord = lineStr.split(" ");
-                    node.setX(Double.parseDouble(cord[4]));
-                    node.setY(Double.parseDouble(cord[5]));
-
-                }
+            try {
                 ch = io.read();
+                while ((char) ch != '[') {
+                    lineStr = readLine();
+                    if (lineStr.endsWith("Tm")) {
+                        String[] cord = lineStr.split(" ");
+                        return Double.parseDouble(cord[4]);
+                    }
+                    ch = io.read();
+                }
+            } catch (IOException e) {
+                return -1;
             }
+            return -1;
         }
 
         private void textToken() throws IOException {
@@ -322,7 +393,7 @@ public class Delegator {
              */
 
             //Node node = new Node();
-            //getCord4Node(node);
+            x = getNodeX();
 
             String text = extractRawText();
 
@@ -347,16 +418,18 @@ public class Delegator {
 
             Lang nodeLang = curLang;
 
-            if (waitingNode == null) {
+            if (!isRusXSet && nodeLang == Lang.BRACE) {
+                handleX(x);
+            }
 
-                waitingNode = new Node();
-                waitingNode.setWlName(newWlName);
-                waitingNode.setPrimText(text);
-                waitingNodeLang = Lang.ENG;
+            if (!isRusXSet) {
+                textBuffer.add(new TextPlusX(text, x, nodeLang));
 
             } else {
-                if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.BRACE : Lang.ENG)) {
 
+                nodeLang = (x >= engX && x < rusX - xArea) ? Lang.ENG : Lang.RUS;
+
+                if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.RUS : Lang.ENG)) {
 
                     waitingNode.setWlName(newWlName);
                     if (nodeLang == Lang.ENG) {
@@ -375,8 +448,34 @@ public class Delegator {
                         waitingNode.setPrimText(waitingNode.getPrimText().concat(text));
                     else waitingNode.setTransText(waitingNode.getTransText().concat(text));
                 }
-
             }
         }
+    }
+
+    private class TextPlusX {
+
+        private String text;
+        private double X;
+        private Lang textLang;
+
+        TextPlusX(String text, double x, Lang lang) {
+            this.text = text;
+            this.X = x;
+            textLang = lang;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public double getX() {
+            return X;
+        }
+
+        public Lang getTextLang() {
+            return textLang;
+        }
+
+
     }
 }
