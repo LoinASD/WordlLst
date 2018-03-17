@@ -109,8 +109,6 @@ public class PDFParser {
      *
      * @param length - длина зашифрованной части файла в байтах
      * @param in - входной поток
-     * @throws DataFormatException выбрасывается в случае, если данные находятся в другой кодировке
-     * @throws IOException выбрасывается при ошибках ввода/вывода
      */
     private void decode(int length, InputStream in) throws DataFormatException, IOException {
         byte[] output = new byte[length];
@@ -127,7 +125,6 @@ public class PDFParser {
      * @param inputStream - входной поток
      * @param marker      - Маркер
      * @return true когда нашел и false когда не нашел @marker
-     * @throws IOException выбрасывается при ошибках ввода/вывода
      */
 
     private static boolean search4Marker(InputStream inputStream, String marker) throws IOException{
@@ -141,9 +138,7 @@ public class PDFParser {
     }
 
     /**
-     * Исполняемый класс, который декодит текст и пишет его в
-     *@outputStream
-     **/
+     * Исполняемый класс, который декодит текст и пишет его в @outputStream*/
 
     private class UnGzipper implements Runnable {
 

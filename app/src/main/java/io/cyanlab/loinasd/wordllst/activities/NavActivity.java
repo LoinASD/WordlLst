@@ -333,7 +333,7 @@ public class NavActivity extends AppCompatActivity
             default: break;
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -357,11 +357,21 @@ public class NavActivity extends AppCompatActivity
                     public void run() {
                         NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
                         NavActivity.database.listDao().deleteList(LIST_NAME);
-                        h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
                     }
                 });
                 deleteWL.start();
+                try {
 
+
+                    deleteWL.join();
+                    LIST_NAME = null;
+                    ((ShowFragment) lists).notifyAdapter();
+                    ((ShowFragment) lines).notifyAdapter();
+                    loadLists();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                loadLists();
 
 
             }
@@ -574,16 +584,6 @@ public class NavActivity extends AppCompatActivity
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBut.setVisibility(View.INVISIBLE);
-            }
-            if (msg.what == HANDLE_MESSAGE_DELETED) {
-
-                ((ShowFragment) activity.lists).setState(ShowFragment.NEEDS_UPD);
-                activity.loadLists();
-
-                LIST_NAME = null;
-
-                return;
-
             }
 
             if (parser && extractor) {

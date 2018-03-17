@@ -45,13 +45,12 @@ public class Delegator {
         proggress++;
     }
 
-
+    /**
+     * Main extraction method. Extracts text from @io
+     *
+     * @param io
+     */
     public void extract(final PipedInputStream io) {
-        /**
-         * This Method extracts Nodes with text from PipedInputStream
-         * Works with DBHelper
-         * This is Main Method
-         */
 
         long startTime = System.currentTimeMillis();
         this.io = io;
@@ -79,13 +78,11 @@ public class Delegator {
         //System.out.printf("Delegator works %d ms", System.currentTimeMillis() - startTime);
     }
 
+    /**
+     * Finds BT-ET blocks and sends contents to @TextExtractor, also searches for CMap
+     * @throws IOException
+     */
     private void parse() throws IOException {
-        /**
-         * This Method finds Text blocks within tags BT and ET
-         * also this method finds cmap
-         */
-
-
 
         while (ch != -1) {
             ch = io.read();
@@ -106,6 +103,10 @@ public class Delegator {
         }
     }
 
+    /**
+     * Parses CMap and fills @CharConverters @Ranges
+     * @throws IOException
+     */
     private void parseCMap() throws IOException {
 
         /**
@@ -169,6 +170,11 @@ public class Delegator {
 
     }
 
+    /**
+     * Reads line from @inputStream. Lightweight realization of @Readers @readLine;
+     * @return Line
+     * @throws IOException
+     */
     private String readLine() throws IOException {
 
         /**
@@ -195,6 +201,10 @@ public class Delegator {
 
     }
 
+    /**
+     * Method, called when the whole text has been read.
+     * Converts text within Nodes with CharConverter using personal thread for each Node
+     */
     private void nodeCollect() {
 
         /*
@@ -227,7 +237,6 @@ public class Delegator {
         NavActivity.database.listDao().insertList(list);
 
 
-
         Message message = new Message();
 
         message.what = NavActivity.HANDLE_MESSAGE_EXTRACTED;
@@ -243,14 +252,25 @@ public class Delegator {
 
     }
 
+
+    /**
+     * Class that extracts text from InputStream and fills Nodes with it
+     */
     private class TextExtractor {
 
         double x;
 
+        /**
+         * Special number to describe the error of X arrangement
+         */
         final int xArea = 20;
 
         ArrayList<TextPlusX> textBuffer = new ArrayList<>();
 
+        /**
+         *This method finds proper Translation X.
+         * While proper X is not found, text and its X are stored in @textBuffer.
+         */
         private void handleX(double X) {
             if (rusX != 0.0) {
                 if (rusX == X) {
@@ -273,6 +293,9 @@ public class Delegator {
             }
         }
 
+        /**
+         * When proper X is found, creates nodes that were in buffer.
+         */
         private void loadBuffer() {
             for (TextPlusX textPlusX : textBuffer) {
 
@@ -286,49 +309,24 @@ public class Delegator {
                     continue;
                 }
 
-                Lang nodeLang = (textPlusX.getX() >= engX && textPlusX.getX() < rusX - xArea) ? Lang.ENG : Lang.RUS;
+                delegateText(textPlusX.getText(), textPlusX.getX());
 
-                if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.RUS : Lang.ENG)) {
-
-                    waitingNode.setWlName(newWlName);
-                    if (nodeLang == Lang.ENG) {
-
-                        nodes.add(waitingNode);
-
-                        waitingNode = new Node();
-
-                        waitingNode.setPrimText(textPlusX.getText());
-
-                    } else waitingNode.setTransText(textPlusX.getText());
-                    waitingNodeLang = nodeLang;
-
-                } else {
-                    if (waitingNodeLang == Lang.ENG)
-                        waitingNode.setPrimText(waitingNode.getPrimText().concat(textPlusX.getText()));
-                    else
-                        waitingNode.setTransText(waitingNode.getTransText().concat(textPlusX.getText()));
-                }
             }
 
 
         }
 
+        /**
+         * Keeps recently read texts language;
+         */
         private Lang curLang;
 
-        private Lang getStringLang(String text) {
-            int i = 0;
-            Lang lang = Lang.UNDEFINED;
-            while (i < text.length() && !(lang == Lang.ENG || lang == Lang.BRACE)) {
-                lang = LangChecker.langCheck(text.charAt(i++));
-            }
-            return lang;
-        }
-
+        /**
+         * Extracts text from IS
+         * Sets current Text Language @curLang
+         * @return @String extracted text
+         */
         private String extractRawText() throws IOException {
-            /**
-             * This fills Node with raw text
-             *
-             */
 
             ch = io.read();
             while ((char) ch != '[') {
@@ -367,6 +365,10 @@ public class Delegator {
 
         }
 
+        /**
+         * Extracts texts X coordinate
+         * @return
+         */
         private double getNodeX() {
             // Get current coordinates and pass it to node
 
@@ -386,6 +388,11 @@ public class Delegator {
             return -1;
         }
 
+        /**
+         * Calls all other methods of this class
+         *
+         * The result of its work is a Node, filled with raw text
+         */
         private void textToken() throws IOException {
 
             /**
@@ -407,51 +414,62 @@ public class Delegator {
                 }
             } else {
 
-                delegateText(text);
+                Lang nodeLang = curLang;
+
+                if (!isRusXSet && nodeLang == Lang.BRACE) {
+                    handleX(x);
+                }
+
+                if (!isRusXSet) {
+                    textBuffer.add(new TextPlusX(text, x, nodeLang));
+
+                } else {
+                    delegateText(text, x);
+                }
+
 
             }
 
 
         }
 
-        private void delegateText(String text) {
+        /**
+         * In most common cases creates a Node filled with text
+         * <p>
+         * Also fills unfinished Nodes with translation texts
+         *
+         * @param text
+         * @param x
+         */
+        private void delegateText(String text, double x) {
 
-            Lang nodeLang = curLang;
+            Lang nodeLang = (x >= engX && x < rusX - xArea) ? Lang.ENG : Lang.RUS;
 
-            if (!isRusXSet && nodeLang == Lang.BRACE) {
-                handleX(x);
-            }
+            if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.RUS : Lang.ENG)) {
 
-            if (!isRusXSet) {
-                textBuffer.add(new TextPlusX(text, x, nodeLang));
+                waitingNode.setWlName(newWlName);
+                if (nodeLang == Lang.ENG) {
+
+                    nodes.add(waitingNode);
+
+                    waitingNode = new Node();
+
+                    waitingNode.setPrimText(text);
+
+                } else waitingNode.setTransText(text);
+                waitingNodeLang = nodeLang;
 
             } else {
-
-                nodeLang = (x >= engX && x < rusX - xArea) ? Lang.ENG : Lang.RUS;
-
-                if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.RUS : Lang.ENG)) {
-
-                    waitingNode.setWlName(newWlName);
-                    if (nodeLang == Lang.ENG) {
-
-                        nodes.add(waitingNode);
-
-                        waitingNode = new Node();
-
-                        waitingNode.setPrimText(text);
-
-                    } else waitingNode.setTransText(text);
-                    waitingNodeLang = nodeLang;
-
-                } else {
-                    if (waitingNodeLang == Lang.ENG)
-                        waitingNode.setPrimText(waitingNode.getPrimText().concat(text));
-                    else waitingNode.setTransText(waitingNode.getTransText().concat(text));
-                }
+                if (waitingNodeLang == Lang.ENG)
+                    waitingNode.setPrimText(waitingNode.getPrimText().concat(text));
+                else waitingNode.setTransText(waitingNode.getTransText().concat(text));
             }
         }
     }
 
+    /**
+     * Class, used to store info about buffered text in @TextExtractor
+     */
     private class TextPlusX {
 
         private String text;
@@ -464,15 +482,15 @@ public class Delegator {
             textLang = lang;
         }
 
-        public String getText() {
+        String getText() {
             return text;
         }
 
-        public double getX() {
+        double getX() {
             return X;
         }
 
-        public Lang getTextLang() {
+        Lang getTextLang() {
             return textLang;
         }
 
