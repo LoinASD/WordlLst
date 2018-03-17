@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedOutputStream;
+import java.util.logging.Logger;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -16,11 +17,13 @@ public class PDFParser {
     private static char cc;
     private static final String markerStream = "stream";
     private static final String markerLength = "Length";
+    private Logger log = Logger.getLogger(PDFParser.class.getName());
 
     /*Парсит все в этой жизни, пишет в 1 поток.*/
 
     public void parsePdf(final String file, final PipedOutputStream out) {
         try {
+            long startTime = System.currentTimeMillis();
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file));
             cc = (char) bufInput.read();
             while (bufInput.available() != 0) {
@@ -72,13 +75,16 @@ public class PDFParser {
                         try {
                             decode(streamLength, bufInput, out);
                         } catch (DataFormatException e) {
-                            System.out.println("Ошибка расшифровки GZIPa");
+                            log.warning("Ошибка расшифровки GZIPa");
+                            //System.out.println("Ошибка расшифровки GZIPa");
                         }
                     }
                 }
             }
             NavActivity.h.sendEmptyMessage(1);
             out.close();
+            //System.out.printf("PDFParser works %d ms", System.currentTimeMillis() - startTime);
+            log.warning("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
         } catch (FileNotFoundException e) {
             //MainActivity.h.sendEmptyMessage(1);
         } catch (IOException e) {

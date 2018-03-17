@@ -6,10 +6,10 @@ import android.os.Message;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
 import io.cyanlab.loinasd.wordllst.controller.DBHelper;
-import io.cyanlab.loinasd.wordllst.controller.database.FilledList;
 
 
 public class Delegator {
@@ -30,6 +30,7 @@ public class Delegator {
     private Lang waitingNodeLang;
     TextExtractor extractor;
     private int waitingNodeLine;
+    private static Logger log = Logger.getLogger(Delegator.class.getName());
 
     private void updateProgress() {
         proggress++;
@@ -43,7 +44,7 @@ public class Delegator {
          * This is Main Method
          */
 
-
+        long startTime = System.currentTimeMillis();
         this.io = io;
         nodes = new ArrayList<>();
         extractor = new TextExtractor();
@@ -63,6 +64,8 @@ public class Delegator {
             e.printStackTrace();
 
         }
+        log.warning("Delegator works in ms:" + (System.currentTimeMillis() - startTime));
+        //System.out.printf("Delegator works %d ms", System.currentTimeMillis() - startTime);
     }
 
     private void parse() throws IOException {
@@ -330,7 +333,7 @@ public class Delegator {
 
             Lang nodeLang = curLang;
 
-            System.out.println(text + "\t" + curLang);
+            //System.out.println(text + "\t" + curLang);
 
             if (waitingNode == null) {
 
