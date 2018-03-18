@@ -3,7 +3,6 @@ package io.cyanlab.loinasd.wordllst.activities;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.content.ContentValues;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -60,6 +59,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
 
         findViewById(R.id.card).setOnClickListener(this);
         final Activity activity = this;
