@@ -99,7 +99,7 @@ public class NavActivity extends AppCompatActivity
         //fab_tab = findViewById(R.id.fab_tab);
         progBarLayout = findViewById(R.id.PB);
         progBarLayout.setVisibility(View.INVISIBLE);
-        final AppCompatActivity activity = this;
+        //final AppCompatActivity activity = this;
 
         /*final FloatingActionButton fab = findViewById(R.id.fab_main);
         fab.setOnClickListener(new View.OnClickListener() {

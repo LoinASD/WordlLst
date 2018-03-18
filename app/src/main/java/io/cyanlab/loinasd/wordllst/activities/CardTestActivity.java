@@ -4,12 +4,8 @@ import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.transition.Transition;
-import android.support.transition.TransitionManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -19,10 +15,12 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.List;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.database.LocalDatabase;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
+
 
 /**
  * Created by Анатолий on 25.12.2017.
@@ -32,13 +30,13 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
 
     String wlName;
     String primary;
-    Cursor data;
+    List<Node> data;
     int id;
     int cur_weight;
     ArrayList<Integer> stack = new ArrayList<>();
     boolean isChecked;
     private GestureDetector detector;
-    DBHelper dbHelper;
+    private LocalDatabase db = NavActivity.database;
 
 
     @Override
@@ -46,8 +44,8 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_test);
         wlName = getIntent().getStringExtra("Name");
-        dbHelper = new DBHelper(this);
-        data = dbHelper.getData(wlName, 0);
+
+        data = db.nodeDao().getNodes(wlName);
         findViewById(R.id.card).setOnClickListener(this);
         final Activity activity = this;
         detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -163,7 +161,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void loadLine() {
-        isChecked = false;
+        /*isChecked = false;
         Random r = new Random();
         int lineNum = r.nextInt(dbHelper.countWeight(wlName) + 1);
         data.moveToFirst();
@@ -188,7 +186,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                 ((TextView) findViewById(R.id.transTV)).setText(data.getString(data.getColumnIndex("trans")) + " (" + primary.split(",").length + ")");
                 ((TextView) findViewById(R.id.card)).setText("Turn Over");
             } else loadLine();
-        } else loadLine();
+        } else loadLine();*/
     }
 
 
