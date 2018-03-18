@@ -382,11 +382,21 @@ public class NavActivity extends AppCompatActivity
                     public void run() {
                         NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
                         NavActivity.database.listDao().deleteList(LIST_NAME);
-                        h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
                     }
                 });
                 deleteWL.start();
+                try {
 
+
+                    deleteWL.join();
+                    LIST_NAME = null;
+                    ((ShowFragment) lists).notifyAdapter();
+                    ((ShowFragment) lines).notifyAdapter();
+                    loadLists();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                loadLists();
 
 
             }
@@ -600,16 +610,6 @@ public class NavActivity extends AppCompatActivity
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBarLayout.setVisibility(View.INVISIBLE);
-            }
-            if (msg.what == HANDLE_MESSAGE_DELETED) {
-
-                ((ShowFragment) activity.lists).setState(ShowFragment.NEEDS_UPD);
-                activity.loadLists();
-
-                LIST_NAME = null;
-
-                return;
-
             }
 
             if (parser && extractor) {

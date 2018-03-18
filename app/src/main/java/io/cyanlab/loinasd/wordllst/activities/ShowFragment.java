@@ -295,7 +295,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
     }
 
-
+    protected void notifyAdapter() {
+        adapter.notifyDataSetChanged();
+    }
 
     private class WLAdapter extends BaseAdapter {
 
