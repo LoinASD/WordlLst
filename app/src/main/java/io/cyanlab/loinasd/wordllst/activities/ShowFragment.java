@@ -72,8 +72,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
             case SHOW_LINES:
                 setAdapter(R.layout.simple_line);
-                /*(getActivity()).getLoaderManager().initLoader(1, null, callBack);
-                getActivity().getLoaderManager().getLoader(1).forceLoad();*/
 
                 main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                     @Override
@@ -106,28 +104,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 break;
             case SHOW_WL:
                 setAdapter(R.layout.lists_line);
-                //(getActivity()).getLoaderManager().initLoader(0, null, callBack);
-                //getActivity().getLoaderManager().getLoader(0).forceLoad();
 
                 main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         String wlName = ((TextView) view.findViewById(R.id.name_line)).getText().toString();
                         listener.onListSelected(wlName, view);
-                    }
-                });
-
-                main.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-                    @Override
-                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                        if (!isWakening) {
-                            //loadProgress();
-
-
-
-
-
-                        }
                     }
                 });
 
@@ -174,9 +156,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         if (MODE == SHOW_LINES) {
             if (hidden) {
                 //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
-                getActivity().findViewById(R.id.bbar_include).setVisibility(View.INVISIBLE);
+                ((NavActivity) getActivity()).setBarVisibility(View.GONE);
             }else {
-                //getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
+                ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
                 //getActivity().findViewById(R.id.bbar).setVisibility(View.VISIBLE);
             }
         }
@@ -199,8 +181,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                     break;
                 case SHOW_LINES:
-                    ((NavActivity) getActivity()).showFabTab();
-                    //getActivity().getLoaderManager().getLoader(1).forceLoad();
                     STATE = DONT_NEEDS_UPD;
                     break;
 
@@ -213,7 +193,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         if (MODE == SHOW_LINES) {
             //getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
-            getActivity().findViewById(R.id.bbar_include).setVisibility(View.VISIBLE);
+            ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
         }
 
 
@@ -248,7 +228,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         super.onPause();
         if (MODE == SHOW_LINES) {
             //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
-            getActivity().findViewById(R.id.bbar_include).setVisibility(View.INVISIBLE);
+            ((NavActivity) getActivity()).setBarVisibility(View.GONE);
 
         }
 

@@ -383,7 +383,18 @@ public class NavActivity extends AppCompatActivity
                     }
                 });
                 deleteWL.start();
+                try {
 
+
+                    deleteWL.join();
+                    LIST_NAME = null;
+                    ((ShowFragment) lists).notifyAdapter();
+                    ((ShowFragment) lines).notifyAdapter();
+                    loadLists();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                loadLists();
 
 
             }
@@ -477,9 +488,36 @@ public class NavActivity extends AppCompatActivity
 
     }
 
-    public void showFabTab(){
-        //fab_tab.setVisibility(View.VISIBLE);
-        testBar.setVisibility(View.VISIBLE);
+    public void setBarVisibility(final int visibility) {
+
+        if (visibility == View.VISIBLE) {
+            testBar.setVisibility(View.VISIBLE);
+            testBar.setScaleY(0);
+            testBar.setTranslationY(100);
+        }
+        testBar.animate().setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                testBar.setVisibility(visibility);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(100).start();
+
+
     }
 
     @Override
@@ -596,16 +634,6 @@ public class NavActivity extends AppCompatActivity
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBarLayout.setVisibility(View.INVISIBLE);
-            }
-            if (msg.what == HANDLE_MESSAGE_DELETED) {
-
-                ((ShowFragment) activity.lists).setState(ShowFragment.NEEDS_UPD);
-                activity.loadLists();
-
-                LIST_NAME = null;
-
-                return;
-
             }
 
             if (parser && extractor) {
