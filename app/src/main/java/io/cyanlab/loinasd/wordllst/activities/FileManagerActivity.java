@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 
 public class FileManagerActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -177,7 +176,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (data != null) {
-            new DBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+            //new DBHelper(this).saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
             setResult(RESULT_CANCELED, data);
             finish();
         }

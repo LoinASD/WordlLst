@@ -28,7 +28,6 @@ import java.io.PipedOutputStream;
 import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 import io.cyanlab.loinasd.wordllst.controller.database.LocalDatabase;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
@@ -55,7 +54,6 @@ public class NavActivity extends AppCompatActivity
     static final int REQUEST_CODE_DELETE_WL = 3;
 
     Thread parser, extractor;
-    DBHelper dbHelper;
     android.support.v4.app.Fragment lists;
     android.support.v4.app.Fragment lines;
     LinearLayout progBarLayout, testBar;
@@ -81,7 +79,6 @@ public class NavActivity extends AppCompatActivity
         setContentView(R.layout.activity_nav);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        dbHelper = new DBHelper(this);
 
 
         Bundle data = new Bundle();
@@ -302,7 +299,7 @@ public class NavActivity extends AppCompatActivity
 
         if (id == R.id.clear_db) {
 
-            dbHelper.clearDB();
+
             loadLists();
             isDeletable = false;
 
@@ -403,7 +400,7 @@ public class NavActivity extends AppCompatActivity
         }
         if (data != null) {
             if (requestCode == REQUEST_CODE_ADD) {
-                dbHelper.saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+
                 ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
             }
         }
@@ -441,7 +438,6 @@ public class NavActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        dbHelper.close();
         if (h != null)
             h.removeCallbacksAndMessages(null);
 

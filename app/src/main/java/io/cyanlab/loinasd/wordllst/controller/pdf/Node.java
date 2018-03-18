@@ -10,10 +10,18 @@ import java.io.Serializable;
 @Entity
 public class Node implements Serializable {
 
-    @Ignore
-    private double x;
-    @Ignore
-    private double y;
+    private int weight;
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
+    @ColumnInfo(name = "nodeWLName")
+    private String wlName;
 
     public String getWlName() {
         return wlName;
@@ -22,9 +30,6 @@ public class Node implements Serializable {
     public void setWlName(String wlName) {
         this.wlName = wlName;
     }
-
-    @ColumnInfo(name = "nodeWLName")
-    private String wlName;
 
     @PrimaryKey
     public Integer id;
@@ -78,24 +83,8 @@ public class Node implements Serializable {
 
     }
 
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
     public String getPrimText() {
         return primText;
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public void setY(double y) {
-        this.y = y;
     }
 
     public void setPrimText(String primText) {

@@ -2,17 +2,29 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "fa24b2237214a0229d82c38ef63849ef",
+    "identityHash": "84bf7e7265be2d4fe5f57c94c5fd00d1",
     "entities": [
       {
         "tableName": "WordList",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `wlName` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `maxWeight` INTEGER NOT NULL, `currentWeight` INTEGER NOT NULL, `wlName` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
             "notNull": false
+          },
+          {
+            "fieldPath": "maxWeight",
+            "columnName": "maxWeight",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentWeight",
+            "columnName": "currentWeight",
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "wlName",
@@ -32,8 +44,14 @@
       },
       {
         "tableName": "Node",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`nodeWLName` TEXT, `id` INTEGER, `primText` TEXT, `transText` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weight` INTEGER NOT NULL, `nodeWLName` TEXT, `id` INTEGER, `primText` TEXT, `transText` TEXT, PRIMARY KEY(`id`))",
         "fields": [
+          {
+            "fieldPath": "weight",
+            "columnName": "weight",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
           {
             "fieldPath": "wlName",
             "columnName": "nodeWLName",
@@ -71,7 +89,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"fa24b2237214a0229d82c38ef63849ef\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"84bf7e7265be2d4fe5f57c94c5fd00d1\")"
     ]
   }
 }

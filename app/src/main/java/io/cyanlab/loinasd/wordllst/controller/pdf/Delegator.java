@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import io.cyanlab.loinasd.wordllst.activities.NavActivity;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.activities.ShowFragment;
 
 
 public class Delegator {
@@ -23,7 +23,6 @@ public class Delegator {
     private boolean isExists;
     //private StringBuilder text;
     private int range;
-    private DBHelper dbHelper;
     private int proggress;
     private ArrayList<Node> nodes;
     private Node waitingNode;
@@ -215,6 +214,7 @@ public class Delegator {
 
         WordList list = new WordList();
         list.setWlName(newWlName);
+        list.maxWeight = list.currentWeight = nodes.size() * ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
 
         ThreadGroup group = new ThreadGroup("Converting");
 
@@ -303,6 +303,9 @@ public class Delegator {
 
                     waitingNode = new Node();
                     waitingNode.setWlName(newWlName);
+
+                    waitingNode.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
+
                     waitingNode.setPrimText(textPlusX.getText());
                     waitingNodeLang = Lang.ENG;
 
@@ -453,6 +456,8 @@ public class Delegator {
                     nodes.add(waitingNode);
 
                     waitingNode = new Node();
+
+                    waitingNode.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
 
                     waitingNode.setPrimText(text);
 

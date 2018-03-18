@@ -13,6 +13,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
@@ -20,6 +21,7 @@ import java.util.List;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
+import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE;
@@ -171,10 +173,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
         if (MODE == SHOW_LINES) {
             if (hidden) {
-                getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
-                //getActivity().findViewById(R.id.bbar).setVisibility(View.INVISIBLE);
+                //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
+                getActivity().findViewById(R.id.bbar_include).setVisibility(View.INVISIBLE);
             }else {
-                getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
+                //getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
                 //getActivity().findViewById(R.id.bbar).setVisibility(View.VISIBLE);
             }
         }
@@ -221,7 +223,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     /*public void loadProgress() {
         for (int i = 0; i < main.getChildCount(); i++) {
-            int progress = dbHelper.countWeight(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString());
+            int progress = ;
             int max = dbHelper.getData(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString(), 0).getCount() * RIGHT_ANSWERS_TO_COMPLETE;
             ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setProgress(max - progress + RIGHT_ANSWERS_TO_COMPLETE);
             ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setMax(max);
@@ -245,8 +247,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public void onPause() {
         super.onPause();
         if (MODE == SHOW_LINES) {
-            getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
-            //getActivity().findViewById(R.id.bbar).setVisibility(View.INVISIBLE);
+            //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
+            getActivity().findViewById(R.id.bbar_include).setVisibility(View.INVISIBLE);
 
         }
 
@@ -306,7 +308,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         LayoutInflater inflater;
 
 
-        List<String> names;
+        List<WordList> lists;
 
         List<Node> nodes;
 
@@ -332,7 +334,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     Thread load = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            names = NavActivity.database.listDao().loadNames();
+                            lists = NavActivity.database.listDao().getAllLists();
                             h.sendEmptyMessage(HANDLE_MESSAGE_NAMES_LOADED);
                         }
                     });
@@ -354,12 +356,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         @Override
         public int getCount() {
-            return ((names != null || nodes != null) ? (MODE == SHOW_WL ? names.size() : nodes.size()) : 0);
+            return ((lists != null || nodes != null) ? (MODE == SHOW_WL ? lists.size() : nodes.size()) : 0);
         }
 
         @Override
         public Object getItem(int i) {
-            return MODE == SHOW_WL ? names.get(i) : nodes.get(i);
+            return MODE == SHOW_WL ? lists.get(i) : nodes.get(i);
         }
 
         @Override
@@ -373,7 +375,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             View v = (view != null ? view : inflater.inflate(resource, null));
 
             if (MODE == SHOW_WL) {
-                ((TextView) v.findViewById(R.id.name_line)).setText((String) getItem(i));
+
+                ((TextView) v.findViewById(R.id.name_line)).setText(((WordList) getItem(i)).getWlName());
+                ((ProgressBar) v.findViewById(R.id.progressBar2)).setMax(((WordList) getItem(i)).maxWeight);
+                ((ProgressBar) v.findViewById(R.id.progressBar2)).setProgress(((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight);
+
+                ((TextView) v.findViewById(R.id.percents)).setText(((((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight) * 100 / ((WordList) getItem(i)).maxWeight) + "%");
             } else {
                 ((TextView) v.findViewById(R.id.primeTV)).setText(((Node) getItem(i)).getPrimText());
                 ((TextView) v.findViewById(R.id.translateTV)).setText(((Node) getItem(i)).getTransText());

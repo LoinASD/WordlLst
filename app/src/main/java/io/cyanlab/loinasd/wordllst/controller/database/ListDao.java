@@ -5,6 +5,7 @@ import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
+import android.arch.persistence.room.Update;
 
 import java.util.List;
 
@@ -25,8 +26,11 @@ public interface ListDao {
     FilledList getWordlist(int id);
 
     @Transaction
-    @Query("SELECT wlName, id FROM WordList WHERE wlName = :wlName")
-    FilledList getWordlist(String wlName);
+    @Query("SELECT * FROM WordList WHERE wlName = :wlName")
+    WordList getWordlist(String wlName);
+
+    @Update
+    void updateList(WordList list);
 
     @Insert
     long insertList(WordList list);

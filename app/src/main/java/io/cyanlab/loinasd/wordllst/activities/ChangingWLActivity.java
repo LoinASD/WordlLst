@@ -18,7 +18,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 
 public class ChangingWLActivity extends AppCompatActivity implements View.OnClickListener {
@@ -26,13 +25,11 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
     int lineID;
     String wlName;
     boolean isAdding;
-    DBHelper dbHelper;
     Node node;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dbHelper = new DBHelper(this);
 
         switch (getIntent().getStringExtra("Action")) {
             case ("Change"): {

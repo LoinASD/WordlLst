@@ -13,6 +13,10 @@ public class WordList {
     @PrimaryKey
     public Integer id;
 
+    public int maxWeight;
+
+    public int currentWeight;
+
     public String getWlName() {
         return wlName;
     }

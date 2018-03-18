@@ -16,10 +16,12 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.database.LocalDatabase;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
+import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 
 /**
@@ -31,8 +33,8 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
     String wlName;
     String primary;
     List<Node> data;
-    int id;
-    int cur_weight;
+    WordList list;
+    Node curNode;
     ArrayList<Integer> stack = new ArrayList<>();
     boolean isChecked;
     private GestureDetector detector;
@@ -45,42 +47,64 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.activity_card_test);
         wlName = getIntent().getStringExtra("Name");
 
-        data = db.nodeDao().getNodes(wlName);
+        Thread getData = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                data = db.nodeDao().getNodes(wlName);
+                list = db.listDao().getWordlist(wlName);
+            }
+        });
+        getData.start();
+        try {
+            getData.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         findViewById(R.id.card).setOnClickListener(this);
         final Activity activity = this;
         detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 
-                float sensivity = 100;
+                float sensivity = 75;
 
                 boolean isDone = false;
 
                 Animation animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
 
                 if (e1.getX() - e2.getX() > sensivity) {
-                    if (cur_weight > ShowFragment.RIGHT_ANSWERS_TO_COMPLETE) {
-                        cur_weight--;
+                    if (curNode.getWeight() > ShowFragment.RIGHT_ANSWERS_TO_COMPLETE) {
+                        curNode.setWeight(curNode.getWeight() - 1);
+                        list.currentWeight--;
                     }
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put("weight", ++cur_weight);
-                    dbHelper.getWritableDatabase().update(wlName, contentValues, "_id = " + id, null);
+                    curNode.setWeight(curNode.getWeight() + 1);
+                    list.currentWeight++;
                     isDone = true;
                     animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_rtl);
 
                 } else if (e2.getX() - e1.getX() > sensivity) {
-                    if (cur_weight == 1) {
-                        cur_weight++;
+                    if (curNode.getWeight() == 1) {
+                        curNode.setWeight(curNode.getWeight() + 1);
+                        list.currentWeight++;
                     }
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put("weight", --cur_weight);
-                    dbHelper.getWritableDatabase().update(wlName, contentValues, "_id = " + id, null);
+                    curNode.setWeight(curNode.getWeight() - 1);
+                    list.currentWeight--;
                     isDone = true;
                     animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
                 }
 
                 if (isDone) {
 
+                    Thread updater = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            db.listDao().updateList(list);
+                            db.nodeDao().updateNode(curNode);
+                        }
+                    });
+
+                    updater.start();
 
                     animation.setAnimationListener(new Animation.AnimationListener() {
                         @Override
@@ -92,7 +116,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                         public void onAnimationEnd(Animation animation) {
                             loadLine();
                             findViewById(R.id.card).setAlpha(0f);
-                            findViewById(R.id.card).animate().alpha(1f).setDuration(300).start();
+                            (findViewById(R.id.card)).animate().alpha(1f).setDuration(300).start();
                         }
 
                         @Override
@@ -100,6 +124,12 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
 
                         }
                     });
+
+                    try {
+                        updater.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     findViewById(R.id.card).startAnimation(animation);
                 }
 
@@ -130,7 +160,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                     animator.addListener(new Animator.AnimatorListener() {
                         @Override
                         public void onAnimationStart(Animator animation) {
-                            findViewById(R.id.card).animate().scaleX(0.6f).setDuration(200).start();
+                            (findViewById(R.id.card)).animate().scaleX(0.6f).setDuration(200).start();
                         }
 
                         @Override
@@ -138,8 +168,8 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                             ((TextView) findViewById(R.id.card)).setText(primary);
                             isChecked = true;
 
-                            findViewById(R.id.card).animate().rotationY(-90f).setDuration(0).start();
-                            findViewById(R.id.card).animate().rotationY(0f).scaleX(1f).setDuration(200).start();
+                            (findViewById(R.id.card)).animate().rotationY(-90f).setDuration(0).start();
+                            (findViewById(R.id.card)).animate().rotationY(0f).scaleX(1f).setDuration(200).start();
                         }
 
                         @Override
@@ -161,32 +191,30 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void loadLine() {
-        /*isChecked = false;
+        isChecked = false;
         Random r = new Random();
-        int lineNum = r.nextInt(dbHelper.countWeight(wlName) + 1);
-        data.moveToFirst();
-        int idIndex = data.getColumnIndex("_id");
-        int weightIndex = data.getColumnIndex("weight");
+        int lineNum = r.nextInt(list.currentWeight + 1);
         int sumWeight = 0;
+        int i = 0;
+        curNode = null;
         do {
-            if (lineNum < sumWeight + data.getInt(weightIndex)) {
-                id = data.getInt(idIndex);
-                cur_weight = data.getInt(weightIndex);
+            if (lineNum < sumWeight + data.get(i).getWeight()) {
+                curNode = data.get(i);
                 break;
             }
-            sumWeight += data.getInt(weightIndex);
-        } while (data.moveToNext());
-        if ((id != -1)) {
-            if (!stack.contains(id)) {
-                if (stack.size() == data.getCount()) {
+            sumWeight += data.get(i++).getWeight();
+        } while (i < data.size());
+        if ((curNode != null)) {
+            if (!stack.contains(data.indexOf(curNode))) {
+                if (stack.size() == data.size()) {
                     stack.remove(0);
                 }
-                stack.add(id);
-                primary = data.getString(data.getColumnIndex("prim"));
-                ((TextView) findViewById(R.id.transTV)).setText(data.getString(data.getColumnIndex("trans")) + " (" + primary.split(",").length + ")");
+                stack.add(data.indexOf(curNode));
+                primary = curNode.getPrimText();
+                ((TextView) findViewById(R.id.transTV)).setText(curNode.getTransText() + " (" + primary.split(",").length + ")");
                 ((TextView) findViewById(R.id.card)).setText("Turn Over");
             } else loadLine();
-        } else loadLine();*/
+        } else loadLine();
     }
 
 
