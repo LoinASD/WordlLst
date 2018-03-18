@@ -1,39 +1,30 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
 import android.content.Intent;
-import android.database.Cursor;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
-import android.os.Bundle;
-import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.Adapter;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.Map;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
+import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_TEST;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE;
-
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_WL;
 
 public class ShowFragment extends android.support.v4.app.Fragment {
@@ -181,8 +172,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         if (MODE == SHOW_LINES) {
             if (hidden) {
                 getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
+                //getActivity().findViewById(R.id.bbar).setVisibility(View.INVISIBLE);
             }else {
                 getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
+                //getActivity().findViewById(R.id.bbar).setVisibility(View.VISIBLE);
             }
         }
         STATE = NEEDS_UPD;
@@ -217,7 +210,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
 
         if (MODE == SHOW_LINES) {
-            getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
+            //getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
+            getActivity().findViewById(R.id.bbar_include).setVisibility(View.VISIBLE);
         }
 
 
@@ -252,6 +246,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         super.onPause();
         if (MODE == SHOW_LINES) {
             getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
+            //getActivity().findViewById(R.id.bbar).setVisibility(View.INVISIBLE);
+
         }
 
     }

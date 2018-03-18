@@ -45,7 +45,7 @@
     </style>
 
     <style name="AppTheme.ImageButton" parent="android:Widget.ImageButton">
-        <item name="android:background">@drawable/image_button_background</item>
+        <item name="android:background">@color/colorAccent</item>
     </style>
 
     <style name="AppTheme.Dialog.TextAppearance" parent="TextAppearance.AppCompat.Widget.Button">
