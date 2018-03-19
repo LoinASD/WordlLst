@@ -13,4 +13,8 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="app_about">This very app you are looking at now was created to support TPU students who have to cope with these horrible WordLists.
+        It was created between September 2017 AD and March 2018 AD.
+        Idea of it was provided by LoinASD and thoughtlessly supported by Onotolo.</string>
+
 </resources>
