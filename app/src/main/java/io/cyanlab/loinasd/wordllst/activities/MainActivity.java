@@ -23,15 +23,14 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 
-public class MainActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
+public class MainActivity extends AppCompatActivity {
 
 
     static final int REQUEST_CODE_FM = 1;
-    static final int REQUEST_CODE_CHANGE = 2;
+    /*static final int REQUEST_CODE_CHANGE = 2;
     static final int REQUEST_CODE_DELETEWL = 3;
 
     static final String PRIM_COLUMN_NAME = "prim";
@@ -42,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
     ListView wlView;
     LinearLayout scroll;
-    DBHelper dbHelper;
     SQLiteDatabase database;
     ProgressBar pbx;
     LinearLayout pb;
@@ -52,14 +50,14 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     MyCursorLoader loader;
     boolean isDeletable;
     boolean isAddable;
-    LayoutInflater inflater;
+    LayoutInflater inflater;*/
 
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //---------------------------------------------//
+        /*//---------------------------------------------//
         wlView = (ListView) findViewById(R.id.scrollView);
         scroll = (LinearLayout)findViewById(R.id.scroll);
         pb = (LinearLayout) findViewById(R.id.PB);
@@ -98,11 +96,11 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
                 return false;
             }
-        });
+        });*/
 
     }
 
-    //-------Options menu-------//
+    /*//-------Options menu-------//
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -128,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
         }
 
-       /* if (id == R.id.clear_database) {
+       *//* if (id == R.id.clear_database) {
             isDeletable = false;
             isAddable = true;
             dbHelper.clearDB();
@@ -147,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
             testWl.putExtra("Name", loader.wlName);
             startActivity(testWl);
         }
-*/
+*//*
         invalidateOptionsMenu();
         return super.onOptionsItemSelected(item);
     }
@@ -210,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
                 @Override
                 public void run() {
                     long timeStart = System.currentTimeMillis();
-                    new Delegator().extract(pin, dbHelper);
+                    new Delegator().extract(pin);
                     long timeStop = System.currentTimeMillis();
 
                     System.out.printf("Parser works %d ms", timeStop - timeStart);
@@ -259,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements android.support.v
 
     static class MyCursorLoader extends android.support.v4.content.CursorLoader {
 
-        DBHelper dbHelper;
+
         String wlName;
 
         public MyCursorLoader(Context context, String wlName, DBHelper dbHelper) {
@@ -319,5 +317,5 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         dbHelper.close();
 
         super.onDestroy();
-    }
+    }*/
 }

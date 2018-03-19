@@ -43,26 +43,30 @@
         android:textColor="@color/colorAccent" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:weightSum="2">
 
         <ImageButton
             android:id="@+id/saveBut"
-            android:layout_width="50dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="30dp"
+            android:layout_marginStart="30dp"
             android:layout_weight="1"
-            android:background="@drawable/image_button_background"
-            app:srcCompat="@android:drawable/ic_menu_save" />
+            android:background="@color/colorAccent"
+            app:srcCompat="@drawable/ic_save_white_24dp" />
 
         <ImageButton
             android:id="@+id/cancelBut"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="30dp"
+            android:layout_marginStart="30dp"
             android:layout_weight="1"
-            android:background="@drawable/image_button_background"
-            app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
+            android:background="@color/colorAccent"
+            app:srcCompat="@drawable/ic_close_white_24dp" />
     </LinearLayout>
 </LinearLayout>

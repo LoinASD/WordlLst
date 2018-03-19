@@ -1,21 +1,13 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.transition.Transition;
-import android.support.transition.TransitionManager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.DragEvent;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +18,7 @@ import java.util.Random;
 import java.util.Vector;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 
 /**
  * Created by Анатолий on 11.12.2017.
@@ -39,7 +31,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
     String[] fake;
     String[] shuffled;
     String translation;
-    Cursor data;
+    List<Node> data;
     ListView listView;
     int realChecked;
     int curLineNum;
@@ -82,61 +74,61 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drag_n_drop_test);
         wlName = getIntent().getStringExtra("Name");
-        data = new DBHelper(this).getData(wlName, 0);
-        listView = ((ListView) findViewById(R.id.prims));
+        Thread loadData = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                data = NavActivity.database.nodeDao().getNodes(wlName);
+            }
+        });
+        try {
+            loadData.start();
+            loadData.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        listView = findViewById(R.id.prims);
         listView.setOnItemClickListener(this);
         shuffled = new String[8];
         loadLine(false, -1, 0);
-        listView.setAdapter(new ArrayAdapter<String>(this, R.layout.test_line, shuffled));
+        listView.setAdapter(new ArrayAdapter<>(this, R.layout.test_line, shuffled));
 
     }
 
     private void loadLine(boolean isFake, int prevNum, int num) {
         try {
             Random r = new Random();
-            int lineNum = r.nextInt(data.getCount() - 1);
-            data.moveToFirst();
-            int id = -1;
-            int idIndex = data.getColumnIndex("_id");
-            do {
-                if (lineNum == data.getInt(idIndex)) {
-                    id = data.getInt(idIndex);
-                    break;
-                }
-            } while (data.moveToNext());
-            if ((id != -1)) {
-                if (!isFake) {
-                    if (!stack.contains(id)) {
-                        real = data.getString(data.getColumnIndex("prim")).split(",");
-                        realChecked = 0;
-                        curLineNum = id;
-                        if (stack.size() == data.getCount()) {
-                            stack.remove(0);
-                        }
-                        stack.add(curLineNum);
-                        translation = data.getString(data.getColumnIndex("trans"));
-                        ((TextView) findViewById(R.id.transTV)).setText(translation);
-                        fake = new String[8 - real.length];
-                        for (int i = 0; i < fake.length; i++) {
-                            loadLine(true, id, i);
-                        }
-                        shuffle();
-                    } else {
-                        loadLine(false, prevNum, num);
-                        return;
+            int lineNum = r.nextInt(data.size() - 1);
+            if (!isFake) {
+                if (!stack.contains(lineNum)) {
+                    real = data.get(lineNum).getPrimText().split(",");
+                    realChecked = 0;
+                    curLineNum = lineNum;
+                    if (stack.size() == data.size()) {
+                        stack.remove(0);
                     }
-                } else if (id != prevNum) {
-                    String[] buf = data.getString(data.getColumnIndex("prim")).split(",");
-                    if (buf.length > 1) {
-                        fake[num] = buf[r.nextInt(buf.length - 1)];
-                    } else {
-                        fake[num] = buf[0];
+                    stack.add(curLineNum);
+                    translation = data.get(lineNum).getTransText();
+                    ((TextView) findViewById(R.id.transTV)).setText(translation);
+                    fake = new String[8 - real.length];
+                    for (int i = 0; i < fake.length; i++) {
+                        loadLine(true, lineNum, i);
                     }
+                    shuffle();
                 } else {
-                    loadLine(true, curLineNum, num);
+                    loadLine(false, prevNum, num);
+                    return;
+                }
+            } else if (lineNum != prevNum) {
+                String[] buf = data.get(lineNum).getPrimText().split(",");
+                if (buf.length > 1) {
+                    fake[num] = buf[r.nextInt(buf.length - 1)];
+                } else {
+                    fake[num] = buf[0];
                 }
             } else {
-                loadLine(false, curLineNum, 0);
+                loadLine(true, curLineNum, num);
             }
         } catch (Exception e) {
             Toast.makeText(this, "You must have at least 8 different English words for test", Toast.LENGTH_LONG).show();

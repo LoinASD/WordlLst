@@ -1,91 +1,95 @@
 package io.cyanlab.loinasd.wordllst.controller.pdf;
 
-class Node {
-    private double x;
-    private double y;
-    private String rawText;
-    private String text;
-    private boolean isHead = false;
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
 
-    Node(double x, double y){
-        this.x = x;
-        this.y = y;
+import java.io.Serializable;
+
+@Entity
+public class Node implements Serializable {
+
+    private int weight;
+
+    public int getWeight() {
+        return weight;
     }
 
-    Node() {}
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
+    @ColumnInfo(name = "nodeWLName")
+    private String wlName;
+
+    public String getWlName() {
+        return wlName;
+    }
+
+    public void setWlName(String wlName) {
+        this.wlName = wlName;
+    }
+
+    @PrimaryKey
+    public Integer id;
+
+    private String primText;
+
+    public String getTransText() {
+        return transText;
+    }
+
+    public void setTransText(String transText) {
+        this.transText = transText;
+    }
+
+    private String transText;
 
     public void convertText(CharConverter converter) {
-        char cc;
-        StringBuilder message = new StringBuilder();
-        if (rawText.charAt(0) == '(') {
-            String[] stringarr = rawText.split("[(]");
-            for (String s : stringarr) {
-                s= s.split("[)]")[0];
-                message.append(s);
-            }
-        } else if (rawText.charAt(0) == '<') {
-            int i = 0;
+        for (int j = 0; j < 2; j++) {
+            String text = (j == 0 ? transText : primText);
+            if (text != null && text.contains("<")) {
+                StringBuilder message = null;
+                char cc;
+                message = new StringBuilder();
+                int last = 0;
+                int i = text.indexOf('<');
 
-            while (i < rawText.length()) {
-                cc = rawText.charAt(i);
-                if (cc == '<') {
-                    cc = rawText.charAt(++i);
+                while (i != -1 && i < text.length() && i >= last) {
+                    message.append(text.substring(last, i));
+                    cc = text.charAt(++i);
                     StringBuilder numChar;
 
                     while (cc != '>') {
                         numChar = new StringBuilder();
-                        for (int j = 0; j < 4; j++) { // 4 - char`s length in HEX
+                        for (int k = 0; k < 4; k++) { // 4 - char`s length in HEX
                             numChar.append(cc);
-                            cc = rawText.charAt(++i);
+                            cc = text.charAt(++i);
                         }
                         int c = Integer.parseInt(numChar.toString(), 16);
                         message.append(converter.convert(c));
                     }
+                    last = i + 1;
+                    i = text.substring(last).indexOf('<') + last;
                 }
-                i++;
+                if (j == 0) {
+                    transText = message.toString();
+                } else primText = message.toString();
             }
+
         }
 
 
-
-        this.text = message.toString();
     }
 
-    public boolean isHead() {
-        return isHead;
+    public String getPrimText() {
+        return primText;
     }
 
-    public void setHead(boolean head) {
-        isHead = head;
+    public void setPrimText(String primText) {
+        this.primText = primText;
     }
 
-    public String getRawText() {
-        return rawText;
-    }
 
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public void setY(double y) {
-        this.y = y;
-    }
-
-    public void setRawText(String text) {
-        this.rawText = text;
-    }
-
-    public void setText(String text) {this.text = text;}
 }

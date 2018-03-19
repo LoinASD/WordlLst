@@ -18,32 +18,28 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 
 public class ChangingWLActivity extends AppCompatActivity implements View.OnClickListener {
 
     int lineID;
     String wlName;
     boolean isAdding;
-    DBHelper dbHelper;
+    Node node;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dbHelper = new DBHelper(this);
 
         switch (getIntent().getStringExtra("Action")) {
             case ("Change"): {
                 setContentView(io.cyanlab.loinasd.wordllst.R.layout.activity_changing_line);
 
                 isAdding = false;
-                lineID = getIntent().getIntExtra("ID", -1);
-                wlName = getIntent().getStringExtra("Name");
+                node = (Node) getIntent().getSerializableExtra("Node");
 
-                Cursor cursor = dbHelper.getRow(wlName, lineID);
-                cursor.moveToFirst();
-                ((EditText) findViewById(R.id.primET)).setText(cursor.getString(cursor.getColumnIndex("prim")));
-                ((EditText) findViewById(R.id.transET)).setText(cursor.getString(cursor.getColumnIndex("trans")));
+                ((EditText) findViewById(R.id.primET)).setText(node.getPrimText());
+                ((EditText) findViewById(R.id.transET)).setText(node.getTransText());
                 findViewById(R.id.primET).refreshDrawableState();
                 findViewById(R.id.transET).refreshDrawableState();
                 findViewById(R.id.saveBut).setOnClickListener(this);
@@ -103,19 +99,35 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
             case (R.id.saveBut): {
                 try {
                     if (!isAdding) {
-                        dbHelper.saveWLRow(wlName, lineID,
-                                ((EditText) findViewById(R.id.primET)).getText().toString(),
-                                ((EditText) findViewById(R.id.transET)).getText().toString());
+                        node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
+                        node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
+
+
+
                     } else {
 
-                        dbHelper.saveNewWLRow(wlName,
-                                ((EditText) findViewById(R.id.primET)).getText().toString(),
-                                ((EditText) findViewById(R.id.transET)).getText().toString());
+                        node = new Node();
+                        node.setWlName(wlName);
+                        node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
+                        node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
                     }
+
+                    Thread save = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            NavActivity.database.nodeDao().updateNode(node);
+                        }
+                    });
+
+                    save.join();
+                    save.start();
+
                     setResult(RESULT_OK,
                             new Intent().putExtra("Name", wlName));
                 } catch (SQLiteException e) {
                     return;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 break;
             }
@@ -134,14 +146,13 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 return;
             }*/
             case (R.id.delBut): {
-                dbHelper.deleteWL(wlName);
-
                 setResult(RESULT_OK);
                 break;
             }
             case (R.id.delLineBut): {
                 if (!isAdding) {
-                    dbHelper.deleteLine(wlName, lineID);
+
+
                 } else {
                     setResult(RESULT_CANCELED);
                     finish();
@@ -166,7 +177,6 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     protected void onDestroy() {
-        dbHelper.close();
         super.onDestroy();
     }
 }

@@ -3,12 +3,11 @@ package io.cyanlab.loinasd.wordllst.activities;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.app.Dialog;
+import android.arch.persistence.room.Room;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,11 +17,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,11 +28,10 @@ import java.io.PipedOutputStream;
 import java.lang.ref.WeakReference;
 
 import io.cyanlab.loinasd.wordllst.R;
-import io.cyanlab.loinasd.wordllst.controller.DBHelper;
+import io.cyanlab.loinasd.wordllst.controller.database.LocalDatabase;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 
-import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_CHANGE;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_FM;
 
 public class NavActivity extends AppCompatActivity
@@ -47,19 +42,21 @@ public class NavActivity extends AppCompatActivity
     static final String MODE_LISTS = "Lists";
     static final String MODE_LINES = "Lines";
 
+    public static String WL_NAME = "wlName";
+
     static final int REQUEST_CODE_ADD = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
-    static final int HANDLE_MESSAGE_EXTRACTED = 2;
-    static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+    public static final int HANDLE_MESSAGE_EXTRACTED = 2;
+    public static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
+    static final int HANDLE_MESSAGE_DELETED = 5;
+    public static final int HANDLE_MESSAGE_EXISTS = 6;
     static final int REQUEST_CODE_CHANGE = 5;
-    static final int REQUEST_CODE_DELETEWL = 3;
+    static final int REQUEST_CODE_DELETE_WL = 3;
 
     Thread parser, extractor;
-    DBHelper dbHelper;
     android.support.v4.app.Fragment lists;
     android.support.v4.app.Fragment lines;
-    LinearLayout fab_tab;
-    LinearLayout progBut;
+    LinearLayout progBarLayout, testBar;
     public static StaticHandler h;
 
     private boolean isDeletable;
@@ -67,6 +64,8 @@ public class NavActivity extends AppCompatActivity
     private boolean isFabExpanded;
 
     public static String LIST_NAME;
+
+    public static LocalDatabase database;
 
 
 
@@ -78,9 +77,8 @@ public class NavActivity extends AppCompatActivity
 
         h = new StaticHandler(this);
         setContentView(R.layout.activity_nav);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        dbHelper = new DBHelper(this);
 
 
         Bundle data = new Bundle();
@@ -95,19 +93,19 @@ public class NavActivity extends AppCompatActivity
 
 
 
-        fab_tab = (LinearLayout)findViewById(R.id.fab_tab);
-        progBut = (LinearLayout)findViewById(R.id.PB);
-        progBut.setVisibility(View.INVISIBLE);
+        //fab_tab = findViewById(R.id.fab_tab);
+        progBarLayout = findViewById(R.id.PB);
+        progBarLayout.setVisibility(View.INVISIBLE);
         final AppCompatActivity activity = this;
 
-        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_main);
+        /*final FloatingActionButton fab = findViewById(R.id.fab_main);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Animation scaleAnimation1;
                 Animation scaleAnimation2;
-                /*Animation mainAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_main_hide);
-                view.startAnimation(mainAnimation);*/
+                *//*Animation mainAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_main_hide);
+                view.startAnimation(mainAnimation);*//*
                 int vis;
                 int img;
                 View fab1;
@@ -123,7 +121,7 @@ public class NavActivity extends AppCompatActivity
                     img = android.R.drawable.ic_menu_close_clear_cancel;
                     sideFab.startAnimation(scaleAnimation1);
 
-                }else {
+                } else {
                     scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
                     scaleAnimation2 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
                     fab2 = fab_tab.findViewById(R.id.fab_card_test);
@@ -167,32 +165,77 @@ public class NavActivity extends AppCompatActivity
                 addLine.putExtra("Action", "AddLine");
                 startActivityForResult(addLine, REQUEST_CODE_CHANGE);
             }
-        });
+        });*/
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        Thread loadDB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (database == null)
+                    database = Room.databaseBuilder(getApplicationContext(), LocalDatabase.class, "base").build();
+            }
+        });
+
+        loadDB.run();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         navigationView.setCheckedItem(R.id.nav_wl_show);
         getSupportFragmentManager().beginTransaction().add(R.id.fragment, lists, MODE_LISTS).commit();
 
 
+        testBar = findViewById(R.id.bbar_include);
+        //-----------testBar------------------------
+        //testBar = findViewById(R.id.bottom_bar);
+        View.OnClickListener barListenner = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                System.out.println(view.getId());
+                switch (view.getId()) {
+                    case R.id.cardTest: {
+                        Intent testWl = new Intent(getBaseContext(), CardTestActivity.class);
+                        testWl.putExtra("Name", LIST_NAME);
+                        startActivity(testWl);
+                        break;
+                    }
+                    case R.id.addLineButton: {
+                        Intent addLine = new Intent(getBaseContext(), ChangingWLActivity.class);
+                        addLine.putExtra("Name", LIST_NAME);
+                        addLine.putExtra("Action", "AddLine");
+                        startActivityForResult(addLine, REQUEST_CODE_CHANGE);
+                        break;
+                    }
+                    case R.id.dndTest: {
+                        Intent testWl = new Intent(getBaseContext(), DnDTestActivity.class);
+                        testWl.putExtra("Name", LIST_NAME);
+                        startActivity(testWl);
+                        break;
+                    }
+                }
+            }
+        };
+        testBar.findViewById(R.id.cardTest).setOnClickListener(barListenner);
+        testBar.findViewById(R.id.dndTest).setOnClickListener(barListenner);
+        testBar.findViewById(R.id.addLineButton).setOnClickListener(barListenner);
+
     }
 
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else if(lists.isHidden()) {
 
-            final ListView main = (ListView) lines.getView().findViewById(R.id.scrollView);
+            final ListView main = lines.getView().findViewById(R.id.scrollView);
             int duration = 500;
 
             ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
@@ -248,7 +291,7 @@ public class NavActivity extends AppCompatActivity
             Intent delWL = new Intent(this, ChangingWLActivity.class);
             delWL.putExtra("Action", "Delete");
             delWL.putExtra("Name", LIST_NAME);
-            startActivityForResult(delWL, REQUEST_CODE_DELETEWL);
+            startActivityForResult(delWL, REQUEST_CODE_DELETE_WL);
             setResult(RESULT_OK, delWL);
             ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
             // getWLsAsButtons(scroll, dbHelper);
@@ -256,7 +299,7 @@ public class NavActivity extends AppCompatActivity
 
         if (id == R.id.clear_db) {
 
-            dbHelper.clearDB();
+
             loadLists();
             isDeletable = false;
 
@@ -312,7 +355,7 @@ public class NavActivity extends AppCompatActivity
             default: break;
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -323,26 +366,42 @@ public class NavActivity extends AppCompatActivity
             if (resultCode == RESULT_OK) {
                 final String file = data.getStringExtra("file");
                 startParser(file);
-                progBut.setVisibility(View.VISIBLE);
-                ((TextView)progBut.findViewById(R.id.pbText)).setText("Parsing...");
+                progBarLayout.setVisibility(View.VISIBLE);
+                ((TextView) progBarLayout.findViewById(R.id.pbText)).setText("Parsing...");
                 findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
             }
         }
-        if (requestCode == REQUEST_CODE_DELETEWL) {
+        if (requestCode == REQUEST_CODE_DELETE_WL) {
             if (resultCode == RESULT_OK) {
 
-                LIST_NAME = null;
-                ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
+                Thread deleteWL = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
+                        NavActivity.database.listDao().deleteList(LIST_NAME);
+                        h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
+                    }
+                });
+                deleteWL.start();
+                try {
 
 
-                LIST_NAME = null;
+                    deleteWL.join();
+                    LIST_NAME = null;
+                    ((ShowFragment) lists).notifyAdapter();
+                    ((ShowFragment) lines).notifyAdapter();
+                    loadLists();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 loadLists();
+
 
             }
         }
         if (data != null) {
             if (requestCode == REQUEST_CODE_ADD) {
-                dbHelper.saveNewWL(data.getStringExtra("Name").trim().replaceAll(" ", "_"));
+
                 ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
             }
         }
@@ -365,10 +424,10 @@ public class NavActivity extends AppCompatActivity
             extractor = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    new Delegator().extract(pin, dbHelper);
+                    new Delegator().extract(pin);
                 }
             });
-
+            parser.setPriority(Thread.MAX_PRIORITY);
             parser.start();
             extractor.start();
 
@@ -380,7 +439,6 @@ public class NavActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        dbHelper.close();
         if (h != null)
             h.removeCallbacksAndMessages(null);
 
@@ -430,15 +488,43 @@ public class NavActivity extends AppCompatActivity
 
     }
 
-    public void showFabTab(){
-        fab_tab.setVisibility(View.VISIBLE);
+    public void setBarVisibility(final int visibility) {
+
+        if (visibility == View.VISIBLE) {
+            testBar.setVisibility(View.VISIBLE);
+            testBar.setScaleY(0);
+            testBar.setTranslationY(100);
+        }
+        testBar.animate().setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                testBar.setVisibility(visibility);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(100).start();
+
+
     }
 
     @Override
     public void onListSelected(String name, View view) {
 
         LIST_NAME = name;
-        final ListView main = (ListView) lists.getView().findViewById(R.id.scrollView);
+        final ListView main = lists.getView().findViewById(R.id.scrollView);
 
         int i = 0;
         int pos = main.getChildCount();
@@ -526,26 +612,43 @@ public class NavActivity extends AppCompatActivity
             }
             if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
                 extractor = true;
-                wlName = msg.getData().getString("wlName");
+                wlName = msg.getData().getString(WL_NAME);
 
 
             }
-            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
+            if (msg.what == HANDLE_MESSAGE_EXISTS) {
                 parser = false;
                 extractor = false;
 
                 Toast.makeText(activity, "Wordlist with equal name already exists", Toast.LENGTH_SHORT).show();
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
-                activity.progBut.setVisibility(View.INVISIBLE);
+                activity.progBarLayout.setVisibility(View.INVISIBLE);
+            }
+
+            if (msg.what == HANDLE_MESSAGE_NOT_EXTRACTED) {
+                parser = false;
+                extractor = false;
+
+                Toast.makeText(activity, "No dictionary found", Toast.LENGTH_SHORT).show();
+
+                activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
+                activity.progBarLayout.setVisibility(View.INVISIBLE);
             }
 
             if (parser && extractor) {
+
+                parser = false;
+                extractor = false;
+
                 LIST_NAME = wlName;
+
+                Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_LONG).show();
                 activity.loadLines();
 
+
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
-                activity.progBut.setVisibility(View.INVISIBLE);
+                activity.progBarLayout.setVisibility(View.INVISIBLE);
             }
         }
     }
@@ -554,7 +657,7 @@ public class NavActivity extends AppCompatActivity
 
     /* static final int REQUEST_CODE_FM = 1;
     static final int REQUEST_CODE_CHANGE = 2;
-    static final int REQUEST_CODE_DELETEWL = 3;
+    static final int REQUEST_CODE_DELETE_WL = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
@@ -649,7 +752,7 @@ public class NavActivity extends AppCompatActivity
             Intent deleteWL = new Intent(getBaseContext(), ChangingWLActivity.class);
             deleteWL.putExtra("Action", "Delete");
             deleteWL.putExtra("Name", loader.wlName);
-            startActivityForResult(deleteWL, REQUEST_CODE_DELETEWL);
+            startActivityForResult(deleteWL, REQUEST_CODE_DELETE_WL);
             setResult(RESULT_OK, deleteWL);
 
         }
