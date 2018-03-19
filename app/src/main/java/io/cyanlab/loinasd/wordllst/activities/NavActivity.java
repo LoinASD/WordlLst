@@ -335,7 +335,7 @@ public class NavActivity extends AppCompatActivity
 
             case  R.id.nav_create:
 
-            case (R.id.addNewWL):
+            case R.id.addNewWL:
                 Intent addWL = new Intent(this, ChangingWLActivity.class);
                 addWL.putExtra("Action", "Add");
                 startActivityForResult(addWL, REQUEST_CODE_ADD);
@@ -346,10 +346,12 @@ public class NavActivity extends AppCompatActivity
                 break;
 
             case R.id.nav_wl_show:
-
                 loadLists();
+                break;
 
-
+            case R.id.nav_about:
+                Intent about = new Intent(this, AboutActivity.class);
+                startActivity(about);
                 break;
 
             default: break;

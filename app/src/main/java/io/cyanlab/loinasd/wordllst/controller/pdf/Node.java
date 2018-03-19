@@ -2,7 +2,6 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 
 import java.io.Serializable;
@@ -41,18 +40,19 @@ public class Node implements Serializable {
     }
 
     public void setTransText(String transText) {
-        this.transText = transText;
+        if (transText == null) this.transText = "";
+        else this.transText = transText;
     }
 
     private String transText;
 
-    public void convertText(CharConverter converter) {
+    void convertText(CharConverter converter) {
+        System.out.printf("P: %s%nT: %s%n%n", primText, transText);
         for (int j = 0; j < 2; j++) {
             String text = (j == 0 ? transText : primText);
             if (text != null && text.contains("<")) {
-                StringBuilder message = null;
+                StringBuilder message = new StringBuilder();
                 char cc;
-                message = new StringBuilder();
                 int last = 0;
                 int i = text.indexOf('<');
 
@@ -67,8 +67,16 @@ public class Node implements Serializable {
                             numChar.append(cc);
                             cc = text.charAt(++i);
                         }
-                        int c = Integer.parseInt(numChar.toString(), 16);
-                        message.append(converter.convert(c));
+                        int c;
+                        try{
+                            c = Integer.parseInt(numChar.toString(), 16);
+                            message.append(converter.convert(c));
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                            System.out.println(numChar);
+                            System.out.println(cc);
+                        }
+
                     }
                     last = i + 1;
                     i = text.substring(last).indexOf('<') + last;

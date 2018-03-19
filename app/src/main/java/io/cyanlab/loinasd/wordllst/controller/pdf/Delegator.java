@@ -44,11 +44,17 @@ public class Delegator {
         proggress++;
     }
 
+    public static Logger getLog() {
+        return log;
+    }
+
     /**
      * Main extraction method. Extracts text from @io
      *
      * @param io
      */
+
+
     public void extract(final PipedInputStream io) {
 
         long startTime = System.currentTimeMillis();
