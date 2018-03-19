@@ -94,6 +94,7 @@ public class PDFParser {
                     }
                 }
             }
+            decoder.join();
             NavActivity.h.sendEmptyMessage(1);
             out.close();
             log.warning("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
@@ -101,6 +102,8 @@ public class PDFParser {
             NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
         } catch (IOException e) {
             NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
