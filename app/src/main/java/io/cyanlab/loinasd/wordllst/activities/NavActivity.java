@@ -12,8 +12,10 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ListFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -236,7 +238,7 @@ public class NavActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else if (lists.isHidden()) {
 
-            final ListView main = lines.getView().findViewById(R.id.scrollView);
+            final RecyclerView main = lines.getView().findViewById(R.id.scrollView);
             int duration = 500;
 
             ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
@@ -401,7 +403,7 @@ public class NavActivity extends AppCompatActivity
                     loadLists();
                 } else {
                     ((ShowFragment) lists).adapterLoadData();
-                    ((ShowFragment) lines).changeHeader();
+                    //((ShowFragment) lines).changeHeader();
                 }
             }
         }
@@ -547,7 +549,7 @@ public class NavActivity extends AppCompatActivity
     public void onListSelected(String name, View view) {
 
         LIST_NAME = name;
-        final ListView main = lists.getView().findViewById(R.id.scrollView);
+        final RecyclerView main = lists.getView().findViewById(R.id.scrollView);
 
         int i = 0;
         int pos = main.getChildCount();

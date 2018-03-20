@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -72,12 +74,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         final View v = inflater.inflate(R.layout.content_nav, null);
         main = v.findViewById(R.id.scrollView);
+        main.setLayoutManager(new LinearLayoutManager(getActivity()));
         h = new FragHandler(this);
         switch (MODE) {
 
             case SHOW_LINES:
 
-                header = getLayoutInflater().inflate(R.layout.list_line_stats, null);
+                /*header = getLayoutInflater().inflate(R.layout.list_line_stats, null);
                 //main.addHeaderView(header);
                 header.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -88,65 +91,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                         startActivityForResult(changeList, REQUEST_CODE_CHANGE_WL);
 
                     }
-                });
+                });*/
 
                 setAdapter(R.layout.simple_line);
-
-                main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-                    @Override
-                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        Intent changeLine = new Intent(getContext(), ChangingWLActivity.class).
-                                putExtra("Node", (Node) adapter.getItem(position)).
-                                putExtra("Action", "Change");
-                        startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
-
-                        setState(NEEDS_UPD);
-
-                        return true;
-                    }
-                });
-
-
-                main.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-                    @Override
-                    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-                        return false;
-                    }
-
-                    @Override
-                    public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-
-                    }
-
-                    @Override
-                    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
-                    }
-                });
 
                 break;
             case SHOW_WL:
                 setAdapter(R.layout.list_line);
-
-                main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                        String wlName = ((WordList) main.getItemAtPosition(position)).getWlName();
-                        listener.onListSelected(wlName, view);
-
-                    }
-                });
-
-
-                main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-                    @Override
-                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-
-
-                        return true;
-                    }
-                });
 
                 try {
                     listener = (onListSelectedListener) getActivity();
@@ -179,7 +130,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     break;
                 case SHOW_LINES:
 
-                    main.setSelection(0);
+                    main.scrollTo(0, 0);
                     //getActivity().getLoaderManager().getLoader(1).forceLoad();
                     break;
 
@@ -326,7 +277,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 case (HANDLE_MESSAGE_NAMES_LOADED): {
                     fragment.adapter.notifyDataSetChanged();
                     if (fragment.MODE == SHOW_LINES) {
-                        fragment.changeHeader();
+                        //fragment.changeHeader();
                     }
                 }
             }
@@ -343,11 +294,45 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         adapter.loadFromDB();
     }
 
-    private class WLAdapter extends BaseAdapter {
+    private class ListHolder extends RecyclerView.ViewHolder {
+
+        TextView namePlace;
+
+        ProgressBar progressBar;
+
+        TextView progress;
+
+        LinearLayout listLayout;
+
+        public ListHolder(View itemView) {
+            super(itemView);
+            namePlace = itemView.findViewById(R.id.name_line);
+            progressBar = itemView.findViewById(R.id.progressBar2);
+            progress = itemView.findViewById(R.id.percents);
+            listLayout = itemView.findViewById(R.id.list_layout);
+        }
+    }
+
+    private class NodeHolder extends RecyclerView.ViewHolder {
+
+        TextView primTV;
+        TextView transTV;
+
+        LinearLayout lineLayout;
+
+        public NodeHolder(View itemView) {
+            super(itemView);
+
+            primTV = itemView.findViewById(R.id.primeTV);
+            transTV = itemView.findViewById(R.id.translateTV);
+            lineLayout = itemView.findViewById(R.id.lineLayout);
+        }
+    }
+
+    private class WLAdapter extends RecyclerView.Adapter {
 
         @LayoutRes
         private int resource;
-        LayoutInflater inflater;
         WordList list;
 
         List<WordList> lists;
@@ -356,7 +341,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         private WLAdapter(@LayoutRes int resource) {
             this.resource = resource;
-            inflater = getLayoutInflater();
         }
 
         private void colorLines() {
@@ -395,14 +379,73 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             }
         }
 
+
         @Override
-        public int getCount() {
-            return ((lists != null || nodes != null) ? (MODE == SHOW_WL ? lists.size() : nodes.size()) : 0);
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+            View view = LayoutInflater.from(parent.getContext()).inflate(resource, parent, false);
+
+            RecyclerView.ViewHolder holder;
+
+            switch (resource) {
+                case R.layout.list_line: {
+                    holder = new ListHolder(view);
+                    break;
+                }
+                case R.layout.simple_line: {
+                    holder = new NodeHolder(view);
+                    break;
+                }
+                default:
+                    holder = new NodeHolder(view);
+            }
+
+            return holder;
         }
 
         @Override
-        public Object getItem(int i) {
-            return MODE == SHOW_WL ? lists.get(i) : nodes.get(i);
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            final int id = position;
+            switch (MODE) {
+                case SHOW_WL: {
+                    ((ListHolder) holder).namePlace.setText(lists.get(position).getWlName());
+                    ((ListHolder) holder).progressBar.setMax(lists.get(position).maxWeight);
+                    ((ListHolder) holder).progressBar.setProgress(lists.get(position).maxWeight - lists.get(position).currentWeight);
+                    String prog = (lists.get(position).maxWeight - lists.get(position).currentWeight) * 100 / (lists.get(position).maxWeight != 0 ? lists.get(position).maxWeight : 1) + "%";
+                    ((ListHolder) holder).progress.setText(prog);
+
+
+                    ((ListHolder) holder).listLayout.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            String wlName = (lists.get(id)).getWlName();
+                            listener.onListSelected(wlName, view);
+                        }
+                    });
+
+                    break;
+                }
+                case SHOW_LINES: {
+                    ((NodeHolder) holder).primTV.setText(nodes.get(position).getPrimText());
+                    ((NodeHolder) holder).transTV.setText(nodes.get(position).getTransText());
+                    ((NodeHolder) holder).lineLayout.setOnLongClickListener(new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View view) {
+
+                            Intent changeLine = new Intent(getContext(), ChangingWLActivity.class).
+                                    putExtra("Node", nodes.get(id)).
+                                    putExtra("Action", "Change");
+                            startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
+
+                            setState(NEEDS_UPD);
+
+                            return true;
+                        }
+                    });
+
+                    break;
+                }
+            }
         }
 
         @Override
@@ -411,31 +454,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
 
         @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
-
-            View v = (view != null ? view : inflater.inflate(resource, null));
-
-            if (MODE == SHOW_WL) {
-
-                ((TextView) v.findViewById(R.id.name_line)).setText(((WordList) getItem(i)).getWlName());
-                ((ProgressBar) v.findViewById(R.id.progressBar2)).setMax(((WordList) getItem(i)).maxWeight);
-                ((ProgressBar) v.findViewById(R.id.progressBar2)).setProgress(((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight);
-
-                ((TextView) v.findViewById(R.id.percents)).setText(((((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight) * 100 / ((((WordList) getItem(i)).maxWeight) != 0 ? ((WordList) getItem(i)).maxWeight : 1) + "%"));
-            } else {
-                ((TextView) v.findViewById(R.id.primeTV)).setText(((Node) getItem(i)).getPrimText());
-                ((TextView) v.findViewById(R.id.translateTV)).setText(((Node) getItem(i)).getTransText());
-            }
-
-
-            return v;
+        public int getItemCount() {
+            return ((lists != null || nodes != null) ? (MODE == SHOW_WL ? lists.size() : nodes.size()) : 0);
         }
 
-        @Nullable
-        @Override
-        public CharSequence[] getAutofillOptions() {
-            return new CharSequence[0];
-        }
     }
 
 }
