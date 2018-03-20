@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="3dp"
@@ -14,22 +15,32 @@
         android:background="@drawable/border"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/name_line"
+        <LinearLayout
+            android:id="@+id/name_delete"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="asdasd"
-            android:textAlignment="viewStart"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textSize="30sp"
-            android:textStyle="bold">
+            android:orientation="horizontal">
 
-        </TextView>
+            <TextView
+                android:id="@+id/name_line"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="asdasd"
+                android:textAlignment="viewStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textSize="30sp"
+                android:textStyle="bold">
+
+            </TextView>
+
+        </LinearLayout>
 
 
         <LinearLayout
@@ -47,6 +58,8 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginBottom="0dp"
                 android:layout_marginEnd="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/MaterialDarkerGreen"
@@ -60,11 +73,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="15dp"
+                android:layout_marginRight="15dp"
                 android:layout_weight="0"
                 android:maxLines="1"
                 android:minLines="1"
                 android:text="50%"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:textSize="18sp" />
         </LinearLayout>
 
     </LinearLayout>

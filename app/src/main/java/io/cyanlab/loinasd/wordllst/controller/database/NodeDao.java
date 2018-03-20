@@ -1,6 +1,7 @@
 package io.cyanlab.loinasd.wordllst.controller.database;
 
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
@@ -39,4 +40,7 @@ public interface NodeDao {
     @Transaction
     @Query("DELETE FROM node WHERE nodeWLName = :wlName")
     void deleteNodes(String wlName);
+
+    @Delete
+    void deleteNode(Node node);
 }

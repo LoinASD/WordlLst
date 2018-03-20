@@ -361,9 +361,16 @@ public class Delegator {
                     curLang = Lang.UNDEFINED;
                     ch = io.read();
                     while ((char) ch != ')') {
+
                         if (curLang != Lang.ENG && LangChecker.langCheck((char) ch) == Lang.ENG)
                             curLang = Lang.ENG;
-                        text.append((char) ch);
+
+                        if (curLang != Lang.ENG && (LangChecker.langCheck((char) ch) == Lang.NUM) || ((char) ch == '.')) {
+                            ch = io.read();
+                            continue;
+                        }
+
+                        text.append(ch != 47 ? (char) ch : ',');
                         ch = io.read();
                     }
                 }

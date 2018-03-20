@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ListFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -31,6 +32,7 @@ import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.database.LocalDatabase;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Delegator;
 import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
+import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_FM;
 
@@ -51,7 +53,7 @@ public class NavActivity extends AppCompatActivity
     static final int HANDLE_MESSAGE_DELETED = 5;
     public static final int HANDLE_MESSAGE_EXISTS = 6;
     static final int REQUEST_CODE_CHANGE = 5;
-    static final int REQUEST_CODE_DELETE_WL = 3;
+    static final int REQUEST_CODE_CHANGE_WL = 4;
 
     Thread parser, extractor;
     android.support.v4.app.Fragment lists;
@@ -66,7 +68,6 @@ public class NavActivity extends AppCompatActivity
     public static String LIST_NAME;
 
     public static LocalDatabase database;
-
 
 
     @Override
@@ -233,7 +234,7 @@ public class NavActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if(lists.isHidden()) {
+        } else if (lists.isHidden()) {
 
             final ListView main = lines.getView().findViewById(R.id.scrollView);
             int duration = 500;
@@ -291,7 +292,7 @@ public class NavActivity extends AppCompatActivity
             Intent delWL = new Intent(this, ChangingWLActivity.class);
             delWL.putExtra("Action", "Delete");
             delWL.putExtra("Name", LIST_NAME);
-            startActivityForResult(delWL, REQUEST_CODE_DELETE_WL);
+            startActivityForResult(delWL, REQUEST_CODE_CHANGE_WL);
             setResult(RESULT_OK, delWL);
             ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
             // getWLsAsButtons(scroll, dbHelper);
@@ -363,7 +364,7 @@ public class NavActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         if (requestCode == REQUEST_CODE_FM) {
             if (resultCode == RESULT_OK) {
                 final String file = data.getStringExtra("file");
@@ -373,39 +374,59 @@ public class NavActivity extends AppCompatActivity
                 findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
             }
         }
-        if (requestCode == REQUEST_CODE_DELETE_WL) {
+        if (requestCode == REQUEST_CODE_CHANGE_WL) {
             if (resultCode == RESULT_OK) {
 
-                Thread deleteWL = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
-                        NavActivity.database.listDao().deleteList(LIST_NAME);
-                        h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
+                if (data.getStringExtra("Action").equals("Delete")) {
+                    Thread deleteWL = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
+                            NavActivity.database.listDao().deleteList(LIST_NAME);
+                            h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
+                        }
+                    });
+                    deleteWL.start();
+                    try {
+
+
+                        deleteWL.join();
+                        LIST_NAME = null;
+                        ((ShowFragment) lists).notifyAdapter();
+                        ((ShowFragment) lines).notifyAdapter();
+                        loadLists();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                });
-                deleteWL.start();
-                try {
-
-
-                    deleteWL.join();
-                    LIST_NAME = null;
-                    ((ShowFragment) lists).notifyAdapter();
-                    ((ShowFragment) lines).notifyAdapter();
                     loadLists();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } else {
+                    ((ShowFragment) lists).adapterLoadData();
+                    ((ShowFragment) lines).changeHeader();
                 }
-                loadLists();
-
-
             }
         }
-        if (data != null) {
-            if (requestCode == REQUEST_CODE_ADD) {
 
-                ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
+        if (requestCode == REQUEST_CODE_ADD && resultCode == RESULT_OK) {
+            final WordList list = new WordList();
+            list.setWlName(data.getStringExtra("Name"));
+            list.maxWeight = 0;
+            list.currentWeight = 0;
+            Thread addList = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    database.listDao().insertList(list);
+                }
+            });
+            try {
+                addList.start();
+                addList.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+            ((ShowFragment) lists).notifyAdapter();
+        }
+        if (requestCode == REQUEST_CODE_CHANGE) {
+            ((ShowFragment) lines).adapterLoadData();
         }
     }
 
@@ -517,7 +538,7 @@ public class NavActivity extends AppCompatActivity
             public void onAnimationRepeat(Animator animator) {
 
             }
-        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(100).start();
+        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(visibility == View.VISIBLE ? 0 : 100).start();
 
 
     }
@@ -536,8 +557,6 @@ public class NavActivity extends AppCompatActivity
         int duration = 500;
         while (i != pos){
             if (main.getChildAt(i) != view) {
-                final int k = i;
-
                 ObjectAnimator animator = ObjectAnimator.ofFloat(main.getChildAt(i),View.ALPHA,1f,0f);
                 animator.setStartDelay((i - diff) * 125);
                 animator.setDuration(250);
@@ -659,7 +678,7 @@ public class NavActivity extends AppCompatActivity
 
     /* static final int REQUEST_CODE_FM = 1;
     static final int REQUEST_CODE_CHANGE = 2;
-    static final int REQUEST_CODE_DELETE_WL = 3;
+    static final int REQUEST_CODE_CHANGE_WL = 3;
     static final int HANDLE_MESSAGE_PARSED = 1;
     static final int HANDLE_MESSAGE_EXTRACTED = 2;
     static final int HANDLE_MESSAGE_NOT_EXTRACTED = 4;
@@ -754,7 +773,7 @@ public class NavActivity extends AppCompatActivity
             Intent deleteWL = new Intent(getBaseContext(), ChangingWLActivity.class);
             deleteWL.putExtra("Action", "Delete");
             deleteWL.putExtra("Name", loader.wlName);
-            startActivityForResult(deleteWL, REQUEST_CODE_DELETE_WL);
+            startActivityForResult(deleteWL, REQUEST_CODE_CHANGE_WL);
             setResult(RESULT_OK, deleteWL);
 
         }

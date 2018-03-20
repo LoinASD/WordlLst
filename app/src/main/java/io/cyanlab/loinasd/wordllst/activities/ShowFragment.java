@@ -6,7 +6,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -24,7 +26,9 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
+import static io.cyanlab.loinasd.wordllst.activities.NavActivity.MODE_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE;
+import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE_WL;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_TEST;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_WL;
@@ -38,7 +42,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     public static final int NEEDS_UPD = 2;
     public static final int DONT_NEEDS_UPD = 1;
-    public boolean isWakening;
+
+    public View header;
 
     public static FragHandler h;
 
@@ -46,7 +51,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     onStateChangedListener stateListener;
 
     WLAdapter adapter;
-    ListView main;
+    RecyclerView main;
 
     private int MODE;
 
@@ -65,12 +70,26 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.content_nav,null);
+        final View v = inflater.inflate(R.layout.content_nav, null);
         main = v.findViewById(R.id.scrollView);
         h = new FragHandler(this);
         switch (MODE) {
 
             case SHOW_LINES:
+
+                header = getLayoutInflater().inflate(R.layout.list_line_stats, null);
+                //main.addHeaderView(header);
+                header.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent changeList = new Intent(getContext(), ChangingWLActivity.class).
+                                putExtra("Name", adapter.list.getWlName()).
+                                putExtra("Action", "Change list");
+                        startActivityForResult(changeList, REQUEST_CODE_CHANGE_WL);
+
+                    }
+                });
+
                 setAdapter(R.layout.simple_line);
 
                 main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -83,33 +102,49 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                         setState(NEEDS_UPD);
 
-                        return false;
+                        return true;
                     }
                 });
 
-                main.setOnScrollListener(new AbsListView.OnScrollListener() {
+
+                main.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
                     @Override
-                    public void onScrollStateChanged(AbsListView view, int scrollState) {
+                    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+                        return false;
+                    }
+
+                    @Override
+                    public void onTouchEvent(RecyclerView rv, MotionEvent e) {
 
                     }
 
                     @Override
-                    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                        if (totalItemCount - firstVisibleItem - visibleItemCount < 20) {
-                            //adapter.loadFromDB();
-                        }
+                    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
                     }
                 });
 
                 break;
             case SHOW_WL:
-                setAdapter(R.layout.lists_line);
+                setAdapter(R.layout.list_line);
 
                 main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        String wlName = ((TextView) view.findViewById(R.id.name_line)).getText().toString();
+
+                        String wlName = ((WordList) main.getItemAtPosition(position)).getWlName();
                         listener.onListSelected(wlName, view);
+
+                    }
+                });
+
+
+                main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+
+                        return true;
                     }
                 });
 
@@ -119,13 +154,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 } catch (ClassCastException e) {
                     e.printStackTrace();
                 }
-
                 break;
 
         }
 
         return v;
     }
+
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -137,7 +172,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             switch (MODE){
                 case SHOW_WL:
                     //getActivity().getLoaderManager().getLoader(0).forceLoad();
-                    isWakening = true;
                     break;
 
                 case SHOW_TEST:
@@ -192,12 +226,33 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
 
         if (MODE == SHOW_LINES) {
-            //getActivity().findViewById(R.id.fab_tab).setVisibility(View.VISIBLE);
-            ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
+            if (isHidden()) {
+                //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
+                ((NavActivity) getActivity()).setBarVisibility(View.GONE);
+            } else {
+                ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
+                //getActivity().findViewById(R.id.bbar).setVisibility(View.VISIBLE);
+            }
         }
 
 
         super.onResume();
+
+    }
+
+    void changeHeader() {
+        ((TextView) header.findViewById(R.id.name_line)).setText(adapter.list.getWlName());
+        ((ProgressBar) header.findViewById(R.id.progressBar2)).setMax(adapter.list.maxWeight);
+        ((ProgressBar) header.findViewById(R.id.progressBar2)).setProgress(adapter.list.maxWeight - adapter.list.currentWeight);
+
+        String prog = (adapter.list.maxWeight - adapter.list.currentWeight) * 100 / (adapter.list.maxWeight != 0 ? adapter.list.maxWeight : 1) + "%";
+        ((TextView) header.findViewById(R.id.percents)).setText(prog);
+
+        String words = "Words: " + adapter.list.maxWeight / RIGHT_ANSWERS_TO_COMPLETE;
+        ((TextView) header.findViewById(R.id.stats_words)).setText(words);
+
+        String learned = "Learned words: " + (adapter.list.maxWeight - adapter.list.currentWeight) / RIGHT_ANSWERS_TO_COMPLETE;
+        ((TextView) header.findViewById(R.id.stats_appr_learned_words)).setText(learned);
 
     }
 
@@ -270,6 +325,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                 case (HANDLE_MESSAGE_NAMES_LOADED): {
                     fragment.adapter.notifyDataSetChanged();
+                    if (fragment.MODE == SHOW_LINES) {
+                        fragment.changeHeader();
+                    }
                 }
             }
 
@@ -281,12 +339,16 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         adapter.notifyDataSetChanged();
     }
 
+    protected void adapterLoadData() {
+        adapter.loadFromDB();
+    }
+
     private class WLAdapter extends BaseAdapter {
 
         @LayoutRes
         private int resource;
         LayoutInflater inflater;
-
+        WordList list;
 
         List<WordList> lists;
 
@@ -306,7 +368,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             }
         }
 
-
         void loadFromDB() {
             switch (MODE) {
 
@@ -325,6 +386,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                         @Override
                         public void run() {
                             nodes = NavActivity.database.nodeDao().getNodes(LIST_NAME);
+                            list = NavActivity.database.listDao().getWordlist(LIST_NAME);
                             h.sendEmptyMessage(HANDLE_MESSAGE_NAMES_LOADED);
                         }
                     });
@@ -332,7 +394,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 }
             }
         }
-
 
         @Override
         public int getCount() {
@@ -360,7 +421,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 ((ProgressBar) v.findViewById(R.id.progressBar2)).setMax(((WordList) getItem(i)).maxWeight);
                 ((ProgressBar) v.findViewById(R.id.progressBar2)).setProgress(((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight);
 
-                ((TextView) v.findViewById(R.id.percents)).setText(((((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight) * 100 / ((WordList) getItem(i)).maxWeight) + "%");
+                ((TextView) v.findViewById(R.id.percents)).setText(((((WordList) getItem(i)).maxWeight - ((WordList) getItem(i)).currentWeight) * 100 / ((((WordList) getItem(i)).maxWeight) != 0 ? ((WordList) getItem(i)).maxWeight : 1) + "%"));
             } else {
                 ((TextView) v.findViewById(R.id.primeTV)).setText(((Node) getItem(i)).getPrimText());
                 ((TextView) v.findViewById(R.id.translateTV)).setText(((Node) getItem(i)).getTransText());

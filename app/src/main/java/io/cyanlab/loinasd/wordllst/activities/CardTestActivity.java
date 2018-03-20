@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,92 +61,97 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
             e.printStackTrace();
         }
 
+        if (data.size() < 6) {
+            Toast.makeText(this, "You must have at least 6 lines to use Card Test", Toast.LENGTH_SHORT).show();
+            finish();
+        } else {
+            findViewById(R.id.card).setOnClickListener(this);
+            final Activity activity = this;
+            detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 
-        findViewById(R.id.card).setOnClickListener(this);
-        final Activity activity = this;
-        detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                    float sensivity = 75;
 
-                float sensivity = 75;
+                    boolean isDone = false;
 
-                boolean isDone = false;
+                    Animation animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
 
-                Animation animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
-
-                if (e1.getX() - e2.getX() > sensivity) {
-                    if (curNode.getWeight() > ShowFragment.RIGHT_ANSWERS_TO_COMPLETE) {
-                        curNode.setWeight(curNode.getWeight() - 1);
-                        list.currentWeight--;
-                    }
-                    curNode.setWeight(curNode.getWeight() + 1);
-                    list.currentWeight++;
-                    isDone = true;
-                    animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_rtl);
-
-                } else if (e2.getX() - e1.getX() > sensivity) {
-                    if (curNode.getWeight() == 1) {
+                    if (e1.getX() - e2.getX() > sensivity) {
+                        if (curNode.getWeight() > ShowFragment.RIGHT_ANSWERS_TO_COMPLETE) {
+                            curNode.setWeight(curNode.getWeight() - 1);
+                            list.currentWeight--;
+                        }
                         curNode.setWeight(curNode.getWeight() + 1);
                         list.currentWeight++;
+                        isDone = true;
+                        animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_rtl);
+
+                    } else if (e2.getX() - e1.getX() > sensivity) {
+                        if (curNode.getWeight() == 1) {
+                            curNode.setWeight(curNode.getWeight() + 1);
+                            list.currentWeight++;
+                        }
+                        curNode.setWeight(curNode.getWeight() - 1);
+                        list.currentWeight--;
+                        isDone = true;
+                        animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
                     }
-                    curNode.setWeight(curNode.getWeight() - 1);
-                    list.currentWeight--;
-                    isDone = true;
-                    animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
-                }
 
-                if (isDone) {
+                    if (isDone) {
 
-                    Thread updater = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            db.listDao().updateList(list);
-                            db.nodeDao().updateNode(curNode);
+                        Thread updater = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                db.listDao().updateList(list);
+                                db.nodeDao().updateNode(curNode);
+                            }
+                        });
+
+                        updater.start();
+
+                        animation.setAnimationListener(new Animation.AnimationListener() {
+                            @Override
+                            public void onAnimationStart(Animation animation) {
+
+                            }
+
+                            @Override
+                            public void onAnimationEnd(Animation animation) {
+                                loadLine();
+                                findViewById(R.id.card).setAlpha(0f);
+                                (findViewById(R.id.card)).animate().alpha(1f).setDuration(300).start();
+                            }
+
+                            @Override
+                            public void onAnimationRepeat(Animation animation) {
+
+                            }
+                        });
+
+                        try {
+                            updater.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                    });
-
-                    updater.start();
-
-                    animation.setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animation animation) {
-                            loadLine();
-                            findViewById(R.id.card).setAlpha(0f);
-                            (findViewById(R.id.card)).animate().alpha(1f).setDuration(300).start();
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {
-
-                        }
-                    });
-
-                    try {
-                        updater.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        findViewById(R.id.card).startAnimation(animation);
                     }
-                    findViewById(R.id.card).startAnimation(animation);
-                }
 
-                return super.onFling(e1, e2, velocityX, velocityY);
-            }
-        });
-        findViewById(R.id.card).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (isChecked) {
-                    detector.onTouchEvent(event);
+                    return super.onFling(e1, e2, velocityX, velocityY);
                 }
-                return false;
-            }
-        });
-        loadLine();
+            });
+            findViewById(R.id.card).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (isChecked) {
+                        detector.onTouchEvent(event);
+                    }
+                    return false;
+                }
+            });
+            loadLine();
+        }
+
     }
 
 
@@ -206,7 +212,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
         } while (i < data.size());
         if ((curNode != null)) {
             if (!stack.contains(data.indexOf(curNode))) {
-                if (stack.size() == data.size()) {
+                if (stack.size() == data.size() / 3) {
                     stack.remove(0);
                 }
                 stack.add(data.indexOf(curNode));

@@ -70,7 +70,9 @@ public class Node implements Serializable {
                         int c;
                         try{
                             c = Integer.parseInt(numChar.toString(), 16);
-                            message.append(converter.convert(c));
+                            char ch = converter.convert(c);
+                            if (ch != '.' && LangChecker.langCheck(ch) != Lang.NUM)
+                                message.append(ch);
                         }catch (Exception e) {
                             e.printStackTrace();
                             System.out.println(numChar);

@@ -2,29 +2,30 @@ package io.cyanlab.loinasd.wordllst.activities;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.CursorLoader;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.List;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
+import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 public class ChangingWLActivity extends AppCompatActivity implements View.OnClickListener {
 
     int lineID;
     String wlName;
     boolean isAdding;
+    boolean isChangingList;
     Node node;
 
     @Override
@@ -37,7 +38,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
                 isAdding = false;
                 node = (Node) getIntent().getSerializableExtra("Node");
-
+                wlName = node.getWlName();
                 ((EditText) findViewById(R.id.primET)).setText(node.getPrimText());
                 ((EditText) findViewById(R.id.transET)).setText(node.getTransText());
                 findViewById(R.id.primET).refreshDrawableState();
@@ -48,12 +49,39 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 //findViewById(R.id.addBut).setOnClickListener(this);
                 break;
             }
-            case ("Delete"): {
-                setContentView(R.layout.activity_delete);
+            case ("Change list"): {
+                setContentView(R.layout.activity_change_list);
                 wlName = getIntent().getStringExtra("Name");
-                ((TextView) findViewById(R.id.reqestDel)).setText("Delete \n" + wlName + "?");
+                ((EditText) findViewById(R.id.reqest_del)).setText(wlName);
+                findViewById(R.id.save_list).setOnClickListener(this);
                 findViewById(R.id.delBut).setOnClickListener(this);
+
+                final Activity activity = this;
+                final GestureDetector detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDoubleTap(MotionEvent e) {
+
+                        Intent data = new Intent();
+
+                        data.putExtra("Action", "Delete");
+
+                        activity.setResult(RESULT_OK, data);
+
+                        activity.finish();
+                        return super.onDoubleTap(e);
+                    }
+                });
+
+                ((ImageButton) findViewById(R.id.delBut)).setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                        return detector.onTouchEvent(motionEvent);
+                    }
+                });
+
                 findViewById(R.id.cancelBut).setOnClickListener(this);
+                isChangingList = true;
                 break;
 
             }
@@ -102,12 +130,10 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                         node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
                         node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
 
-
-
                     } else {
-
                         node = new Node();
                         node.setWlName(wlName);
+                        node.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
                         node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
                         node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
                     }
@@ -115,7 +141,15 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     Thread save = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            NavActivity.database.nodeDao().updateNode(node);
+
+                            if (isAdding) {
+                                WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                                list.currentWeight += ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+                                list.maxWeight += ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+                                NavActivity.database.listDao().updateList(list);
+                                NavActivity.database.nodeDao().insertNode(node);
+                            } else
+                                NavActivity.database.nodeDao().updateNode(node);
                         }
                     });
 
@@ -146,12 +180,34 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 return;
             }*/
             case (R.id.delBut): {
-                setResult(RESULT_OK);
+                if (!isChangingList) {
+                    setResult(RESULT_OK);
+                } else {
+                    Toast.makeText(this, "Double-tap this button to delete " + wlName, Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 break;
             }
             case (R.id.delLineBut): {
                 if (!isAdding) {
+                    Thread delete = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            NavActivity.database.nodeDao().deleteNode(node);
+                            NavActivity.database.nodeDao().deleteNode(node);
+                            WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                            list.maxWeight -= ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+                            list.currentWeight -= node.getWeight();
+                            NavActivity.database.listDao().updateList(list);
+                        }
+                    });
 
+                    try {
+                        delete.start();
+                        delete.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
                 } else {
                     setResult(RESULT_CANCELED);
@@ -170,13 +226,30 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 setResult(RESULT_CANCELED);
                 break;
             }
+            case R.id.save_list: {
+                Thread update = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        WordList list = NavActivity.database.listDao().getWordlist(wlName);
+
+                        List<Node> nodes = NavActivity.database.nodeDao().getNodes(list.getWlName());
+
+
+                        NavActivity.database.listDao().updateList(list);
+                    }
+                });
+                try {
+                    update.start();
+                    update.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                setResult(RESULT_OK);
+            }
 
         }
         finish();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
 }
