@@ -1,6 +1,9 @@
 *.iml
 /local.properties
-/.idea
+/.idea/copyright
+/.idea/dictionaries
+/.idea/inspectionProfiles
+/.idea/workspace.xml
 .DS_Store
 /build
 /captures
