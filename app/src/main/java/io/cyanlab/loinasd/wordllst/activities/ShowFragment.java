@@ -80,23 +80,57 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 header = new Header(v.findViewById(R.id.appbar));
                 //main.addHeaderView(header);
 
-                /*StatisticsPercentsBehavior behavior = new StatisticsPercentsBehavior((TextView)(header.findViewById(R.id.percents)), (LinearLayout)(header.findViewById(R.id.name_plus_button)));
+                /*BottomBarBehavior behavior = new BottomBarBehavior((TextView)(header.findViewById(R.id.percents)), (LinearLayout)(header.findViewById(R.id.name_plus_button)));
                 CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams)(header.findViewById(R.id.percents)).getLayoutParams());
                 params.setBehavior(behavior);*/
+
+                LinearLayout testBar = v.findViewById(R.id.bottom_bar);
+                //-----------testBar------------------------
+
+                View.OnClickListener barListenner = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        System.out.println(view.getId());
+                        switch (view.getId()) {
+                            case R.id.cardTest: {
+                                Intent testWl = new Intent(getActivity(), CardTestActivity.class);
+                                testWl.putExtra("Name", LIST_NAME);
+                                startActivity(testWl);
+                                break;
+                            }
+                            case R.id.addLineButton: {
+                                Intent addLine = new Intent(getActivity(), ChangingWLActivity.class);
+                                addLine.putExtra("Name", LIST_NAME);
+                                addLine.putExtra("Action", "AddLine");
+                                startActivityForResult(addLine, REQUEST_CODE_CHANGE);
+                                break;
+                            }
+                            case R.id.dndTest: {
+                                Intent testWl = new Intent(getActivity(), DnDTestActivity.class);
+                                testWl.putExtra("Name", LIST_NAME);
+                                startActivity(testWl);
+                                break;
+                            }
+                        }
+                    }
+                };
+                testBar.findViewById(R.id.cardTest).setOnClickListener(barListenner);
+                testBar.findViewById(R.id.dndTest).setOnClickListener(barListenner);
+                testBar.findViewById(R.id.addLineButton).setOnClickListener(barListenner);
+
+                testBar.setTranslationY(100);
+
+                ((MainActivity) getActivity()).testBar = testBar;
 
                 setAdapter(R.layout.simple_line);
 
                 break;
             case SHOW_WL:
 
-                DrawerLayout drawer = ((MainActivity)getActivity()).findViewById(R.id.drawer_layout);
                 Toolbar toolbar = v.findViewById(R.id.toolbar);
                 ((MainActivity)getActivity()).toolbar = toolbar;
                 ((MainActivity)getActivity()).setSupportActionBar(toolbar);
-                ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                        (getActivity()), drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-                drawer.addDrawerListener(toggle);
-                toggle.syncState();
 
                 setAdapter(R.layout.list_line);
 
@@ -109,7 +143,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 break;
 
         }
-
         return v;
     }
 
@@ -122,6 +155,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             adapter.loadFromDB();
             switch (MODE){
                 case SHOW_WL:
+
+                    View toolbar = getView().findViewById(R.id.toolbar);
+
+                    toolbar.setTranslationY(-100);
+                    toolbar.animate().translationY(0).setDuration(150).start();
+
                     break;
 
                 case SHOW_TEST:
@@ -137,18 +176,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             }
 
         }
-        if (MODE == SHOW_LINES) {
-            if (hidden) {
-                ((MainActivity) getActivity()).setBarVisibility(View.GONE);
-
-            }else {
-                if (((MainActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
-                    ((MainActivity) getActivity()).setBarVisibility(View.VISIBLE);
-                }
-            }
-
-        }
-        STATE = NEEDS_UPD;
     }
 
 
@@ -177,16 +204,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
 
 
-        if (MODE == SHOW_LINES) {
-            if (isHidden()) {
-                ((MainActivity) getActivity()).setBarVisibility(View.GONE);
-            } else {
-                if (((MainActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
-                    ((MainActivity) getActivity()).setBarVisibility(View.VISIBLE);
-                }
-            }
-        }
-
 
         super.onResume();
 
@@ -197,9 +214,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         header.listName.refreshDrawableState();
         header.bar.setMax(adapter.list.maxWeight);
         header.bar.setProgress(adapter.list.maxWeight - adapter.list.currentWeight);
-
-        String prog = (adapter.list.maxWeight - adapter.list.currentWeight) * 100 / (adapter.list.maxWeight != 0 ? adapter.list.maxWeight : 1) + "%";
-        header.percents.setText(prog);
 
         String words = "Words: " + adapter.list.maxWeight / RIGHT_ANSWERS_TO_COMPLETE;
         header.statsWords.setText(words);
@@ -212,14 +226,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     private class Header{
 
         TextView listName;
-        TextView percents;
         TextView statsWords;
         TextView statsApprLearnedWords;
         ProgressBar bar;
 
         private Header(View header){
             listName = header.findViewById(R.id.name_line);
-            percents = header.findViewById(R.id.percents);
             statsWords = header.findViewById(R.id.stats_words);
             statsApprLearnedWords = header.findViewById(R.id.stats_appr_learned_words);
             bar = header.findViewById(R.id.progressBar2);
@@ -258,10 +270,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        if (MODE == SHOW_LINES) {
-            ((MainActivity) getActivity()).setBarVisibility(View.GONE);
-
-        }
 
     }
 

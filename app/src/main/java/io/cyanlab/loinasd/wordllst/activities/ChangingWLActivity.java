@@ -33,7 +33,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        switch (getIntent().getStringExtra("Action")) {
+        /*switch (getIntent().getStringExtra("Action")) {
             case ("Change"): {
                 setContentView(io.cyanlab.loinasd.wordllst.R.layout.activity_changing_line);
 
@@ -204,7 +204,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
                 break;
             }
-        }
+        }*/
 
         //-----------------------------------------//
 
@@ -214,7 +214,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
+        /*switch (v.getId()) {
             case (R.id.saveBut): {
 
                 try {
@@ -250,7 +250,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 }
                 break;
             }
-            /*case (R.id.addBut): {
+            *//*case (R.id.addBut): {
                 if (!isAdding) {
                     isAdding = true;
                     ((ImageButton) findViewById(R.id.delLineBut)).setImageResource(android.R.drawable.arrow_down_float);
@@ -263,7 +263,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     ((ImageButton) findViewById(R.id.addBut)).setImageResource(android.R.drawable.ic_menu_add);
                 }
                 return;
-            }*/
+            }*//*
             case (R.id.delBut): {
                 setResult(RESULT_OK);
                 break;
@@ -324,7 +324,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 }
             }
 
-        }
+        }*/
         finish();
     }
 

@@ -9,11 +9,13 @@
         <item name="colorControlHighlight">@color/colorPrimary</item>
         <item name="colorControlActivated">@color/colorPrimary</item>
         <item name="listChoiceBackgroundIndicator">@color/colorAccent</item>
+        <item name="android:titleTextColor">@color/colorWhite</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:textColor">@color/colorWhite</item>
     </style>
 
     <style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">

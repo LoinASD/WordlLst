@@ -2,20 +2,15 @@ package io.cyanlab.loinasd.wordllst.activities;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.app.Activity;
 import android.arch.persistence.room.Room;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -33,7 +28,7 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ShowFragment.onListSelectedListener{
+        implements  ShowFragment.onListSelectedListener{
 
     static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LINES = 4;
 
@@ -78,7 +73,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         h = new StaticHandler(this);
-        setContentView(R.layout.activity_nav);
+        setContentView(R.layout.activity_main);
 
 
 
@@ -106,58 +101,14 @@ public class MainActivity extends AppCompatActivity
 
         loadDB.run();
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
         getSupportFragmentManager().beginTransaction().add(R.id.fragment, lists, MODE_LISTS).commit();
-
-
-        testBar = findViewById(R.id.bbar_include);
-        //-----------testBar------------------------
-
-        View.OnClickListener barListenner = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                System.out.println(view.getId());
-                switch (view.getId()) {
-                    case R.id.cardTest: {
-                        Intent testWl = new Intent(getBaseContext(), CardTestActivity.class);
-                        testWl.putExtra("Name", LIST_NAME);
-                        startActivity(testWl);
-                        break;
-                    }
-                    case R.id.addLineButton: {
-                        Intent addLine = new Intent(getBaseContext(), ChangingWLActivity.class);
-                        addLine.putExtra("Name", LIST_NAME);
-                        addLine.putExtra("Action", "AddLine");
-                        startActivityForResult(addLine, REQUEST_CODE_CHANGE);
-                        break;
-                    }
-                    case R.id.dndTest: {
-                        Intent testWl = new Intent(getBaseContext(), DnDTestActivity.class);
-                        testWl.putExtra("Name", LIST_NAME);
-                        startActivity(testWl);
-                        break;
-                    }
-                }
-            }
-        };
-        testBar.findViewById(R.id.cardTest).setOnClickListener(barListenner);
-        testBar.findViewById(R.id.dndTest).setOnClickListener(barListenner);
-        testBar.findViewById(R.id.addLineButton).setOnClickListener(barListenner);
-
-
 
     }
 
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else if (lists.isHidden()) {
+        if (lists.isHidden()) {
 
             hideLines();
 
@@ -166,7 +117,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
+    /*@SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -192,8 +143,8 @@ public class MainActivity extends AppCompatActivity
                 setResult(RESULT_OK, addWL);
                 break;
 
-            /*case R.id.nav_settings:
-                break;*/
+            *//*case R.id.nav_settings:
+                break;*//*
 
             case R.id.nav_wl_show:
                 if (getSupportFragmentManager().findFragmentByTag(MODE_LINES)!=null){
@@ -213,10 +164,12 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
+    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.menu_main,menu);
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -378,7 +331,6 @@ public class MainActivity extends AppCompatActivity
         animator.start();
 
         ((AppBarLayout)lines.getView().findViewById(R.id.appbar)).setExpanded(false, true);
-        lines.getView().findViewById(R.id.stats_holder).animate().alpha(0f).setDuration(duration).start();
     }
 
     public void loadLines(){
@@ -392,38 +344,6 @@ public class MainActivity extends AppCompatActivity
             transaction.hide(lists);
         }
         transaction.commit();
-
-
-    }
-
-    public void setBarVisibility(final int visibility) {
-
-        if (visibility == View.VISIBLE) {
-            testBar.setVisibility(View.VISIBLE);
-            testBar.setScaleY(0);
-            testBar.setTranslationY(100);
-        }
-        testBar.animate().setListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animator) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animator) {
-                testBar.setVisibility(visibility);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animator) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animator) {
-
-            }
-        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(visibility == View.VISIBLE ? 0 : 0).start();
 
 
     }
@@ -458,14 +378,14 @@ public class MainActivity extends AppCompatActivity
         animator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                toolbar.animate().alpha(0f).setDuration(duration);
+                toolbar.animate().translationY(-100).setDuration(duration).start();
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
 
                 loadLines();
-                toolbar.animate().alpha(1f).setDuration(100);
+                toolbar.animate().translationY(0).setDuration(100).start();
                 main.animate().alpha(1f).setDuration(100).start();
                 for (int i = 0; i < main.getChildCount(); i++) {
                     main.getChildAt(i).setAlpha(1f);
@@ -552,7 +472,6 @@ public class MainActivity extends AppCompatActivity
 
                 Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_LONG).show();
                 activity.loadLines();
-                activity.setBarVisibility(View.VISIBLE);
                 ((ShowFragment) activity.lines).adapterLoadData();
 
 

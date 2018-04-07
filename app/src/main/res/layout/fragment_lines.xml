@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/lines"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -10,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
-        app:expanded="true">
+        android:minHeight="56dp"
+        app:expanded="false">
 
         <LinearLayout
             android:id="@+id/stats_holder"
@@ -21,7 +23,7 @@
             android:orientation="vertical"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
+            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed">
 
             <LinearLayout
                 android:id="@+id/name_plus_button"
@@ -103,22 +105,10 @@
 
                 </LinearLayout>
 
-                <ImageButton
-                    android:id="@+id/edit_listname"
-                    style="@style/AppTheme.ImageButton"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:layout_gravity="right|center_vertical"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="0"
-                    app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
-
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/stats_name"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_weight="1"
@@ -149,20 +139,16 @@
 
                 </TextView>
 
-                <TextView
-                    android:id="@+id/percents"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right|center_vertical|end"
-                    android:layout_marginRight="8dp"
+                <ImageButton
+                    android:id="@+id/edit_listname"
+                    style="@style/AppTheme.ImageButton"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_gravity="right"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginStart="20dp"
                     android:layout_weight="1"
-                    android:maxLines="1"
-                    android:minLines="1"
-                    android:text="50%"
-                    android:textAlignment="center"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="24sp"
-                    android:visibility="visible" />
+                    app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
 
             </LinearLayout>
 
@@ -173,7 +159,51 @@
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/colorAccentLowAlpha"
+        android:layoutAnimation="@anim/list_anim"
         android:nestedScrollingEnabled="false"
         app:layout_anchorGravity="top"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <LinearLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@color/colorPrimary"
+        android:orientation="horizontal"
+        app:layout_anchor="@id/scrollView"
+        app:layout_anchorGravity="bottom"
+        app:layout_behavior="io.cyanlab.loinasd.wordllst.view.BottomBarBehavior">
+
+        <TextView
+            android:id="@+id/cardTest"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:clickable="false"
+            android:drawableBottom="@color/colorAccent"
+            android:drawableTop="@color/MaterialCyan"
+            android:elegantTextHeight="false"
+            android:gravity="center"
+            android:text="CARD TEST"
+            android:textColor="@color/colorWhite" />
+
+        <ImageView
+            android:id="@+id/addLineButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            app:srcCompat="@drawable/ic_add_white_24dp" />
+
+        <TextView
+            android:id="@+id/dndTest"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:text="TEST"
+            android:textColor="@color/colorWhite" />
+    </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>
