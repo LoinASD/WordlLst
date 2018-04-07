@@ -26,11 +26,11 @@ import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_LINES;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_TEST;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_WL;
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.LIST_NAME;
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_CHANGE;
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_LINES;
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_TEST;
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_WL;
 
 public class ShowFragment extends android.support.v4.app.Fragment {
 
@@ -69,7 +69,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
-        final View v = inflater.inflate(MODE == SHOW_LINES ? R.layout.content_nav_lines : R.layout.content_nav_lists, null);
+        final View v = inflater.inflate(MODE == SHOW_LINES ? R.layout.fragment_lines : R.layout.fragment_lists, null);
         main = v.findViewById(R.id.scrollView);
         main.setLayoutManager(new LinearLayoutManager(getActivity()));
         switch (MODE) {
@@ -89,10 +89,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 break;
             case SHOW_WL:
 
-                DrawerLayout drawer = ((NavActivity)getActivity()).findViewById(R.id.drawer_layout);
+                DrawerLayout drawer = ((MainActivity)getActivity()).findViewById(R.id.drawer_layout);
                 Toolbar toolbar = v.findViewById(R.id.toolbar);
-                ((NavActivity)getActivity()).toolbar = toolbar;
-                ((NavActivity)getActivity()).setSupportActionBar(toolbar);
+                ((MainActivity)getActivity()).toolbar = toolbar;
+                ((MainActivity)getActivity()).setSupportActionBar(toolbar);
                 ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                         (getActivity()), drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
                 drawer.addDrawerListener(toggle);
@@ -139,11 +139,11 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
         if (MODE == SHOW_LINES) {
             if (hidden) {
-                ((NavActivity) getActivity()).setBarVisibility(View.GONE);
+                ((MainActivity) getActivity()).setBarVisibility(View.GONE);
 
             }else {
-                if (((NavActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
-                    ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
+                if (((MainActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
+                    ((MainActivity) getActivity()).setBarVisibility(View.VISIBLE);
                 }
             }
 
@@ -179,10 +179,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         if (MODE == SHOW_LINES) {
             if (isHidden()) {
-                ((NavActivity) getActivity()).setBarVisibility(View.GONE);
+                ((MainActivity) getActivity()).setBarVisibility(View.GONE);
             } else {
-                if (((NavActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
-                    ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
+                if (((MainActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
+                    ((MainActivity) getActivity()).setBarVisibility(View.VISIBLE);
                 }
             }
         }
@@ -227,7 +227,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             header.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ((NavActivity) getActivity()).deleteList(LIST_NAME);
+                    ((MainActivity) getActivity()).deleteList(LIST_NAME);
                 }
             });
         }
@@ -259,7 +259,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public void onPause() {
         super.onPause();
         if (MODE == SHOW_LINES) {
-            ((NavActivity) getActivity()).setBarVisibility(View.GONE);
+            ((MainActivity) getActivity()).setBarVisibility(View.GONE);
 
         }
 
@@ -382,7 +382,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     load = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            lists = NavActivity.database.listDao().getAllLists();
+                            lists = MainActivity.database.listDao().getAllLists();
                         }
                     });
                     break;
@@ -392,7 +392,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     load = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            nodes = NavActivity.database.nodeDao().getNodes(LIST_NAME);
+                            nodes = MainActivity.database.nodeDao().getNodes(LIST_NAME);
                         }
                     });
                     break;
@@ -404,7 +404,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     Thread loadName = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            list = NavActivity.database.listDao().getWordlist(LIST_NAME);
+                            list = MainActivity.database.listDao().getWordlist(LIST_NAME);
                         }
                     });
                     loadName.start();

@@ -8,7 +8,7 @@ import java.io.PipedInputStream;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import io.cyanlab.loinasd.wordllst.activities.NavActivity;
+import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.activities.ShowFragment;
 
 
@@ -70,9 +70,9 @@ public class Delegator {
             if (gotDictionary && !isExists) {
                 nodeCollect();
             } else if (isExists) {
-                NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_EXISTS);
+                MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_EXISTS);
             } else {
-                NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
+                MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
             }
 
         } catch (IOException e) {
@@ -239,21 +239,21 @@ public class Delegator {
         while (group.activeCount() > 0) {
         }
 
-        NavActivity.database.nodeDao().insertAll(nodes);
-        NavActivity.database.listDao().insertList(list);
+        MainActivity.database.nodeDao().insertAll(nodes);
+        MainActivity.database.listDao().insertList(list);
 
 
         Message message = new Message();
 
-        message.what = NavActivity.HANDLE_MESSAGE_EXTRACTED;
+        message.what = MainActivity.HANDLE_MESSAGE_EXTRACTED;
 
         Bundle data = new Bundle();
 
-        data.putString(NavActivity.WL_NAME, newWlName);
+        data.putString(MainActivity.WL_NAME, newWlName);
 
         message.setData(data);
 
-        NavActivity.h.sendMessage(message);
+        MainActivity.h.sendMessage(message);
 
 
     }
@@ -423,7 +423,7 @@ public class Delegator {
             if (newWlName == null) {
                 newWlName = text.trim().replaceAll(" ", "_").replaceAll(":", "");
 
-                for (String s : NavActivity.database.listDao().loadNames()) {
+                for (String s : MainActivity.database.listDao().loadNames()) {
                     if (newWlName.equals(s)) {
                         isExists = true;
                     }

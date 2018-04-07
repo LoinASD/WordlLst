@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import io.cyanlab.loinasd.wordllst.activities.NavActivity;
+import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 
 
 public class PDFParser {
@@ -95,13 +95,13 @@ public class PDFParser {
                 }
             }
             decoder.join();
-            NavActivity.h.sendEmptyMessage(1);
+            MainActivity.h.sendEmptyMessage(1);
             out.close();
             log.warning("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
         } catch (FileNotFoundException e) {
-            NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
+            MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
         } catch (IOException e) {
-            NavActivity.h.sendEmptyMessage(NavActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
+            MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -38,7 +38,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
     ArrayList<Integer> stack = new ArrayList<>();
     boolean isChecked;
     private GestureDetector detector;
-    private LocalDatabase db = NavActivity.database;
+    private LocalDatabase db = MainActivity.database;
 
 
     @Override

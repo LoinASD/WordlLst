@@ -114,7 +114,6 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="20dp"
                     android:layout_weight="0"
-                    android:background="@drawable/buttons"
                     app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
 
             </LinearLayout>
