@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:layout_margin="15dp"
@@ -37,14 +38,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:ems="20"
+        android:ems="10"
         android:inputType="textMultiLine"
+        android:padding="5dp"
         android:textAlignment="center"
         android:textColor="@color/colorAccent" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
         android:weightSum="2">
@@ -52,21 +54,12 @@
         <ImageButton
             android:id="@+id/saveBut"
             style="@style/AppTheme.ImageButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="30dp"
-            android:layout_marginStart="30dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_margin="5dp"
+            android:layout_marginRight="10dp"
             android:layout_weight="1"
             app:srcCompat="@drawable/ic_save_white_24dp" />
 
-        <ImageButton
-            android:id="@+id/cancelBut"
-            style="@style/AppTheme.ImageButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="30dp"
-            android:layout_marginStart="30dp"
-            android:layout_weight="1"
-            app:srcCompat="@drawable/ic_close_white_24dp" />
     </LinearLayout>
 </LinearLayout>

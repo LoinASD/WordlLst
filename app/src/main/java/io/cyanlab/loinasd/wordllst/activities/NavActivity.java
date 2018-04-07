@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PersistableBundle;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ListFragment;
 import android.support.v4.view.GravityCompat;
@@ -58,18 +60,18 @@ public class NavActivity extends AppCompatActivity
     static final int REQUEST_CODE_CHANGE_WL = 4;
 
     Thread parser, extractor;
+
     android.support.v4.app.Fragment lists;
     android.support.v4.app.Fragment lines;
-    LinearLayout progBarLayout, testBar;
+    public LinearLayout progBarLayout, testBar;
+
     public static StaticHandler h;
-
-    private boolean isDeletable;
-
-    private boolean isFabExpanded;
 
     public static String LIST_NAME;
 
     public static LocalDatabase database;
+
+    public View toolbar;
 
 
     @Override
@@ -80,8 +82,7 @@ public class NavActivity extends AppCompatActivity
 
         h = new StaticHandler(this);
         setContentView(R.layout.activity_nav);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
 
 
         Bundle data = new Bundle();
@@ -95,86 +96,8 @@ public class NavActivity extends AppCompatActivity
         lines.setArguments(dataLines);
 
 
-
-        //fab_tab = findViewById(R.id.fab_tab);
         progBarLayout = findViewById(R.id.PB);
         progBarLayout.setVisibility(View.INVISIBLE);
-        final AppCompatActivity activity = this;
-
-        /*final FloatingActionButton fab = findViewById(R.id.fab_main);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Animation scaleAnimation1;
-                Animation scaleAnimation2;
-                *//*Animation mainAnimation = AnimationUtils.loadAnimation(activity,R.anim.fab_main_hide);
-                view.startAnimation(mainAnimation);*//*
-                int vis;
-                int img;
-                View fab1;
-                View fab2;
-                View sideFab = fab_tab.findViewById(R.id.fab_add_line);
-                if (!isFabExpanded){
-
-                    scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
-                    scaleAnimation2 = AnimationUtils.loadAnimation(activity,R.anim.fab_show);
-                    fab2 = fab_tab.findViewById(R.id.fab_other_test);
-                    fab1 = fab_tab.findViewById(R.id.fab_card_test);
-                    vis = View.VISIBLE;
-                    img = android.R.drawable.ic_menu_close_clear_cancel;
-                    sideFab.startAnimation(scaleAnimation1);
-
-                } else {
-                    scaleAnimation1 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
-                    scaleAnimation2 = AnimationUtils.loadAnimation(activity,R.anim.fab_hide);
-                    fab2 = fab_tab.findViewById(R.id.fab_card_test);
-                    fab1 = fab_tab.findViewById(R.id.fab_other_test);
-                    vis = View.INVISIBLE;
-                    img = R.drawable.ic_tests_24dp;
-                    sideFab.startAnimation(scaleAnimation2);
-                }
-                sideFab.setVisibility(vis);
-                fab1.startAnimation(scaleAnimation1);
-                fab1.setVisibility(vis);
-                scaleAnimation2.setStartOffset(100);
-                fab2.startAnimation(scaleAnimation2);
-                fab2.setVisibility(vis);
-                fab.setImageResource(img);
-                isFabExpanded = !isFabExpanded;
-            }
-        });
-
-        fab_tab.findViewById(R.id.fab_card_test).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent testWl = new Intent(getBaseContext(), CardTestActivity.class);
-                testWl.putExtra("Name", LIST_NAME);
-                startActivity(testWl);
-            }
-        });
-        fab_tab.findViewById(R.id.fab_other_test).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent testWl = new Intent(getBaseContext(), DnDTestActivity.class);
-                testWl.putExtra("Name", LIST_NAME);
-                startActivity(testWl);
-            }
-        });
-        fab_tab.findViewById(R.id.fab_add_line).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent addLine = new Intent(getBaseContext(), ChangingWLActivity.class);
-                addLine.putExtra("Name", LIST_NAME);
-                addLine.putExtra("Action", "AddLine");
-                startActivityForResult(addLine, REQUEST_CODE_CHANGE);
-            }
-        });*/
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
 
         Thread loadDB = new Thread(new Runnable() {
             @Override
@@ -189,13 +112,12 @@ public class NavActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        navigationView.setCheckedItem(R.id.nav_wl_show);
         getSupportFragmentManager().beginTransaction().add(R.id.fragment, lists, MODE_LISTS).commit();
 
 
         testBar = findViewById(R.id.bbar_include);
         //-----------testBar------------------------
-        //testBar = findViewById(R.id.bottom_bar);
+
         View.OnClickListener barListenner = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -228,6 +150,8 @@ public class NavActivity extends AppCompatActivity
         testBar.findViewById(R.id.dndTest).setOnClickListener(barListenner);
         testBar.findViewById(R.id.addLineButton).setOnClickListener(barListenner);
 
+
+
     }
 
 
@@ -238,86 +162,11 @@ public class NavActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else if (lists.isHidden()) {
 
-            final RecyclerView main = lines.getView().findViewById(R.id.scrollView);
-            int duration = 500;
-
-            ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
-            animator.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-
-                    loadLists();
-                    main.animate().alpha(1).setDuration(100).start();
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
-                }
-            });
-            animator.start();
+            hideLines();
 
         }else {
                 super.onBackPressed();
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.item_about) {
-            return true;
-        }
-        if (id == R.id.deleteWl) {
-            Intent delWL = new Intent(this, ChangingWLActivity.class);
-            delWL.putExtra("Action", "Delete");
-            delWL.putExtra("Name", LIST_NAME);
-            startActivityForResult(delWL, REQUEST_CODE_CHANGE_WL);
-            setResult(RESULT_OK, delWL);
-            ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
-            // getWLsAsButtons(scroll, dbHelper);
-        }
-
-        if (id == R.id.clear_db) {
-
-
-            loadLists();
-            isDeletable = false;
-
-            ((ShowFragment) lines).setState(ShowFragment.NEEDS_UPD);
-            ((ShowFragment) lists).setState(ShowFragment.NEEDS_UPD);
-        }
-        invalidateOptionsMenu();
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.deleteWl).setVisible(isDeletable);
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -334,6 +183,7 @@ public class NavActivity extends AppCompatActivity
                 Intent fileManager = new Intent(act, FileManagerActivity.class);
                 startActivityForResult(fileManager, REQUEST_CODE_FM);
                 setResult(RESULT_OK, fileManager);
+
                 break;
 
             case  R.id.nav_create:
@@ -345,11 +195,14 @@ public class NavActivity extends AppCompatActivity
                 setResult(RESULT_OK, addWL);
                 break;
 
-            case R.id.nav_settings:
-                break;
+            /*case R.id.nav_settings:
+                break;*/
 
             case R.id.nav_wl_show:
-                loadLists();
+                if (getSupportFragmentManager().findFragmentByTag(MODE_LINES)!=null){
+                    hideLines();
+                } else
+                    loadLists();
                 break;
 
             case R.id.nav_about:
@@ -374,61 +227,61 @@ public class NavActivity extends AppCompatActivity
                 progBarLayout.setVisibility(View.VISIBLE);
                 ((TextView) progBarLayout.findViewById(R.id.pbText)).setText("Parsing...");
                 findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
+                testBar.setVisibility(View.GONE);
             }
         }
         if (requestCode == REQUEST_CODE_CHANGE_WL) {
             if (resultCode == RESULT_OK) {
 
-                if (data.getStringExtra("Action").equals("Delete")) {
-                    Thread deleteWL = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            NavActivity.database.nodeDao().deleteNodes(LIST_NAME);
-                            NavActivity.database.listDao().deleteList(LIST_NAME);
-                            h.sendEmptyMessage(HANDLE_MESSAGE_DELETED);
-                        }
-                    });
-                    deleteWL.start();
-                    try {
-
-
-                        deleteWL.join();
-                        LIST_NAME = null;
-                        ((ShowFragment) lists).notifyAdapter();
-                        ((ShowFragment) lines).notifyAdapter();
-                        loadLists();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                if (data != null && data.getStringExtra("Action").equals("Delete")) {
+                    LIST_NAME = null;
+                    ((ShowFragment) lists).notifyAdapter();
+                    ((ShowFragment) lines).notifyAdapter();
                     loadLists();
-                } else {
-                    ((ShowFragment) lists).adapterLoadData();
-                    //((ShowFragment) lines).changeHeader();
+                } else if (data != null && data.getStringExtra("Action").equals("Change Name")){
+                    LIST_NAME = data.getStringExtra("New name");
+                    ((ShowFragment) lines).adapterLoadData();
+                    ((ShowFragment) lists).notifyAdapter();
+                    ((ShowFragment) lines).changeHeader();
+
                 }
             }
         }
 
         if (requestCode == REQUEST_CODE_ADD && resultCode == RESULT_OK) {
-            final WordList list = new WordList();
-            list.setWlName(data.getStringExtra("Name"));
-            list.maxWeight = 0;
-            list.currentWeight = 0;
-            Thread addList = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    database.listDao().insertList(list);
-                }
-            });
-            try {
-                addList.start();
-                addList.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            addList(data.getStringExtra("Name"));
             ((ShowFragment) lists).notifyAdapter();
+            LIST_NAME = data.getStringExtra("Name");
+            loadLines();
         }
         if (requestCode == REQUEST_CODE_CHANGE) {
             ((ShowFragment) lines).adapterLoadData();
+        }
+    }
+
+    public void deleteList(String wlName){
+        Intent changeList = new Intent(this, ChangingWLActivity.class).
+                putExtra("Name", wlName).
+                putExtra("Action", "Change list");
+        startActivityForResult(changeList, REQUEST_CODE_CHANGE_WL);
+    }
+
+    public void addList(String wlName){
+        final WordList list = new WordList();
+        list.setWlName(wlName);
+        list.maxWeight = 0;
+        list.currentWeight = 0;
+        Thread addList = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                database.listDao().insertList(list);
+            }
+        });
+        try {
+            addList.start();
+            addList.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -472,9 +325,6 @@ public class NavActivity extends AppCompatActivity
 
     public void loadLists(){
 
-        isDeletable = false;
-        invalidateOptionsMenu();
-
         if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS).isHidden()) {
             android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             if (getSupportFragmentManager().findFragmentByTag(MODE_LISTS) != null) {
@@ -490,15 +340,45 @@ public class NavActivity extends AppCompatActivity
 
         }
 
+    }
 
+    private void hideLines(){
+        final RecyclerView main = lines.getView().findViewById(R.id.scrollView);
+        int duration = 250;
 
+        ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+
+                loadLists();
+                lines.getView().findViewById(R.id.stats_holder).animate().alpha(1f).setDuration(100);
+                main.animate().alpha(1).setDuration(100).start();
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animator.start();
+
+        ((AppBarLayout)lines.getView().findViewById(R.id.appbar)).setExpanded(false, true);
+        lines.getView().findViewById(R.id.stats_holder).animate().alpha(0f).setDuration(duration).start();
     }
 
     public void loadLines(){
-
-        isDeletable = true;
-        invalidateOptionsMenu();
-
 
         android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         if (getSupportFragmentManager().findFragmentByTag(MODE_LINES) == null) {
@@ -540,7 +420,7 @@ public class NavActivity extends AppCompatActivity
             public void onAnimationRepeat(Animator animator) {
 
             }
-        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(visibility == View.VISIBLE ? 0 : 100).start();
+        }).scaleY(visibility == View.VISIBLE ? 1 : 0).translationY(visibility == View.VISIBLE ? 0 : 100).setDuration(200).setStartDelay(visibility == View.VISIBLE ? 0 : 0).start();
 
 
     }
@@ -554,14 +434,14 @@ public class NavActivity extends AppCompatActivity
         int i = 0;
         int pos = main.getChildCount();
         int diff = 0;
-        int delay = main.getChildCount() * 125;
+        int delay = main.getChildCount() * 100;
 
-        int duration = 500;
+        final int duration = 300;
         while (i != pos){
             if (main.getChildAt(i) != view) {
                 ObjectAnimator animator = ObjectAnimator.ofFloat(main.getChildAt(i),View.ALPHA,1f,0f);
-                animator.setStartDelay((i - diff) * 125);
-                animator.setDuration(250);
+                animator.setStartDelay((i - diff) * 100);
+                animator.setDuration(200);
                 animator.start();
             }else {
                 diff = 1;
@@ -575,13 +455,14 @@ public class NavActivity extends AppCompatActivity
         animator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-
+                toolbar.animate().alpha(0f).setDuration(duration);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
 
                 loadLines();
+                toolbar.animate().alpha(1f).setDuration(100);
                 main.animate().alpha(1f).setDuration(100).start();
                 for (int i = 0; i < main.getChildCount(); i++) {
                     main.getChildAt(i).setAlpha(1f);
@@ -668,10 +549,14 @@ public class NavActivity extends AppCompatActivity
 
                 Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_LONG).show();
                 activity.loadLines();
+                activity.setBarVisibility(View.VISIBLE);
+                ((ShowFragment) activity.lines).adapterLoadData();
 
 
                 activity.findViewById(R.id.fragment).setVisibility(View.VISIBLE);
                 activity.progBarLayout.setVisibility(View.INVISIBLE);
+
+
             }
         }
     }

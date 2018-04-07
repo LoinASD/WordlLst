@@ -6,17 +6,16 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -28,9 +27,7 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.MODE_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.REQUEST_CODE_CHANGE_WL;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_TEST;
 import static io.cyanlab.loinasd.wordllst.activities.NavActivity.SHOW_WL;
@@ -40,12 +37,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     private int STATE;
 
     public static final int RIGHT_ANSWERS_TO_COMPLETE = 3;
-    public static final int HANDLE_MESSAGE_NAMES_LOADED = 0;
+    public static final int HANDLE_MESSAGE_NAME_LOADED = 0;
 
     public static final int NEEDS_UPD = 2;
     public static final int DONT_NEEDS_UPD = 1;
 
-    public View header;
+    public Header header;
 
     public static FragHandler h;
 
@@ -72,31 +69,35 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
-        final View v = inflater.inflate(R.layout.content_nav, null);
+        final View v = inflater.inflate(MODE == SHOW_LINES ? R.layout.content_nav_lines : R.layout.content_nav_lists, null);
         main = v.findViewById(R.id.scrollView);
         main.setLayoutManager(new LinearLayoutManager(getActivity()));
-        h = new FragHandler(this);
         switch (MODE) {
 
             case SHOW_LINES:
 
-                /*header = getLayoutInflater().inflate(R.layout.list_line_stats, null);
+                h = new FragHandler(this);
+                header = new Header(v.findViewById(R.id.appbar));
                 //main.addHeaderView(header);
-                header.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent changeList = new Intent(getContext(), ChangingWLActivity.class).
-                                putExtra("Name", adapter.list.getWlName()).
-                                putExtra("Action", "Change list");
-                        startActivityForResult(changeList, REQUEST_CODE_CHANGE_WL);
 
-                    }
-                });*/
+                /*StatisticsPercentsBehavior behavior = new StatisticsPercentsBehavior((TextView)(header.findViewById(R.id.percents)), (LinearLayout)(header.findViewById(R.id.name_plus_button)));
+                CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams)(header.findViewById(R.id.percents)).getLayoutParams());
+                params.setBehavior(behavior);*/
 
                 setAdapter(R.layout.simple_line);
 
                 break;
             case SHOW_WL:
+
+                DrawerLayout drawer = ((NavActivity)getActivity()).findViewById(R.id.drawer_layout);
+                Toolbar toolbar = v.findViewById(R.id.toolbar);
+                ((NavActivity)getActivity()).toolbar = toolbar;
+                ((NavActivity)getActivity()).setSupportActionBar(toolbar);
+                ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                        (getActivity()), drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                drawer.addDrawerListener(toggle);
+                toggle.syncState();
+
                 setAdapter(R.layout.list_line);
 
                 try {
@@ -112,7 +113,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         return v;
     }
 
-
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
@@ -122,7 +122,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             adapter.loadFromDB();
             switch (MODE){
                 case SHOW_WL:
-                    //getActivity().getLoaderManager().getLoader(0).forceLoad();
                     break;
 
                 case SHOW_TEST:
@@ -130,8 +129,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     break;
                 case SHOW_LINES:
 
-                    main.scrollTo(0, 0);
-                    //getActivity().getLoaderManager().getLoader(1).forceLoad();
+                    main.scrollToPosition(0);
+                    ((AppBarLayout)getView().findViewById(R.id.appbar)).setExpanded(false, false);
                     break;
 
                 default: break;
@@ -140,12 +139,14 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
         if (MODE == SHOW_LINES) {
             if (hidden) {
-                //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
                 ((NavActivity) getActivity()).setBarVisibility(View.GONE);
+
             }else {
-                ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
-                //getActivity().findViewById(R.id.bbar).setVisibility(View.VISIBLE);
+                if (((NavActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
+                    ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
+                }
             }
+
         }
         STATE = NEEDS_UPD;
     }
@@ -154,7 +155,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     @Override
     public void onResume() {
 
-        if (STATE == NEEDS_UPD && !isHidden()) {
+        if (!isHidden()) {
             //main.scheduleLayoutAnimation();
             adapter.loadFromDB();
             switch (MODE) {
@@ -178,11 +179,11 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         if (MODE == SHOW_LINES) {
             if (isHidden()) {
-                //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
                 ((NavActivity) getActivity()).setBarVisibility(View.GONE);
             } else {
-                ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
-                //getActivity().findViewById(R.id.bbar).setVisibility(View.VISIBLE);
+                if (((NavActivity)getActivity()).progBarLayout.getVisibility() != View.VISIBLE){
+                    ((NavActivity) getActivity()).setBarVisibility(View.VISIBLE);
+                }
             }
         }
 
@@ -192,19 +193,44 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     }
 
     void changeHeader() {
-        ((TextView) header.findViewById(R.id.name_line)).setText(adapter.list.getWlName());
-        ((ProgressBar) header.findViewById(R.id.progressBar2)).setMax(adapter.list.maxWeight);
-        ((ProgressBar) header.findViewById(R.id.progressBar2)).setProgress(adapter.list.maxWeight - adapter.list.currentWeight);
+        header.listName.setText(LIST_NAME);
+        header.listName.refreshDrawableState();
+        header.bar.setMax(adapter.list.maxWeight);
+        header.bar.setProgress(adapter.list.maxWeight - adapter.list.currentWeight);
 
         String prog = (adapter.list.maxWeight - adapter.list.currentWeight) * 100 / (adapter.list.maxWeight != 0 ? adapter.list.maxWeight : 1) + "%";
-        ((TextView) header.findViewById(R.id.percents)).setText(prog);
+        header.percents.setText(prog);
 
         String words = "Words: " + adapter.list.maxWeight / RIGHT_ANSWERS_TO_COMPLETE;
-        ((TextView) header.findViewById(R.id.stats_words)).setText(words);
+        header.statsWords.setText(words);
 
         String learned = "Learned words: " + (adapter.list.maxWeight - adapter.list.currentWeight) / RIGHT_ANSWERS_TO_COMPLETE;
-        ((TextView) header.findViewById(R.id.stats_appr_learned_words)).setText(learned);
+        header.statsApprLearnedWords.setText(learned);
 
+    }
+
+    private class Header{
+
+        TextView listName;
+        TextView percents;
+        TextView statsWords;
+        TextView statsApprLearnedWords;
+        ProgressBar bar;
+
+        private Header(View header){
+            listName = header.findViewById(R.id.name_line);
+            percents = header.findViewById(R.id.percents);
+            statsWords = header.findViewById(R.id.stats_words);
+            statsApprLearnedWords = header.findViewById(R.id.stats_appr_learned_words);
+            bar = header.findViewById(R.id.progressBar2);
+
+            header.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((NavActivity) getActivity()).deleteList(LIST_NAME);
+                }
+            });
+        }
     }
 
     /*public void loadProgress() {
@@ -233,7 +259,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public void onPause() {
         super.onPause();
         if (MODE == SHOW_LINES) {
-            //getActivity().findViewById(R.id.fab_tab).setVisibility(View.INVISIBLE);
             ((NavActivity) getActivity()).setBarVisibility(View.GONE);
 
         }
@@ -250,41 +275,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     }
 
     public void setState(int state) {
-        if (STATE == DONT_NEEDS_UPD) {
-            STATE = state;
-        }
+        STATE = state;
     }
 
     public interface onStateChangedListener {
         void onStateChanged(int newState);
     }
 
-
-    public static class FragHandler extends Handler {
-
-        private WeakReference<ShowFragment> mFragment;
-
-        private FragHandler(ShowFragment fragment) {
-            mFragment = new WeakReference<ShowFragment>(fragment);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            ShowFragment fragment = mFragment.get();
-
-            switch (msg.what) {
-
-                case (HANDLE_MESSAGE_NAMES_LOADED): {
-                    fragment.adapter.notifyDataSetChanged();
-                    if (fragment.MODE == SHOW_LINES) {
-                        //fragment.changeHeader();
-                    }
-                }
-            }
-
-
-        }
-    }
 
     protected void notifyAdapter() {
         adapter.notifyDataSetChanged();
@@ -304,7 +301,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         LinearLayout listLayout;
 
-        public ListHolder(View itemView) {
+        ListHolder(View itemView) {
             super(itemView);
             namePlace = itemView.findViewById(R.id.name_line);
             progressBar = itemView.findViewById(R.id.progressBar2);
@@ -320,12 +317,35 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         LinearLayout lineLayout;
 
-        public NodeHolder(View itemView) {
+        NodeHolder(View itemView) {
             super(itemView);
 
             primTV = itemView.findViewById(R.id.primeTV);
             transTV = itemView.findViewById(R.id.translateTV);
             lineLayout = itemView.findViewById(R.id.lineLayout);
+        }
+    }
+
+    public static class FragHandler extends Handler {
+
+        private WeakReference<ShowFragment> mFragment;
+
+        private FragHandler(ShowFragment fragment) {
+            mFragment = new WeakReference<ShowFragment>(fragment);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            ShowFragment fragment = mFragment.get();
+
+            switch (msg.what) {
+
+                case (HANDLE_MESSAGE_NAME_LOADED): {
+                    fragment.changeHeader();
+                }
+            }
+
+
         }
     }
 
@@ -353,29 +373,50 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
 
         void loadFromDB() {
+
+            Thread load = new Thread();
+
             switch (MODE) {
 
                 case (SHOW_WL): {
-                    Thread load = new Thread(new Runnable() {
+                    load = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             lists = NavActivity.database.listDao().getAllLists();
-                            h.sendEmptyMessage(HANDLE_MESSAGE_NAMES_LOADED);
                         }
                     });
-                    load.start();
+                    break;
+
                 }
                 case (SHOW_LINES): {
-                    Thread load = new Thread(new Runnable() {
+                    load = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             nodes = NavActivity.database.nodeDao().getNodes(LIST_NAME);
-                            list = NavActivity.database.listDao().getWordlist(LIST_NAME);
-                            h.sendEmptyMessage(HANDLE_MESSAGE_NAMES_LOADED);
                         }
                     });
-                    load.start();
+                    break;
                 }
+
+            }
+            try {
+                if (MODE == SHOW_LINES){
+                    Thread loadName = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            list = NavActivity.database.listDao().getWordlist(LIST_NAME);
+                        }
+                    });
+                    loadName.start();
+                    loadName.join();
+                    changeHeader();
+                }
+                load.start();
+                load.join();
+                adapter.notifyDataSetChanged();
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 
@@ -455,7 +496,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
         @Override
         public int getItemCount() {
-            return ((lists != null || nodes != null) ? (MODE == SHOW_WL ? lists.size() : nodes.size()) : 0);
+            return ((MODE == SHOW_WL && lists != null || MODE == SHOW_LINES && nodes != null) ? (MODE == SHOW_WL ? lists.size() : nodes.size()) : 0);
         }
 
     }

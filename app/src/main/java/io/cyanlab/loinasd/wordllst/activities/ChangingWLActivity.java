@@ -2,13 +2,17 @@ package io.cyanlab.loinasd.wordllst.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.os.Message;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -20,6 +24,10 @@ import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
+import static io.cyanlab.loinasd.wordllst.activities.NavActivity.HANDLE_MESSAGE_DELETED;
+import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
+import static io.cyanlab.loinasd.wordllst.activities.NavActivity.h;
+
 public class ChangingWLActivity extends AppCompatActivity implements View.OnClickListener {
 
     int lineID;
@@ -27,6 +35,9 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
     boolean isAdding;
     boolean isChangingList;
     Node node;
+    Vibrator vibrator;
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,17 +55,73 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 findViewById(R.id.primET).refreshDrawableState();
                 findViewById(R.id.transET).refreshDrawableState();
                 findViewById(R.id.saveBut).setOnClickListener(this);
-                findViewById(R.id.delLineBut).setOnClickListener(this);
                 findViewById(R.id.clearBut).setOnClickListener(this);
-                //findViewById(R.id.addBut).setOnClickListener(this);
+
+                vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+
+                final Activity activity = this;
+                final GestureDetector detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDoubleTap(MotionEvent e) {
+
+
+                        Thread delete = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                NavActivity.database.nodeDao().deleteNode(node);
+                                NavActivity.database.nodeDao().deleteNode(node);
+                                WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                                list.maxWeight -= ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+                                list.currentWeight -= node.getWeight();
+                                NavActivity.database.listDao().updateList(list);
+                            }
+                        });
+
+                        try {
+                            delete.start();
+                            delete.join();
+
+                            Toast.makeText(activity, "Line has been successfully deleted", Toast.LENGTH_SHORT).show();
+
+                        } catch (InterruptedException exception) {
+                            exception.printStackTrace();
+                        }
+
+                        activity.finish();
+
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onSingleTapConfirmed(MotionEvent e) {
+
+                        Toast.makeText(activity, "Double-tap this button to delete this line", Toast.LENGTH_SHORT).show();
+
+                        activity.findViewById(R.id.delLineBut).animate().rotation(7).setInterpolator(AnimationUtils.loadInterpolator(activity,R.anim.cycle_7)).setDuration(200).start();
+
+                        vibrator.vibrate(150);
+
+                        return false;
+                    }
+                });
+
+                (findViewById(R.id.delLineBut)).setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        return detector.onTouchEvent(motionEvent);
+                    }
+                });
+
                 break;
             }
             case ("Change list"): {
                 setContentView(R.layout.activity_change_list);
                 wlName = getIntent().getStringExtra("Name");
                 ((EditText) findViewById(R.id.reqest_del)).setText(wlName);
+                findViewById(R.id.reqest_del).refreshDrawableState();
                 findViewById(R.id.save_list).setOnClickListener(this);
-                findViewById(R.id.delBut).setOnClickListener(this);
+                vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+
 
                 final Activity activity = this;
                 final GestureDetector detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -65,37 +132,72 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
                         data.putExtra("Action", "Delete");
 
+                        Thread deleteWL = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                NavActivity.database.nodeDao().deleteNodes(wlName);
+                                NavActivity.database.listDao().deleteList(wlName);
+                            }
+                        });
+                        deleteWL.start();
+                        try {
+                            deleteWL.join();
+                            Toast.makeText(activity, "Wordlist " + wlName + " has been successfully deleted", Toast.LENGTH_SHORT).show();
+                        } catch (InterruptedException exception) {
+                            exception.printStackTrace();
+                        }
+
                         activity.setResult(RESULT_OK, data);
 
                         activity.finish();
-                        return super.onDoubleTap(e);
+
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onSingleTapConfirmed(MotionEvent e) {
+
+                        Toast.makeText(activity, "Double-tap this button to delete " + wlName, Toast.LENGTH_SHORT).show();
+
+                        activity.findViewById(R.id.delBut).animate().rotation(10).setInterpolator(AnimationUtils.loadInterpolator(activity,R.anim.cycle_7)).setDuration(200).start();
+
+                        vibrator.vibrate(150);
+
+                        return false;
                     }
                 });
 
-                ((ImageButton) findViewById(R.id.delBut)).setOnTouchListener(new View.OnTouchListener() {
+                (findViewById(R.id.delBut)).setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View view, MotionEvent motionEvent) {
-
                         return detector.onTouchEvent(motionEvent);
                     }
                 });
 
-                findViewById(R.id.cancelBut).setOnClickListener(this);
                 isChangingList = true;
                 break;
 
             }
             case ("Add"): {
                 setContentView(R.layout.activity_add_wl);
+                final Activity activity = this;
+                vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                 findViewById(R.id.saveBut).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        if (((EditText) findViewById(R.id.namePlace)).getText().toString().equals("")){
+                            v.animate().rotation(10).setInterpolator(AnimationUtils.loadInterpolator(activity,R.anim.cycle_7)).setDuration(200).start();
+                            vibrator.vibrate(150);
+                            Toast.makeText(ChangingWLActivity.this, "Don't leave a name field empty", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
                         setResult(RESULT_OK,
-                                new Intent().putExtra("Name", ((EditText) findViewById(R.id.namePlace)).getText().toString()));
+                                new Intent().putExtra("Name", ((EditText) findViewById(R.id.namePlace)).getText().toString().replaceAll(" ", "_")));
                         finish();
                     }
                 });
-                findViewById(R.id.cancelBut).setOnClickListener(this);
+
                 break;
             }
             case ("AddLine"): {
@@ -107,10 +209,9 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 findViewById(R.id.primET).refreshDrawableState();
                 findViewById(R.id.transET).refreshDrawableState();
                 findViewById(R.id.saveBut).setOnClickListener(this);
-                findViewById(R.id.delLineBut).setOnClickListener(this);
-                ((ImageButton) findViewById(R.id.delLineBut)).setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+                findViewById(R.id.delLineBut).setVisibility(View.GONE);
                 findViewById(R.id.clearBut).setOnClickListener(this);
-                //findViewById(R.id.addBut).setOnClickListener(this);
+
                 break;
             }
         }
@@ -125,19 +226,15 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
     public void onClick(View v) {
         switch (v.getId()) {
             case (R.id.saveBut): {
-                try {
-                    if (!isAdding) {
-                        node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
-                        node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
 
-                    } else {
+                try {
+                    if (isAdding) {
                         node = new Node();
                         node.setWlName(wlName);
                         node.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
-                        node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
-                        node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
                     }
-
+                    node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
+                    node.setTransText(((EditText) findViewById(R.id.transET)).getText().toString());
                     Thread save = new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -158,9 +255,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
                     setResult(RESULT_OK,
                             new Intent().putExtra("Name", wlName));
-                } catch (SQLiteException e) {
-                    return;
-                } catch (InterruptedException e) {
+                }catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 break;
@@ -180,41 +275,12 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 return;
             }*/
             case (R.id.delBut): {
-                if (!isChangingList) {
-                    setResult(RESULT_OK);
-                } else {
-                    Toast.makeText(this, "Double-tap this button to delete " + wlName, Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                setResult(RESULT_OK);
                 break;
             }
             case (R.id.delLineBut): {
-                if (!isAdding) {
-                    Thread delete = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            NavActivity.database.nodeDao().deleteNode(node);
-                            NavActivity.database.nodeDao().deleteNode(node);
-                            WordList list = NavActivity.database.listDao().getWordlist(wlName);
-                            list.maxWeight -= ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
-                            list.currentWeight -= node.getWeight();
-                            NavActivity.database.listDao().updateList(list);
-                        }
-                    });
-
-                    try {
-                        delete.start();
-                        delete.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                } else {
-                    setResult(RESULT_CANCELED);
-                    finish();
-                }
-                setResult(RESULT_OK,
-                        new Intent().putExtra("Name", wlName));
+                setResult(RESULT_CANCELED);
+                finish();
                 break;
             }
             case (R.id.clearBut): {
@@ -222,30 +288,50 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 ((EditText) findViewById(R.id.transET)).setText("");
                 return;
             }
-            case (R.id.cancelBut): {
-                setResult(RESULT_CANCELED);
-                break;
-            }
             case R.id.save_list: {
                 Thread update = new Thread(new Runnable() {
                     @Override
                     public void run() {
 
-                        WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                        try {
+                            NavActivity.database.beginTransaction();
 
-                        List<Node> nodes = NavActivity.database.nodeDao().getNodes(list.getWlName());
+                            String newName = ((EditText)findViewById(R.id.reqest_del)).getText().toString();
 
+                            WordList list = NavActivity.database.listDao().getWordlist(wlName);
 
-                        NavActivity.database.listDao().updateList(list);
+                            List<Node> nodes = NavActivity.database.nodeDao().getNodes(list.getWlName());
+
+                            for (Node node: nodes){
+                                node.setWlName(newName);
+                                NavActivity.database.nodeDao().updateNode(node);
+                            }
+
+                            list.setWlName(newName);
+                            NavActivity.database.listDao().updateList(list);
+
+                            NavActivity.database.setTransactionSuccessful();
+
+                            Intent data = new Intent();
+
+                            data.putExtra("New name", newName);
+
+                            data.putExtra("Action", "Change Name");
+
+                            setResult(RESULT_OK, data);
+
+                        } finally {
+                            NavActivity.database.endTransaction();
+                        }
                     }
                 });
                 try {
                     update.start();
                     update.join();
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                setResult(RESULT_OK);
             }
 
         }

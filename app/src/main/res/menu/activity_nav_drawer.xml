@@ -6,6 +6,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_wl_show"
+            android:checkable="false"
             android:icon="@android:drawable/ic_menu_sort_by_size"
             android:title="Show WordLists" />
         <item
@@ -18,13 +19,14 @@
             android:checkable="false"
             android:icon="@android:drawable/ic_input_add"
             android:title="Create" />
-        <item
+        <!--<item
             android:id="@+id/nav_settings"
             android:checkable="false"
             android:icon="@drawable/ic_menu_manage"
-            android:title="Settings" />
+            android:title="Settings" />-->
         <item
             android:id="@+id/nav_about"
+            android:checkable="false"
             android:icon="@drawable/ic_info_outline_black_24dp"
             android:title="About" />
     </group>
