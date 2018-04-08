@@ -11,6 +11,7 @@
     <color name="colorFalse">#E53935</color>
     <color name="colorWhite">#ffffff</color>
     <color name="colorAccentLowAlpha">#1380bf44</color>
+    <color name="colorPrimaryLowAlpha">#6a212121</color>
 
     <color name="MaterialBackground">#263238</color>
     <color name="MaterialDarkerBackground">#2d3238</color>

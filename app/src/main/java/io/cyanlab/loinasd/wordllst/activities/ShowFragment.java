@@ -1,23 +1,28 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
+import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -52,6 +57,12 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     WLAdapter adapter;
     RecyclerView main;
 
+    View bottomSheet;
+
+    Node bufferedNode;
+    private Node expandedNode;
+    View.OnClickListener bottomSheetListener;
+
     private int MODE;
 
     @Override
@@ -84,7 +95,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams)(header.findViewById(R.id.percents)).getLayoutParams());
                 params.setBehavior(behavior);*/
 
-                LinearLayout testBar = v.findViewById(R.id.bottom_bar);
+                LinearLayout testBar = v.findViewById(R.id.test_bar);
                 //-----------testBar------------------------
 
                 View.OnClickListener barListenner = new View.OnClickListener() {
@@ -100,10 +111,29 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                                 break;
                             }
                             case R.id.addLineButton: {
-                                Intent addLine = new Intent(getActivity(), ChangingWLActivity.class);
-                                addLine.putExtra("Name", LIST_NAME);
-                                addLine.putExtra("Action", "AddLine");
-                                startActivityForResult(addLine, REQUEST_CODE_CHANGE);
+                                if (bufferedNode != null){
+
+                                    final Node newNode = new Node();
+                                    newNode.setWlName(LIST_NAME);
+                                    newNode.setTransText(bufferedNode.getTransText());
+                                    newNode.setPrimText(bufferedNode.getPrimText());
+                                    newNode.setWeight(RIGHT_ANSWERS_TO_COMPLETE);
+
+                                    Thread updateNode = new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            MainActivity.database.nodeDao().insertNode(newNode);
+                                        }
+                                    });
+                                    updateNode.start();
+                                    Toast.makeText(getActivity(), "Line successfully pasted", Toast.LENGTH_SHORT).show();
+                                    adapterLoadData();
+                                    try {
+                                        updateNode.join();
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                                 break;
                             }
                             case R.id.dndTest: {
@@ -122,6 +152,10 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 testBar.setTranslationY(100);
 
                 ((MainActivity) getActivity()).testBar = testBar;
+
+                bottomSheet = v.findViewById(R.id.bottom_sheet);
+                prepareBottomSheet();
+
 
                 setAdapter(R.layout.simple_line);
 
@@ -168,6 +202,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     break;
                 case SHOW_LINES:
 
+                    BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
+                    behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
                     main.scrollToPosition(0);
                     ((AppBarLayout)getView().findViewById(R.id.appbar)).setExpanded(false, false);
                     break;
@@ -176,6 +213,228 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             }
 
         }
+    }
+
+    private void prepareBottomSheet(){
+        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+
+    }
+
+    public void closeBottomSheet(){
+
+        if (bottomSheet.findViewById(R.id.bre_edit_toolbar).getVisibility() == View.VISIBLE){
+            editLine(false);
+        }
+
+        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        getView().findViewById(R.id.blur_view).setVisibility(View.INVISIBLE);
+        main.setLayoutFrozen(false);
+        main.setClickable(true);
+    }
+
+    public void openBottomSheet(String prim, String trans){
+        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
+
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+        main.setLayoutFrozen(true);
+        main.setClickable(false);
+
+        View blur = getView().findViewById(R.id.blur_view);
+
+        blur.setVisibility(View.VISIBLE);
+
+        blur.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                closeBottomSheet();
+            }
+        });
+
+        ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(prim);
+        ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(trans);
+
+        bottomSheet.findViewById(R.id.bre_prim).refreshDrawableState();
+        bottomSheet.findViewById(R.id.bre_trans).refreshDrawableState();
+
+        bottomSheet.refreshDrawableState();
+
+        bottomSheetListener = new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                try {
+                    switch (view.getId()){
+                        case R.id.copy_line:{
+                            bufferedNode = expandedNode;
+                            Toast.makeText(getActivity(), "Line successfully copied", Toast.LENGTH_SHORT).show();
+                            closeBottomSheet();
+                            break;
+                        }
+                        case R.id.cut_line:{
+
+                            bufferedNode = expandedNode;
+
+                            Thread deleteNode = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    MainActivity.database.nodeDao().deleteNode(expandedNode);
+                                }
+                            });
+
+                            deleteNode.start();
+                            deleteNode.join();
+
+                            closeBottomSheet();
+                            Toast.makeText(getActivity(), "Line successfully cut", Toast.LENGTH_SHORT).show();
+
+                            break;
+                        }
+                        case R.id.paste_line:{
+
+                            if (bufferedNode != null) {
+                                ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(bufferedNode.getPrimText());
+                                ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(bufferedNode.getTransText());
+
+                                expandedNode.setPrimText(bufferedNode.getPrimText());
+                                expandedNode.setTransText(bufferedNode.getTransText());
+
+                                Thread updateNode = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        MainActivity.database.nodeDao().updateNode(expandedNode);
+                                    }
+                                });
+                                updateNode.start();
+                                Toast.makeText(getActivity(), "Line successfully pasted", Toast.LENGTH_SHORT).show();
+                                updateNode.join();
+                                break;
+                            }
+                        }
+                        case R.id.edit_line:{
+                            editLine(true);
+                        }
+                    }
+
+                    adapterLoadData();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        };
+
+        bottomSheet.findViewById(R.id.copy_line).setOnClickListener(bottomSheetListener);
+        bottomSheet.findViewById(R.id.cut_line).setOnClickListener(bottomSheetListener);
+        bottomSheet.findViewById(R.id.paste_line).setOnClickListener(bottomSheetListener);
+        bottomSheet.findViewById(R.id.edit_line).setOnClickListener(bottomSheetListener);
+    }
+
+    private void editLine(boolean isEditing){
+
+        final View toolbar1, toolbar2;
+
+        if (isEditing){
+            toolbar1 = bottomSheet.findViewById(R.id.ble_toolbar);
+            toolbar2 = bottomSheet.findViewById(R.id.bre_edit_toolbar);
+
+            View.OnClickListener editListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    try {
+                        switch (view.getId()){
+                            case R.id.bre_cancel_edition:{
+                                editLine(false);
+                                break;
+                            }
+                            case R.id.bre_save_line:{
+                                expandedNode.setPrimText(((EditText) bottomSheet.findViewById(R.id.bre_prim)).getText().toString());
+                                expandedNode.setTransText(((EditText) bottomSheet.findViewById(R.id.bre_trans)).getText().toString());
+
+                                Thread updateNode = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        MainActivity.database.nodeDao().updateNode(expandedNode);
+                                    }
+                                });
+                                updateNode.start();
+
+                                updateNode.join();
+
+                                editLine(false);
+
+                                closeBottomSheet();
+                                Toast.makeText(getActivity(), "Line successfully saved", Toast.LENGTH_SHORT).show();
+
+                                adapterLoadData();
+                                break;
+                            }case R.id.bre_delete_line:{
+
+                                Thread deleteNode = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        MainActivity.database.nodeDao().deleteNode(expandedNode);
+                                    }
+                                });
+
+                                deleteNode.start();
+                                deleteNode.join();
+
+                                editLine(false);
+
+                                closeBottomSheet();
+                                Toast.makeText(getActivity(), "Line successfully deleted", Toast.LENGTH_SHORT).show();
+                                adapterLoadData();
+
+                                break;
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            toolbar2.findViewById(R.id.bre_save_line).setOnClickListener(editListener);
+            toolbar2.findViewById(R.id.bre_delete_line).setOnClickListener(editListener);
+            toolbar2.findViewById(R.id.bre_cancel_edition).setOnClickListener(editListener);
+
+        }else {
+            toolbar1 = bottomSheet.findViewById(R.id.bre_edit_toolbar);
+            toolbar2 = bottomSheet.findViewById(R.id.ble_toolbar);
+        }
+
+        bottomSheet.findViewById(R.id.bre_prim).setEnabled(isEditing);
+        bottomSheet.findViewById(R.id.bre_trans).setEnabled(isEditing);
+
+        toolbar1.animate().alpha(0).setDuration(200).setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                toolbar1.setVisibility(View.GONE);
+                toolbar2.setVisibility(View.VISIBLE);
+                toolbar2.setAlpha(0);
+                toolbar2.animate().alpha(1).setDuration(200).setListener(null).start();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        }).start();
+
     }
 
 
@@ -475,18 +734,19 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     break;
                 }
                 case SHOW_LINES: {
-                    ((NodeHolder) holder).primTV.setText(nodes.get(position).getPrimText());
-                    ((NodeHolder) holder).transTV.setText(nodes.get(position).getTransText());
+
+                    final String prim = nodes.get(position).getPrimText();
+                    final String trans = nodes.get(position).getTransText();
+
+                    ((NodeHolder) holder).primTV.setText(prim);
+                    ((NodeHolder) holder).transTV.setText(trans);
                     ((NodeHolder) holder).lineLayout.setOnLongClickListener(new View.OnLongClickListener() {
                         @Override
                         public boolean onLongClick(View view) {
 
-                            Intent changeLine = new Intent(getContext(), ChangingWLActivity.class).
-                                    putExtra("Node", nodes.get(id)).
-                                    putExtra("Action", "Change");
-                            startActivityForResult(changeLine, REQUEST_CODE_CHANGE);
+                            expandedNode = nodes.get(id);
 
-                            setState(NEEDS_UPD);
+                            openBottomSheet(prim, trans);
 
                             return true;
                         }

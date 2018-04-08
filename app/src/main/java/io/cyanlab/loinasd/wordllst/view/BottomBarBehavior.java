@@ -4,7 +4,9 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -28,7 +30,7 @@ public class BottomBarBehavior<V extends LinearLayout> extends CoordinatorLayout
     }
 
 
-    float height;
+    private float height;
 
     @Override
     public boolean onDependentViewChanged(CoordinatorLayout parent, V child, View dependency) {
@@ -43,4 +45,5 @@ public class BottomBarBehavior<V extends LinearLayout> extends CoordinatorLayout
 
         return false;
     }
+
 }

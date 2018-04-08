@@ -162,13 +162,12 @@
         android:background="@color/colorAccentLowAlpha"
         android:layoutAnimation="@anim/list_anim"
         android:nestedScrollingEnabled="false"
-        app:layout_anchorGravity="top"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     </android.support.v7.widget.RecyclerView>
 
     <LinearLayout
-        android:id="@+id/bottom_bar"
+        android:id="@+id/test_bar"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:background="@color/colorPrimary"
@@ -206,4 +205,19 @@
             android:text="TEST"
             android:textColor="@color/colorWhite" />
     </LinearLayout>
+
+    <View
+        android:id="@+id/blur_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryLowAlpha"
+        android:visibility="invisible" />
+
+    <include
+        android:id="@+id/bottom_sheet"
+        layout="@layout/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:behavior_hideable="true"
+        app:layout_behavior="@string/bottom_sheet_behavior" />
 </android.support.design.widget.CoordinatorLayout>
