@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/bottom_line_edition"
+    style="@style/AppTheme.Dialog"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/colorPrimary"
@@ -13,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:paddingTop="5dp"
         android:visibility="gone">
 
         <ImageButton
@@ -44,7 +46,8 @@
         android:id="@+id/ble_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="5dp">
 
         <ImageButton
             android:id="@+id/edit_line"
@@ -52,6 +55,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
             app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
 
         <ImageButton
@@ -60,6 +65,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
             app:srcCompat="@drawable/ic_content_cut_white_24dp" />
 
         <ImageButton
@@ -68,6 +75,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
             app:srcCompat="@drawable/ic_content_paste_white_24dp" />
 
         <ImageButton
@@ -76,6 +85,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
             app:srcCompat="@drawable/ic_content_copy_white_24dp" />
 
     </LinearLayout>
@@ -93,7 +104,8 @@
             android:layout_weight="1"
             android:text="Edit"
             android:textAlignment="center"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/colorWhiteLowAlpha"
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/textView5"
@@ -102,7 +114,8 @@
             android:layout_weight="2"
             android:text="Cut"
             android:textAlignment="center"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/colorWhiteLowAlpha"
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/textView4"
@@ -111,7 +124,8 @@
             android:layout_weight="2"
             android:text="Paste"
             android:textAlignment="center"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/colorWhiteLowAlpha"
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/textView"
@@ -120,11 +134,13 @@
             android:layout_weight="2"
             android:text="Copy"
             android:textAlignment="center"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/colorWhiteLowAlpha"
+            android:textSize="10sp" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/ble_line"
+        style="@style/AppTheme.EditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
@@ -132,7 +148,7 @@
 
         <EditText
             android:id="@+id/bre_prim"
-            style="@style/Widget.AppCompat.EditText"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
@@ -140,27 +156,24 @@
             android:layout_marginRight="20dp"
             android:layout_marginTop="10dp"
             android:autoSizeTextType="uniform"
-            android:cursorVisible="true"
             android:ems="10"
             android:enabled="false"
+            android:inputType="text"
             android:text="kek"
-            android:textColor="@color/colorAccent"
             android:textSize="24sp" />
 
         <EditText
             android:id="@+id/bre_trans"
-            style="@style/Widget.AppCompat.EditText"
+            style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
-            android:autoSizeTextType="uniform"
-            android:cursorVisible="true"
             android:ems="10"
             android:enabled="false"
             android:text="trans"
-            android:textColor="@color/colorAccent"
             android:textSize="24sp" />
+
 
     </LinearLayout>
 

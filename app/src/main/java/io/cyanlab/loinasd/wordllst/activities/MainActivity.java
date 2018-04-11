@@ -8,9 +8,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -110,7 +113,10 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
         if (lists.isHidden()) {
 
-            hideLines();
+            if (((ShowFragment) lines).bsManager.getState() != BottomSheetBehavior.STATE_EXPANDED) {
+                hideLines();
+            }else
+                ((ShowFragment) lines).bsManager.closeBottomSheet();
 
         }else {
                 super.onBackPressed();
@@ -175,6 +181,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()){
+
+            case R.id.add_list:{
+
+                Intent fileManager = new Intent(this, FileManagerActivity.class);
+                startActivityForResult(fileManager, REQUEST_CODE_FM);
+                setResult(RESULT_OK, fileManager);
+
+                break;
+
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         if (requestCode == REQUEST_CODE_FM) {
             if (resultCode == RESULT_OK) {
@@ -183,7 +208,6 @@ public class MainActivity extends AppCompatActivity
                 progBarLayout.setVisibility(View.VISIBLE);
                 ((TextView) progBarLayout.findViewById(R.id.pbText)).setText("Parsing...");
                 findViewById(R.id.fragment).setVisibility(View.INVISIBLE);
-                testBar.setVisibility(View.GONE);
             }
         }
         if (requestCode == REQUEST_CODE_CHANGE_WL) {
@@ -354,28 +378,12 @@ public class MainActivity extends AppCompatActivity
         LIST_NAME = name;
         final RecyclerView main = lists.getView().findViewById(R.id.scrollView);
 
-        int i = 0;
-        int pos = main.getChildCount();
-        int diff = 0;
         int delay = main.getChildCount() * 100;
 
         final int duration = 300;
-        while (i != pos){
-            if (main.getChildAt(i) != view) {
-                ObjectAnimator animator = ObjectAnimator.ofFloat(main.getChildAt(i),View.ALPHA,1f,0f);
-                animator.setStartDelay((i - diff) * 100);
-                animator.setDuration(200);
-                animator.start();
-            }else {
-                diff = 1;
-            }
-            i++;
-        }
 
 
-
-        ObjectAnimator animator = ObjectAnimator.ofFloat(main, View.ALPHA, 0f).setDuration(duration);
-        animator.addListener(new Animator.AnimatorListener() {
+        main.animate().alpha(0f).setListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
                 toolbar.animate().translationY(-100).setDuration(duration).start();
@@ -386,10 +394,7 @@ public class MainActivity extends AppCompatActivity
 
                 loadLines();
                 toolbar.animate().translationY(0).setDuration(100).start();
-                main.animate().alpha(1f).setDuration(100).start();
-                for (int i = 0; i < main.getChildCount(); i++) {
-                    main.getChildAt(i).setAlpha(1f);
-                }
+                main.animate().alpha(1f).setDuration(100).setListener(null).start();
 
             }
 
@@ -402,9 +407,7 @@ public class MainActivity extends AppCompatActivity
             public void onAnimationRepeat(Animator animation) {
 
             }
-        });
-        animator.setStartDelay(delay);
-        animator.start();
+        }).setStartDelay(delay).start();
 
 
         //ObjectAnimator.ofFloat(view,View.SCALE_X,0f,1f).setDuration(700).start();

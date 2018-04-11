@@ -20,10 +20,10 @@
         <activity
             android:name=".activities.DnDTestActivity"
             android:label="Test"
-            android:theme="@style/AppTheme.Dialog" />
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".activities.CardTestActivity"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
             android:label=""/>
         <activity
             android:name=".activities.MainActivity"

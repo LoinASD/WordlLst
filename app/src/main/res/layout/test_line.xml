@@ -3,12 +3,12 @@
     android:id="@+id/name_line"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="20dp"
+    android:layout_margin="8dp"
     android:background="@color/colorWhite"
-    android:gravity="center"
-    android:padding="8dp"
+    android:gravity="start"
+    android:padding="16dp"
     android:text="asdasd"
-    android:textAlignment="center"
+    android:textAlignment="textStart"
     android:textAllCaps="false"
     android:textSize="24sp">
 

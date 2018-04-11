@@ -14,145 +14,11 @@
         android:minHeight="56dp"
         app:expanded="false">
 
-        <LinearLayout
-            android:id="@+id/stats_holder"
+        <include
+            layout="@layout/stats_holder"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimary"
-            android:minHeight="56dp"
-            android:orientation="vertical"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed">
-
-            <LinearLayout
-                android:id="@+id/name_plus_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-
-                <LinearLayout
-                    android:id="@+id/stats_progres"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/stats"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical|center_horizontal"
-                        android:layout_weight="0"
-                        android:gravity="center_vertical|center_horizontal"
-                        android:orientation="horizontal"
-                        android:padding="8dp"
-                        app:layout_scrollFlags="scroll|snap">
-
-                        <TextView
-                            android:id="@+id/stats_words"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginEnd="10dp"
-                            android:layout_marginLeft="10dp"
-                            android:layout_marginRight="10dp"
-                            android:layout_marginStart="10dp"
-                            android:layout_weight="0"
-                            android:gravity="center_vertical"
-                            android:text="40"
-                            android:textAlignment="viewEnd"
-                            android:textColor="@color/colorWhite"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/stats_appr_learned_words"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginEnd="10dp"
-                            android:layout_marginLeft="10dp"
-                            android:layout_marginRight="10dp"
-                            android:layout_marginStart="10dp"
-                            android:gravity="center_vertical"
-                            android:text="150"
-                            android:textAlignment="viewEnd"
-                            android:textColor="@color/colorWhite"
-                            android:textSize="18sp" />
-
-                    </LinearLayout>
-
-                    <ProgressBar
-                        android:id="@+id/progressBar2"
-                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginBottom="5dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="10dp"
-                        android:layout_marginStart="10dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_weight="1"
-                        android:backgroundTint="@color/MaterialDarkerGreen"
-                        android:indeterminate="false"
-                        android:max="100"
-                        android:progress="33"
-                        android:progressTint="@color/colorAccent" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/stats_name"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:paddingBottom="5dp"
-                android:paddingTop="5dp"
-                android:weightSum="1">
-
-                <TextView
-                    android:id="@+id/name_line"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center_vertical|center_horizontal"
-                    android:layout_marginBottom="5dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginRight="8dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_weight="1"
-                    android:autoText="false"
-                    android:gravity="center_horizontal"
-                    android:textAlignment="center"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="30sp"
-                    android:textStyle="bold"
-                    app:autoSizeTextType="uniform">
-
-                </TextView>
-
-                <ImageButton
-                    android:id="@+id/edit_listname"
-                    style="@style/AppTheme.ImageButton"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:layout_gravity="right"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="1"
-                    app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed" />
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v7.widget.RecyclerView
@@ -219,5 +85,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:behavior_hideable="true"
+        app:behavior_peekHeight="0dp"
         app:layout_behavior="@string/bottom_sheet_behavior" />
 </android.support.design.widget.CoordinatorLayout>

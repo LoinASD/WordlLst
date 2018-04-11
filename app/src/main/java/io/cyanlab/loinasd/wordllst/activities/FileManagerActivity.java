@@ -17,8 +17,10 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -42,7 +44,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     private static final String ATTRIBUTE_NAME_IMAGE = "image";
     private static String CURRENT_PATH;// = "/sdcard/storage/0/Download";
     private static String ROOT_PATH =
-            Environment.getExternalStorageDirectory().getPath();
+            Environment.getExternalStorageDirectory().getAbsolutePath();
     LinearLayout wayLayout;
     ListView lw;
     TextView way;
@@ -56,7 +58,16 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
         way = findViewById(R.id.wayTextView);
         lw = findViewById(R.id.treeListView);
         lw.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        CURRENT_PATH = ROOT_PATH;
+
+        if (!Environment.getExternalStorageState().equals(
+                Environment.MEDIA_MOUNTED)) {
+            Toast.makeText(this, "SD-card is not responding", Toast.LENGTH_SHORT).show();
+            setResult(RESULT_CANCELED);
+            finish();
+            return;
+        }
+
+        CURRENT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
         dir = new File(CURRENT_PATH);
         //-----------------------------------//
         showDir(dir);
@@ -93,37 +104,36 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
     private void showDir(final File dir) {
         way.setText(dir.getName());
         files = dir.list();
-        Arrays.sort(files,new SortedByName());
-        ArrayList<String> usefulFiles = new ArrayList<>();
-        data = new ArrayList<>();
-        Map<String, Object> m;
-        File f;
-        for (String file : files) {
-            f = new File(dir, file);
-            if (f.isDirectory())
-                if (!file.startsWith(".")) {
-                    img = R.drawable.folder;
-                    usefulFiles.add(file);
-                }
+        if (files != null) {
+            Arrays.sort(files,new SortedByName());
+            ArrayList<String> usefulFiles = new ArrayList<>();
+            data = new ArrayList<>();
+            Map<String, Object> m;
+            File f;
+            for (String file : files) {
+                f = new File(dir, file);
+                if (f.isDirectory())
+                    if (!file.startsWith(".")) {
+                        img = R.drawable.folder;
+                        usefulFiles.add(file);
+                    }
                 else {
-                    continue;
+                    if (file.endsWith(".pdf")){
+                        img = R.drawable.pdf;
+                        usefulFiles.add(file);
+                    }
                 }
-            else {
-                if (file.endsWith(".pdf")){
-                    img = R.drawable.pdf;
-                    usefulFiles.add(file);
-                }else continue;
+                m = new HashMap<>();
+                m.put(ATTRIBUTE_NAME_TEXT, file);
+                m.put(ATTRIBUTE_NAME_IMAGE, img);
+                data.add(m);
             }
-            m = new HashMap<>();
-            m.put(ATTRIBUTE_NAME_TEXT, file);
-            m.put(ATTRIBUTE_NAME_IMAGE, img);
-            data.add(m);
+            usefulFiles.toArray(files);
+            String[] from = { ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE };
+            int[] to = { R.id.fileTextView, R.id.fileImageView };
+            sa = new SimpleAdapter(this, data, R.layout.file_line, from, to);
+            lw.setAdapter(sa);
         }
-        usefulFiles.toArray(files);
-        String[] from = { ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE };
-        int[] to = { R.id.fileTextView, R.id.fileImageView };
-        sa = new SimpleAdapter(this, data, R.layout.file_line, from, to);
-        lw.setAdapter(sa);
     }
 
     @Override

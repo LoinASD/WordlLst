@@ -1,10 +1,10 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorControlHighlight">@color/colorPrimary</item>
         <item name="colorControlActivated">@color/colorPrimary</item>
@@ -12,13 +12,12 @@
         <item name="android:titleTextColor">@color/colorWhite</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:textColor">@color/colorWhite</item>
     </style>
 
-    <style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+    <style name="AppTheme.Dialog" parent="Base.V7.Theme.AppCompat">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:colorBackground">@color/colorPrimary</item>
@@ -55,12 +54,15 @@
         <item name="android:textColor">@color/colorWhite</item>
     </style>
 
-    <style name="AppTheme.MenuItem.TextAppearance" parent="android:TextAppearance.Holo.Widget.IconMenu.Item">
-        <item name="android:textSize">18sp</item>
-    </style>
-
     <style name="AppTheme.ProgressBar.Horizontal" parent="Widget.AppCompat.ProgressBar.Horizontal">
         <item name="android:secondaryProgressTint">@color/colorAccent</item>
         <item name="android:progressBackgroundTint">@color/colorWhite</item>
+    </style>
+
+    <style name="AppTheme.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:colorControlHighlight">@color/colorAccent</item>
+        <item name="android:colorControlActivated">@color/colorAccent</item>
+        <item name="editTextColor">@color/colorAccent</item>
+        <item name="android:textColor">@color/colorAccent</item>
     </style>
 </resources>

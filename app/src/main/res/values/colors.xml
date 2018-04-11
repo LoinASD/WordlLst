@@ -7,10 +7,12 @@
     <color name="colorAccent1">#ff4081</color>
     <color name="colorAccent">#80bf44</color>
     <color name="colorButtons">#e7e7e7</color>
-    <color name="colorTrue">#91B859</color>
-    <color name="colorFalse">#E53935</color>
+    <color name="colorTrue">#8b91b859</color>
+    <color name="colorFalse">#5ee53935</color>
     <color name="colorWhite">#ffffff</color>
+    <color name="colorWhiteLowAlpha">#aeffffff</color>
     <color name="colorAccentLowAlpha">#1380bf44</color>
+    <color name="colorAccentMedAlpha">#8780bf44</color>
     <color name="colorPrimaryLowAlpha">#6a212121</color>
 
     <color name="MaterialBackground">#263238</color>

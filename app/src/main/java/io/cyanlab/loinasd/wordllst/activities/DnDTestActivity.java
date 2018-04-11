@@ -33,7 +33,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
     ListView listView;
     int realChecked;
     int curLineNum;
-    int basicBG = R.color.colorButtons;
+    int basicBG = R.color.colorWhite;
     ArrayList<Integer> stack = new ArrayList<>();
 
     @Override
