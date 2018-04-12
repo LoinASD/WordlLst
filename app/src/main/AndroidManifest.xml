@@ -12,10 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".activities.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity android:name=".activities.FileManagerActivity" />
         <activity
             android:name=".activities.ChangingWLActivity"
@@ -24,14 +20,14 @@
         <activity
             android:name=".activities.DnDTestActivity"
             android:label="Test"
-            android:theme="@style/AppTheme.Dialog" />
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".activities.CardTestActivity"
-            android:theme="@style/AppTheme.Dialog" />
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label=""/>
         <activity
-            android:name=".activities.NavActivity"
-            android:label="@string/app_name"
-            android:parentActivityName=".activities.MainActivity"
+            android:name=".activities.MainActivity"
+            android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>

@@ -3,20 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="io.cyanlab.loinasd.wordllst.activities.MainActivity">
     <item
-        android:id="@+id/item_about"
+        android:id="@+id/add_list"
+        android:icon="@drawable/ic_add_white_24dp"
         android:orderInCategory="103"
-        android:title="About"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/clear_db"
-        android:orderInCategory="104"
-        android:title="ClearDB" />
-    <item
-        android:id="@+id/deleteWl"
-        android:enabled="true"
-        android:icon="@android:drawable/ic_menu_delete"
-        android:orderInCategory="103"
-        android:title="@string/delete_wl"
-        android:visible="false"
+        android:title="@string/add_wordlist"
         app:showAsAction="always" />
 </menu>

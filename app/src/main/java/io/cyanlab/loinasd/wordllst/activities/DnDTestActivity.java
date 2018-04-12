@@ -1,6 +1,5 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -15,7 +14,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Vector;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
@@ -35,7 +33,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
     ListView listView;
     int realChecked;
     int curLineNum;
-    int basicBG = R.color.colorButtons;
+    int basicBG = R.color.colorWhite;
     ArrayList<Integer> stack = new ArrayList<>();
 
     @Override
@@ -77,7 +75,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
         Thread loadData = new Thread(new Runnable() {
             @Override
             public void run() {
-                data = NavActivity.database.nodeDao().getNodes(wlName);
+                data = MainActivity.database.nodeDao().getNodes(wlName);
             }
         });
         try {

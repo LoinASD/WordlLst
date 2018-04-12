@@ -9,8 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,16 +37,20 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
     List<Node> data;
     WordList list;
     Node curNode;
+    TextView card;
     ArrayList<Integer> stack = new ArrayList<>();
     boolean isChecked;
     private GestureDetector detector;
-    private LocalDatabase db = NavActivity.database;
+    private LocalDatabase db = MainActivity.database;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_test);
+
+        card = findViewById(R.id.card);
+
         wlName = getIntent().getStringExtra("Name");
 
         Thread getData = new Thread(new Runnable() {
@@ -65,7 +71,8 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
             Toast.makeText(this, "You must have at least 6 lines to use Card Test", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            findViewById(R.id.card).setOnClickListener(this);
+            setTitle(wlName);
+            card.setOnClickListener(this);
             final Activity activity = this;
             detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
                 @Override
@@ -75,72 +82,25 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
 
                     boolean isDone = false;
 
-                    Animation animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
+                    Animation animation = null;
 
                     if (e1.getX() - e2.getX() > sensivity) {
-                        if (curNode.getWeight() > ShowFragment.RIGHT_ANSWERS_TO_COMPLETE) {
-                            curNode.setWeight(curNode.getWeight() - 1);
-                            list.currentWeight--;
-                        }
-                        curNode.setWeight(curNode.getWeight() + 1);
-                        list.currentWeight++;
                         isDone = true;
-                        animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_rtl);
+                        animation = getFailureAnimation();
 
                     } else if (e2.getX() - e1.getX() > sensivity) {
-                        if (curNode.getWeight() == 1) {
-                            curNode.setWeight(curNode.getWeight() + 1);
-                            list.currentWeight++;
-                        }
-                        curNode.setWeight(curNode.getWeight() - 1);
-                        list.currentWeight--;
                         isDone = true;
-                        animation = AnimationUtils.loadAnimation(activity, R.anim.flip_out_ltr);
+                        animation = getSuccessAnimation();
                     }
 
-                    if (isDone) {
-
-                        Thread updater = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                db.listDao().updateList(list);
-                                db.nodeDao().updateNode(curNode);
-                            }
-                        });
-
-                        updater.start();
-
-                        animation.setAnimationListener(new Animation.AnimationListener() {
-                            @Override
-                            public void onAnimationStart(Animation animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationEnd(Animation animation) {
-                                loadLine();
-                                findViewById(R.id.card).setAlpha(0f);
-                                (findViewById(R.id.card)).animate().alpha(1f).setDuration(300).start();
-                            }
-
-                            @Override
-                            public void onAnimationRepeat(Animation animation) {
-
-                            }
-                        });
-
-                        try {
-                            updater.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        findViewById(R.id.card).startAnimation(animation);
+                    if (animation != null && isDone) {
+                        animateCard(animation);
                     }
 
                     return super.onFling(e1, e2, velocityX, velocityY);
                 }
             });
-            findViewById(R.id.card).setOnTouchListener(new View.OnTouchListener() {
+            card.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (isChecked) {
@@ -149,9 +109,72 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                     return false;
                 }
             });
+
+            findViewById(R.id.failure).setOnClickListener(this);
+            findViewById(R.id.success).setOnClickListener(this);
+
             loadLine();
         }
 
+    }
+
+    private void animateCard(Animation animation){
+
+        Thread updater = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                db.listDao().updateList(list);
+                db.nodeDao().updateNode(curNode);
+            }
+        });
+
+        updater.start();
+
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                loadLine();
+                card.setAlpha(0f);
+                card.animate().alpha(1f).setDuration(300).start();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
+        try {
+            updater.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        card.startAnimation(animation);
+    }
+
+    private Animation getFailureAnimation(){
+        if (curNode.getWeight() > ShowFragment.RIGHT_ANSWERS_TO_COMPLETE) {
+            curNode.setWeight(curNode.getWeight() - 1);
+            list.currentWeight--;
+        }
+        curNode.setWeight(curNode.getWeight() + 1);
+        list.currentWeight++;
+        return AnimationUtils.loadAnimation(this, R.anim.flip_out_rtl);
+    }
+
+    private Animation getSuccessAnimation(){
+        if (curNode.getWeight() == 1) {
+            curNode.setWeight(curNode.getWeight() + 1);
+            list.currentWeight++;
+        }
+        curNode.setWeight(curNode.getWeight() - 1);
+        list.currentWeight--;
+        return AnimationUtils.loadAnimation(this, R.anim.flip_out_ltr);
     }
 
 
@@ -159,40 +182,50 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.failure:{
+                if (isChecked){
+                    animateCard(getFailureAnimation());
+                }
+                break;
+            }
+            case R.id.success:{
+                if (isChecked){
+                    animateCard(getSuccessAnimation());
+                }
+                break;
+            }
+        }
 
-            case (R.id.card): {
-                if (!isChecked) {
-                    ObjectAnimator animator = ObjectAnimator.ofFloat(findViewById(R.id.card), View.ROTATION_Y, 0f, 90f).setDuration(200);
-                    animator.addListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-                            (findViewById(R.id.card)).animate().scaleX(0.6f).setDuration(200).start();
-                        }
+        if (!isChecked) {
+            ObjectAnimator animator = ObjectAnimator.ofFloat(card, View.ROTATION_Y, 0f, 90f).setDuration(200);
+            animator.setInterpolator(new AccelerateInterpolator());
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    (card).animate().scaleX(0.3f).setDuration(200).start();
+                }
 
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            ((TextView) findViewById(R.id.card)).setText(primary);
-                            isChecked = true;
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    card.setText(primary);
+                    isChecked = true;
 
-                            (findViewById(R.id.card)).animate().rotationY(-90f).setDuration(0).start();
-                            (findViewById(R.id.card)).animate().rotationY(0f).scaleX(1f).setDuration(200).start();
-                        }
+                    (card).animate().rotationY(-90f).setDuration(0).setInterpolator(new DecelerateInterpolator()).start();
+                    (card).animate().rotationY(0f).scaleX(1f).setDuration(200).start();
+                }
 
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
-                    animator.start();
-
+                @Override
+                public void onAnimationCancel(Animator animation) {
 
                 }
-            }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            animator.start();
+
         }
     }
 
@@ -218,7 +251,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                 stack.add(data.indexOf(curNode));
                 primary = curNode.getPrimText();
                 ((TextView) findViewById(R.id.transTV)).setText(curNode.getTransText() + " (" + primary.split(",").length + ")");
-                ((TextView) findViewById(R.id.card)).setText("Turn Over");
+                 card.setText("Turn Over");
             } else loadLine();
         } else loadLine();
     }

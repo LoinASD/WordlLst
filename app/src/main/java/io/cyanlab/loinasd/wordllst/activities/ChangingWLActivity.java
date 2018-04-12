@@ -2,11 +2,7 @@ package io.cyanlab.loinasd.wordllst.activities;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
-import android.os.Message;
-import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
@@ -14,8 +10,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.List;
@@ -23,10 +17,6 @@ import java.util.List;
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
-
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.HANDLE_MESSAGE_DELETED;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.LIST_NAME;
-import static io.cyanlab.loinasd.wordllst.activities.NavActivity.h;
 
 public class ChangingWLActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -43,7 +33,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        switch (getIntent().getStringExtra("Action")) {
+        /*switch (getIntent().getStringExtra("Action")) {
             case ("Change"): {
                 setContentView(io.cyanlab.loinasd.wordllst.R.layout.activity_changing_line);
 
@@ -68,12 +58,12 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                         Thread delete = new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                NavActivity.database.nodeDao().deleteNode(node);
-                                NavActivity.database.nodeDao().deleteNode(node);
-                                WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                                MainActivity.database.nodeDao().deleteNode(node);
+                                MainActivity.database.nodeDao().deleteNode(node);
+                                WordList list = MainActivity.database.listDao().getWordlist(wlName);
                                 list.maxWeight -= ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
                                 list.currentWeight -= node.getWeight();
-                                NavActivity.database.listDao().updateList(list);
+                                MainActivity.database.listDao().updateList(list);
                             }
                         });
 
@@ -135,8 +125,8 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                         Thread deleteWL = new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                NavActivity.database.nodeDao().deleteNodes(wlName);
-                                NavActivity.database.listDao().deleteList(wlName);
+                                MainActivity.database.nodeDao().deleteNodes(wlName);
+                                MainActivity.database.listDao().deleteList(wlName);
                             }
                         });
                         deleteWL.start();
@@ -214,7 +204,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
                 break;
             }
-        }
+        }*/
 
         //-----------------------------------------//
 
@@ -224,7 +214,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
+        /*switch (v.getId()) {
             case (R.id.saveBut): {
 
                 try {
@@ -240,13 +230,13 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                         public void run() {
 
                             if (isAdding) {
-                                WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                                WordList list = MainActivity.database.listDao().getWordlist(wlName);
                                 list.currentWeight += ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
                                 list.maxWeight += ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
-                                NavActivity.database.listDao().updateList(list);
-                                NavActivity.database.nodeDao().insertNode(node);
+                                MainActivity.database.listDao().updateList(list);
+                                MainActivity.database.nodeDao().insertNode(node);
                             } else
-                                NavActivity.database.nodeDao().updateNode(node);
+                                MainActivity.database.nodeDao().updateNode(node);
                         }
                     });
 
@@ -260,7 +250,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 }
                 break;
             }
-            /*case (R.id.addBut): {
+            *//*case (R.id.addBut): {
                 if (!isAdding) {
                     isAdding = true;
                     ((ImageButton) findViewById(R.id.delLineBut)).setImageResource(android.R.drawable.arrow_down_float);
@@ -273,7 +263,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     ((ImageButton) findViewById(R.id.addBut)).setImageResource(android.R.drawable.ic_menu_add);
                 }
                 return;
-            }*/
+            }*//*
             case (R.id.delBut): {
                 setResult(RESULT_OK);
                 break;
@@ -294,23 +284,23 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     public void run() {
 
                         try {
-                            NavActivity.database.beginTransaction();
+                            MainActivity.database.beginTransaction();
 
                             String newName = ((EditText)findViewById(R.id.reqest_del)).getText().toString();
 
-                            WordList list = NavActivity.database.listDao().getWordlist(wlName);
+                            WordList list = MainActivity.database.listDao().getWordlist(wlName);
 
-                            List<Node> nodes = NavActivity.database.nodeDao().getNodes(list.getWlName());
+                            List<Node> nodes = MainActivity.database.nodeDao().getNodes(list.getWlName());
 
                             for (Node node: nodes){
                                 node.setWlName(newName);
-                                NavActivity.database.nodeDao().updateNode(node);
+                                MainActivity.database.nodeDao().updateNode(node);
                             }
 
                             list.setWlName(newName);
-                            NavActivity.database.listDao().updateList(list);
+                            MainActivity.database.listDao().updateList(list);
 
-                            NavActivity.database.setTransactionSuccessful();
+                            MainActivity.database.setTransactionSuccessful();
 
                             Intent data = new Intent();
 
@@ -321,7 +311,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                             setResult(RESULT_OK, data);
 
                         } finally {
-                            NavActivity.database.endTransaction();
+                            MainActivity.database.endTransaction();
                         }
                     }
                 });
@@ -334,7 +324,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 }
             }
 
-        }
+        }*/
         finish();
     }
 
