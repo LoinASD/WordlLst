@@ -1,25 +1,19 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
-import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -34,7 +28,6 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 import io.cyanlab.loinasd.wordllst.view.BottomSheetManager;
 
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.LIST_NAME;
-import static io.cyanlab.loinasd.wordllst.activities.MainActivity.REQUEST_CODE_CHANGE;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_TEST;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_WL;
@@ -135,7 +128,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                                 break;
                             }
                             case R.id.dndTest: {
-                                Intent testWl = new Intent(getActivity(), DnDTestActivity.class);
+                                Intent testWl = new Intent(getActivity(), ListTestActivity.class);
                                 testWl.putExtra("Name", LIST_NAME);
                                 startActivity(testWl);
                                 break;

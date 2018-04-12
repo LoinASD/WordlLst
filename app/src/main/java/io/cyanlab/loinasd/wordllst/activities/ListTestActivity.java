@@ -22,7 +22,7 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
  * Created by Анатолий on 11.12.2017.
  */
 
-public class DnDTestActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class ListTestActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     String wlName;
     String[] real;
@@ -33,8 +33,12 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
     ListView listView;
     int realChecked;
     int curLineNum;
-    int basicBG = R.color.colorWhite;
+    int basicBG = R.color.colorWhiteLowAlpha;
     ArrayList<Integer> stack = new ArrayList<>();
+
+    final static int OPTIONS_NUMBER = 8;
+
+    ArrayList<View> viewStack;
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -48,29 +52,33 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
         }
         if (isFake) {
             v.setBackgroundColor(getResources().getColor(R.color.colorFalse));
+            viewStack.add(v);
         } else {
             v.setBackgroundColor(getResources().getColor(R.color.colorTrue));
+            viewStack.add(v);
             if (++realChecked == real.length) {
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        for (int i = 0; i < listView.getChildCount(); i++) {
-                            listView.getChildAt(i).setBackgroundColor(getResources().getColor(basicBG));
+                        for (View view : viewStack) {
+                            view.setBackgroundColor(getResources().getColor(basicBG));
                         }
+
                         loadLine(false, curLineNum, 0);
                         ((ArrayAdapter) listView.getAdapter()).notifyDataSetChanged();
-
                     }
                 }, 500);
+
             }
+
         }
     }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_drag_n_drop_test);
+        setContentView(R.layout.activity_list_test);
         wlName = getIntent().getStringExtra("Name");
         Thread loadData = new Thread(new Runnable() {
             @Override
@@ -85,10 +93,11 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
             e.printStackTrace();
         }
 
+        viewStack = new ArrayList<>();
 
         listView = findViewById(R.id.prims);
         listView.setOnItemClickListener(this);
-        shuffled = new String[8];
+        shuffled = new String[OPTIONS_NUMBER];
         loadLine(false, -1, 0);
         listView.setAdapter(new ArrayAdapter<>(this, R.layout.test_line, shuffled));
 
@@ -109,7 +118,7 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
                     stack.add(curLineNum);
                     translation = data.get(lineNum).getTransText();
                     ((TextView) findViewById(R.id.transTV)).setText(translation);
-                    fake = new String[8 - real.length];
+                    fake = new String[OPTIONS_NUMBER - real.length];
                     for (int i = 0; i < fake.length; i++) {
                         loadLine(true, lineNum, i);
                     }
@@ -135,22 +144,22 @@ public class DnDTestActivity extends AppCompatActivity implements AdapterView.On
     }
 
     private void shuffle() {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < OPTIONS_NUMBER; i++) {
             shuffled[i] = null;
         }
 
         Random r = new Random();
         for (int j = 0; j < real.length; j++) {
-            int num = r.nextInt(8);
+            int num = r.nextInt(OPTIONS_NUMBER);
             while (shuffled[num] != null) {
-                num = r.nextInt(8);
+                num = r.nextInt(OPTIONS_NUMBER);
             }
             shuffled[num] = real[j];
         }
         for (int j = 0; j < fake.length; j++) {
-            int num = r.nextInt(8);
+            int num = r.nextInt(OPTIONS_NUMBER);
             while (shuffled[num] != null) {
-                num = r.nextInt(8);
+                num = r.nextInt(OPTIONS_NUMBER);
             }
             shuffled[num] = fake[j];
         }

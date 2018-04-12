@@ -18,7 +18,7 @@
             android:label="Edit Line"
             android:theme="@style/AppTheme.Dialog" />
         <activity
-            android:name=".activities.DnDTestActivity"
+            android:name=".activities.ListTestActivity"
             android:label="Test"
             android:theme="@style/AppTheme" />
         <activity
