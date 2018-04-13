@@ -56,8 +56,8 @@ public class MainActivity extends AppCompatActivity
 
     Thread parser, extractor;
 
-    android.support.v4.app.Fragment lists;
-    android.support.v4.app.Fragment lines;
+    public android.support.v4.app.Fragment lists;
+    public android.support.v4.app.Fragment lines;
     public LinearLayout progBarLayout, testBar;
 
     public static StaticHandler h;
@@ -474,7 +474,9 @@ public class MainActivity extends AppCompatActivity
                 LIST_NAME = wlName;
 
                 Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_LONG).show();
+
                 activity.loadLines();
+
                 ((ShowFragment) activity.lines).adapterLoadData();
 
 

@@ -1,16 +1,22 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -38,35 +44,35 @@ public class ListTestActivity extends AppCompatActivity implements AdapterView.O
 
     final static int OPTIONS_NUMBER = 8;
 
-    ArrayList<View> viewStack;
+    boolean[] viewStack;
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 
         boolean isFake = true;
-        for (int i = 0; i < real.length; i++) {
-            if (((TextView) v).getText().equals(real[i])) {
+        for (String aReal : real) {
+            if (((TextView) v).getText().equals(aReal)) {
                 isFake = false;
                 break;
             }
         }
         if (isFake) {
             v.setBackgroundColor(getResources().getColor(R.color.colorFalse));
-            viewStack.add(v);
+            viewStack[position] = true;
         } else {
             v.setBackgroundColor(getResources().getColor(R.color.colorTrue));
-            viewStack.add(v);
+            viewStack[position] = true;
             if (++realChecked == real.length) {
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        for (View view : viewStack) {
-                            view.setBackgroundColor(getResources().getColor(basicBG));
+                        for (int i = 0; i < OPTIONS_NUMBER; i++) {
+                            viewStack[i] = false;
                         }
 
                         loadLine(false, curLineNum, 0);
-                        ((ArrayAdapter) listView.getAdapter()).notifyDataSetChanged();
+                        ((LinesAdapter) listView.getAdapter()).notifyDataSetChanged();
                     }
                 }, 500);
 
@@ -93,13 +99,13 @@ public class ListTestActivity extends AppCompatActivity implements AdapterView.O
             e.printStackTrace();
         }
 
-        viewStack = new ArrayList<>();
+        viewStack = new boolean[OPTIONS_NUMBER];
 
         listView = findViewById(R.id.prims);
         listView.setOnItemClickListener(this);
         shuffled = new String[OPTIONS_NUMBER];
         loadLine(false, -1, 0);
-        listView.setAdapter(new ArrayAdapter<>(this, R.layout.test_line, shuffled));
+        listView.setAdapter(new LinesAdapter(this, R.layout.test_line, shuffled));
 
     }
 
@@ -164,6 +170,33 @@ public class ListTestActivity extends AppCompatActivity implements AdapterView.O
             shuffled[num] = fake[j];
         }
 
+    }
+
+    private class LinesAdapter extends ArrayAdapter{
+
+
+        public LinesAdapter(@NonNull Context context, int resource, @NonNull Object[] objects) {
+            super(context, resource, objects);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+
+            View v = convertView == null ? View.inflate(getContext(), R.layout.test_line, null) : convertView;
+
+            boolean isFake = true;
+            for (String aReal : real) {
+                if (shuffled[position].equals(aReal)) {
+                    isFake = false;
+                    break;
+                }
+            }
+
+            v.setBackgroundColor(getResources().getColor(viewStack[position] ? (!isFake ? R.color.colorTrue : R.color.colorFalse) : basicBG));
+
+            return super.getView(position, convertView, parent);
+        }
     }
 
     @Override

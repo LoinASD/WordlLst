@@ -34,17 +34,13 @@ import io.cyanlab.loinasd.wordllst.R;
 
 public class FileManagerActivity extends AppCompatActivity implements View.OnClickListener{
 
-    private static File dir;
     Logger logger = Logger.getLogger("FM");
-    private static ArrayList<Map<String, Object>> data;
-    private static String[] files;
-    private static int img;
-    private static  SimpleAdapter sa;
+    private String[] files;
     private static final String ATTRIBUTE_NAME_TEXT = "text";
     private static final String ATTRIBUTE_NAME_IMAGE = "image";
     private static String CURRENT_PATH;// = "/sdcard/storage/0/Download";
     private static String ROOT_PATH =
-            Environment.getExternalStorageDirectory().getAbsolutePath();
+            Environment.getExternalStorageDirectory().getPath();
     LinearLayout wayLayout;
     ListView lw;
     TextView way;
@@ -67,8 +63,8 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
             return;
         }
 
-        CURRENT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
-        dir = new File(CURRENT_PATH);
+        CURRENT_PATH = Environment.getExternalStorageDirectory().getPath();
+        File dir = new File(CURRENT_PATH);
         //-----------------------------------//
         showDir(dir);
         ImageButton ib = this.findViewById(R.id.backButton);
@@ -107,21 +103,22 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
         if (files != null) {
             Arrays.sort(files,new SortedByName());
             ArrayList<String> usefulFiles = new ArrayList<>();
-            data = new ArrayList<>();
+            ArrayList<Map<String, Object>> data = new ArrayList<>();
             Map<String, Object> m;
             File f;
             for (String file : files) {
                 f = new File(dir, file);
-                if (f.isDirectory())
+                int img;
+                if (f.isDirectory()){
                     if (!file.startsWith(".")) {
                         img = R.drawable.folder;
                         usefulFiles.add(file);
-                    }
-                else {
+                    }else continue;
+                }else {
                     if (file.endsWith(".pdf")){
                         img = R.drawable.pdf;
                         usefulFiles.add(file);
-                    }
+                    }else continue;
                 }
                 m = new HashMap<>();
                 m.put(ATTRIBUTE_NAME_TEXT, file);
@@ -131,7 +128,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
             usefulFiles.toArray(files);
             String[] from = { ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE };
             int[] to = { R.id.fileTextView, R.id.fileImageView };
-            sa = new SimpleAdapter(this, data, R.layout.file_line, from, to);
+            SimpleAdapter sa = new SimpleAdapter(this, data, R.layout.file_line, from, to);
             lw.setAdapter(sa);
         }
     }

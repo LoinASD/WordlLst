@@ -12,24 +12,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.FileManagerActivity" />
+        <activity
+            android:name=".activities.FileManagerActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.ChangingWLActivity"
             android:label="Edit Line"
-            android:theme="@style/AppTheme.Dialog" />
+            android:theme="@style/AppTheme.Dialog"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.ListTestActivity"
             android:label="Test"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.CardTestActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:label=""/>
+            android:label=""
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

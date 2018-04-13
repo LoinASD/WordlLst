@@ -142,6 +142,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                 testBar.setTranslationY(100);
 
+                v.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        bsManager.expandBottomSheet(adapter.list);
+                    }
+                });
+
                 ((MainActivity) getActivity()).testBar = testBar;
 
                 bsManager = new BottomSheetManager(getActivity(), this, v.findViewById(R.id.bottom_sheet));
@@ -235,7 +242,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     }
 
-    void changeHeader() {
+    public void changeHeader() {
         header.listName.setText(LIST_NAME);
         header.listName.refreshDrawableState();
         header.bar.setMax(adapter.list.maxWeight);
@@ -317,12 +324,14 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     }
 
 
-    protected void notifyAdapter() {
+    public void notifyAdapter() {
         adapter.notifyDataSetChanged();
     }
 
     public void adapterLoadData() {
-        adapter.loadFromDB();
+        if (adapter != null) {
+            adapter.loadFromDB();
+        }
     }
 
     private class ListHolder extends RecyclerView.ViewHolder {
@@ -511,9 +520,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                         @Override
                         public boolean onLongClick(View view) {
 
-                            bsManager.setExpandedNode(nodes.get(id));
-
-                            bsManager.openBottomSheet(prim, trans);
+                            bsManager.expandBottomSheet(nodes.get(id));
 
                             return true;
                         }
