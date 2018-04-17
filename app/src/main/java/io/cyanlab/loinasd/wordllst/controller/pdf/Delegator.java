@@ -29,6 +29,8 @@ public class Delegator {
     private Lang waitingNodeLang;
     private TextExtractor extractor;
 
+    private boolean isOldVersion;
+
     final private int COINS_TO_SET_X = 10;
 
     private double engX;
@@ -67,6 +69,8 @@ public class Delegator {
 
         try {
             parse();
+
+
             if (gotDictionary && !isExists) {
                 nodeCollect();
             } else if (isExists) {
@@ -89,6 +93,8 @@ public class Delegator {
      */
     private void parse() throws IOException {
 
+        if ((char)io.read() == '3') isOldVersion = true;
+
         while (ch != -1) {
             ch = io.read();
 
@@ -103,6 +109,21 @@ public class Delegator {
                     String line = readLine();
                     if (line.equals("gincmap"))
                         parseCMap();
+                }
+            }
+        }
+    }
+
+    private void convertName(){
+        if (newWlName != null && newWlName.length() > 0){
+            Node nameNode = new Node();
+            nameNode.setPrimText(newWlName);
+            nameNode.convertText(converter);
+            newWlName = nameNode.getPrimText();
+
+            for (String s : MainActivity.database.listDao().loadNames()) {
+                if (newWlName.equals(s)) {
+                    isExists = true;
                 }
             }
         }
@@ -124,17 +145,17 @@ public class Delegator {
             lineStr = readLine();
             if (lineStr.endsWith("begincodespacerange")) {
 
-                // range looks like <0000> <FFFF>
-                range = readLine().split(" ")[0].length() - 2;
+                // range looks like <0000> <FFFF> or <00><FF>
+                range = readLine().contains("<0000>") ? 4 : 2;
             }
 
             if (lineStr.endsWith("beginbfchar")){
                 count = Integer.parseInt("" + lineStr.charAt(0));
                 for (int i = count; i > 0; i--) {
                     lineStr = readLine();
-                    chars = lineStr.split(" ");
-                    int c1 = Integer.parseInt(chars[0].substring(1, range + 1), 16);
-                    int c2 = Integer.parseInt(chars[1].substring(1, range + 1), 16);
+                    chars = lineStr.split("<");
+                    int c1 = Integer.parseInt(chars[1].substring(0, range), 16);
+                    int c2 = Integer.parseInt(chars[2].substring(0, range), 16);
                     converter.addNewRange(c1, c1, c2);
                 }
             }
@@ -142,24 +163,26 @@ public class Delegator {
                 count = Integer.parseInt("" + lineStr.charAt(0));
                 for (int i = count; i > 0; i--) {
                     lineStr = readLine();
-                    chars = lineStr.split(" ");
-                    String strC1 = chars[0].substring(1, range + 1);
-                    String strC2 = chars[1].substring(1, range + 1);
+                    chars = lineStr.split("<");
+                    String strC1 = chars[1].substring(0, range);
+                    String strC2 = chars[2].substring(0, range);
                     //System.out.printf("%nc1 = %s; c2 = %s%n", strC1, strC2);
                     int c1 = Integer.parseInt(strC1, 16);
                     int c2 = Integer.parseInt(strC2, 16);
                     //System.out.printf("int: c1 = %d; c2 = %d", c1, c2);
                     if (lineStr.contains("[")) {
                         String[] arr = lineStr.substring(
-                                lineStr.indexOf('[') + 1, lineStr.length() - 1).split(" ");
+                                lineStr.indexOf('[') + 1, lineStr.length() - 1).split("<");
                         int c, dif = c1;
                         for (String s: arr) {
-                            c = Integer.parseInt(s.substring(1, range + 1), 16);
-                            converter.addNewRange(dif, dif, c);
-                            dif++;
+                            if (!s.equals("")) {
+                                c = Integer.parseInt(s.substring(0, range), 16);
+                                converter.addNewRange(dif, dif, c);
+                                dif++;
+                            }
                         }
                     } else {
-                        String strC3 = chars[2].substring(1, range + 1);
+                        String strC3 = chars[3].substring(0, range);
                         int c3 = Integer.parseInt(strC3, 16);
                         //System.out.printf("%nc3 = %s; int3: %d%n", strC3, c3);
                         converter.addNewRange(c1, c2, c3);
@@ -345,9 +368,9 @@ public class Delegator {
 
 
             StringBuilder text = new StringBuilder();
-            while ((char) ch != ']') {
-                while (((char) ch != '(') && ((char) ch != '<')) {
-                    // skip all text out brackets
+            while ((char) ch != ']' && ch != -1) {
+                while (((char) ch != '(') && ((char) ch != '<') && ch != -1 && (char)ch != ']') {
+                    // skip all text which is out of brackets
                     ch = io.read();
                 }
                 if ((char) ch == '<') {
@@ -357,7 +380,7 @@ public class Delegator {
                         ch = io.read();
                         text.append((char) ch);
                     }
-                } else {
+                } else if ((char)ch == '('){
                     curLang = Lang.UNDEFINED;
                     ch = io.read();
                     while ((char) ch != ')') {
@@ -374,6 +397,7 @@ public class Delegator {
                         ch = io.read();
                     }
                 }
+                if ((char) ch == ']') break;
                 ch = io.read();
             }
 
@@ -404,6 +428,9 @@ public class Delegator {
             return -1;
         }
 
+        StringBuilder nameBuf;
+        double xBuf;
+
         /**
          * Calls all other methods of this class
          *
@@ -420,30 +447,62 @@ public class Delegator {
 
             String text = extractRawText();
 
-            if (newWlName == null) {
-                newWlName = text.trim().replaceAll(" ", "_").replaceAll(":", "");
+            if (!isOldVersion) {
+                if (newWlName == null) {
+                    newWlName = text.trim();
 
-                for (String s : MainActivity.database.listDao().loadNames()) {
-                    if (newWlName.equals(s)) {
-                        isExists = true;
+                    for (String s : MainActivity.database.listDao().loadNames()) {
+                        if (newWlName.equals(s)) {
+                            isExists = true;
+                        }
                     }
-                }
-            } else {
-
-                Lang nodeLang = curLang;
-
-                if (!isRusXSet && nodeLang == Lang.BRACE) {
-                    handleX(x);
-                }
-
-                if (!isRusXSet) {
-                    textBuffer.add(new TextPlusX(text, x, nodeLang));
-
                 } else {
+
+                    Lang nodeLang = curLang;
+
+                    if (!isRusXSet && nodeLang == Lang.BRACE) {
+                        handleX(x);
+                    }
+
+                    if (!isRusXSet) {
+                        textBuffer.add(new TextPlusX(text, x, nodeLang));
+
+                    } else {
+                        delegateText(text, x);
+                    }
+
+                }
+            }else {
+                if (newWlName == null){
+                    if (nameBuf == null){
+                        rusX = 302.14d;
+                        nameBuf = new StringBuilder(text);
+                        xBuf = x;
+                    }else if (x > xBuf){
+                        xBuf = x;
+                        nameBuf.append(text);
+                    }else{
+
+                        newWlName = nameBuf.toString();
+                        convertName();
+
+                    }
+                }else{
+
+                    if (waitingNode == null) {
+
+                        waitingNode = new Node();
+                        waitingNode.setWlName(newWlName);
+
+                        waitingNode.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
+
+                        waitingNode.setPrimText(text);
+                        waitingNodeLang = Lang.ENG;
+
+                    }
+
                     delegateText(text, x);
                 }
-
-
             }
 
 

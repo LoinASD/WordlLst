@@ -3,12 +3,14 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedOutputStream;
 import java.util.logging.Logger;
 import java.util.zip.DataFormatException;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
@@ -35,6 +37,15 @@ public class PDFParser {
             outputStream = out;
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file),2048);
             long startTime = System.currentTimeMillis();
+
+            for (int i = 0; i < 8; i++){
+                cc = (char) bufInput.read();
+            }
+
+            boolean isOldVersion = cc == '3';
+
+            out.write(cc);
+
             cc = (char) bufInput.read();
             while (bufInput.available() != 0) {
                 cc = (char) bufInput.read();
@@ -48,7 +59,7 @@ public class PDFParser {
                             StringBuilder res = new StringBuilder();
                             bufInput.read();
                             cc = (char) bufInput.read();
-                            while ((cc != '>') && (cc != '/')) {
+                            while ((cc != '>') && (cc != '/') && cc != '\n') {
                                 res.append(cc);
                                 cc = (char) bufInput.read();
                             }
@@ -57,13 +68,16 @@ public class PDFParser {
                             } catch (NumberFormatException e) {
                                 isFonts = true;
                             }
+                            if (cc == '\n') break;
                             if (cc == '/') {
                                 bufInput.skip(streamLength);
                                 continue;
                             }
+
                         }
                     }
                     if (cc == '>') cc = (char) bufInput.read();
+
                 }
 
                 if ((streamLength > 0)) {
@@ -76,9 +90,11 @@ public class PDFParser {
                     }
                     if (isStream) {
                         bufInput.read();
-                        bufInput.read();
+                        if (!isOldVersion) {
+                            bufInput.read();
+                        }
                         System.out.println(streamLength);
-                        //FileOutputStream fOS = new FileOutputStream("C:/Android/WH"+ streamLength+".txt");
+
                         try {
                             if (decoder != null) {
                                 decoder.join();
@@ -94,7 +110,9 @@ public class PDFParser {
                     }
                 }
             }
-            decoder.join();
+            if (decoder != null && decoder.isAlive()){
+                decoder.join();
+            }
             MainActivity.h.sendEmptyMessage(1);
             out.close();
             log.warning("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
