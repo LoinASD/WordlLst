@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 import java.util.zip.Inflater;
 
 import io.cyanlab.loinasd.wordllst.R;
+import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
+import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 public class FileManagerActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -155,5 +157,51 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.line_context_menu, menu);
+        return super.onPrepareOptionsMenu(menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (item.getItemId() == R.id.addNewWL){
+            Thread addList = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.database.beginTransaction();
+
+                    WordList list = new WordList();
+
+                    list.setWlName("New List");
+                    list.currentWeight = ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+                    list.maxWeight = ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+
+                    Node node = new Node();
+                    node.setPrimText("kek");
+                    node.setTransText("mek");
+                    node.setWlName("New List");
+                    node.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
+
+                    MainActivity.database.listDao().insertList(list);
+                    MainActivity.database.nodeDao().insertNode(node);
+
+                    MainActivity.database.setTransactionSuccessful();
+                    MainActivity.database.endTransaction();
+                }
+            });
+            addList.start();
+            try {
+                addList.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            setResult(RESULT_CANCELED);
+            finish();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

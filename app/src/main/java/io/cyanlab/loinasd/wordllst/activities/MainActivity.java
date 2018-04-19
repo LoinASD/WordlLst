@@ -407,7 +407,7 @@ public class MainActivity extends AppCompatActivity
             public void onAnimationRepeat(Animator animation) {
 
             }
-        }).setStartDelay(delay).start();
+        }).setStartDelay(delay).setDuration(duration).start();
 
 
         //ObjectAnimator.ofFloat(view,View.SCALE_X,0f,1f).setDuration(700).start();

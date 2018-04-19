@@ -5,16 +5,16 @@
     style="@style/AppTheme.Dialog"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/colorPrimary"
+    android:background="@color/greyColor"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="16dp"
+    android:elevation="16dp">
 
     <LinearLayout
         android:id="@+id/bre_edit_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingTop="5dp"
         android:visibility="gone">
 
         <ImageButton
@@ -22,7 +22,10 @@
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:layout_weight="1"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_delete_white_24dp" />
 
         <ImageButton
@@ -30,7 +33,10 @@
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:layout_weight="1"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_save_white_24dp" />
 
         <ImageButton
@@ -38,7 +44,10 @@
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:layout_weight="1"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_close_white_24dp" />
     </LinearLayout>
 
@@ -46,17 +55,20 @@
         android:id="@+id/ble_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="5dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/edit_line"
             style="@style/AppTheme.ImageButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_weight="0"
+            android:background="@drawable/dialog_background"
+            android:cropToPadding="false"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
 
         <ImageButton
@@ -64,9 +76,10 @@
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:layout_weight="2"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_content_cut_white_24dp" />
 
         <ImageButton
@@ -74,9 +87,10 @@
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:layout_weight="2"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_content_paste_white_24dp" />
 
         <ImageButton
@@ -84,9 +98,10 @@
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:layout_weight="2"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_content_copy_white_24dp" />
 
     </LinearLayout>
@@ -151,15 +166,13 @@
             style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="10dp"
-            android:autoSizeTextType="uniform"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:ems="10"
             android:enabled="false"
-            android:inputType="text"
             android:text="kek"
+            android:textColor="@color/primaryDarkColor"
             android:textSize="24sp" />
 
         <EditText
@@ -167,11 +180,12 @@
             style="@style/AppTheme.EditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:ems="10"
             android:enabled="false"
             android:text="trans"
+            android:textColor="@color/primaryDarkColor"
             android:textSize="24sp" />
 
 

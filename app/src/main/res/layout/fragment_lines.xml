@@ -3,29 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/lines"
+    style="@style/AppTheme"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <android.support.design.widget.AppBarLayout
-        android:id="@+id/appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:minHeight="56dp"
-        app:expanded="false">
-
-        <include
-            layout="@layout/stats_holder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed" />
-    </android.support.design.widget.AppBarLayout>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorAccentLowAlpha"
+        android:background="@color/darkerGreyColor"
         android:layoutAnimation="@anim/list_anim"
         android:nestedScrollingEnabled="false"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -33,43 +19,138 @@
     </android.support.v7.widget.RecyclerView>
 
     <LinearLayout
+        android:id="@+id/tests_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:orientation="vertical"
+        android:paddingRight="16dp"
+        android:translationY="-49dp"
+        app:layout_behavior="io.cyanlab.loinasd.wordllst.view.TestSheetBehavior">
+
+        <LinearLayout
+            android:layout_width="150dp"
+            android:layout_height="130dp"
+            android:background="@drawable/tests_sheet"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/textView13"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Edit list"
+                android:textColor="@color/colorWhite"
+                android:textSize="18sp" />
+
+            <View
+                android:id="@+id/divider5"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@color/secondaryDarkColor" />
+
+            <TextView
+                android:id="@+id/textView12"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:paddingTop="4dp"
+                android:text="Cards"
+                android:textColor="@color/colorWhite"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textView11"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Test"
+                android:textColor="@color/colorWhite"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/tests_button"
+            android:layout_width="64dp"
+            android:layout_height="32dp"
+            android:layout_gravity="right"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/tests_button" />
+    </LinearLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"
+        android:minHeight="56dp"
+        android:theme="@style/AppTheme"
+        app:elevation="4dp"
+        app:expanded="true">
+
+        <include
+            layout="@layout/stats_holder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed|snap" />
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
         android:id="@+id/test_bar"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="@color/colorPrimary"
+        android:layout_height="48dp"
+        android:background="@color/primaryColor"
+        android:elevation="8dp"
         android:orientation="horizontal"
         app:layout_anchor="@id/scrollView"
-        app:layout_anchorGravity="bottom"
+        app:layout_anchorGravity="bottom|right"
         app:layout_behavior="io.cyanlab.loinasd.wordllst.view.BottomBarBehavior">
 
         <TextView
             android:id="@+id/cardTest"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_margin="8dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="4dp"
             android:layout_weight="2"
+            android:background="@drawable/dialog_background"
             android:clickable="false"
             android:drawableBottom="@color/colorAccent"
             android:drawableTop="@color/MaterialCyan"
             android:elegantTextHeight="false"
             android:gravity="center"
             android:text="CARD TEST"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/colorWhite"
+            android:textSize="18sp" />
 
         <ImageView
             android:id="@+id/addLineButton"
-            android:layout_width="0dp"
+            android:layout_width="48dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_weight="0"
+            android:background="@drawable/dialog_background"
             app:srcCompat="@drawable/ic_add_white_24dp" />
 
         <TextView
             android:id="@+id/dndTest"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_margin="8dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="4dp"
             android:layout_weight="2"
+            android:background="@drawable/dialog_background"
             android:gravity="center"
             android:text="TEST"
-            android:textColor="@color/colorWhite" />
+            android:textColor="@color/colorWhite"
+            android:textSize="18sp" />
     </LinearLayout>
 
     <View
@@ -87,4 +168,5 @@
         app:behavior_hideable="true"
         app:behavior_peekHeight="0dp"
         app:layout_behavior="@string/bottom_sheet_behavior" />
+
 </android.support.design.widget.CoordinatorLayout>

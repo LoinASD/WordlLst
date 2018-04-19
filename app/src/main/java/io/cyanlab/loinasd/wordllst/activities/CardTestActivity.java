@@ -197,12 +197,12 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
         }
 
         if (!isChecked) {
-            ObjectAnimator animator = ObjectAnimator.ofFloat(card, View.ROTATION_Y, 0f, 90f).setDuration(200);
+            ObjectAnimator animator = ObjectAnimator.ofFloat(card, View.ROTATION_Y, 0f, 90f).setDuration(150);
             animator.setInterpolator(new AccelerateInterpolator());
             animator.addListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {
-                    (card).animate().scaleX(0.3f).setDuration(200).start();
+                    (card).animate().scaleX(0.3f).setDuration(150).start();
                 }
 
                 @Override
@@ -211,7 +211,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
                     isChecked = true;
 
                     (card).animate().rotationY(-90f).setDuration(0).setInterpolator(new DecelerateInterpolator()).start();
-                    (card).animate().rotationY(0f).scaleX(1f).setDuration(200).start();
+                    (card).animate().rotationY(0f).scaleX(1f).setDuration(150).start();
                 }
 
                 @Override

@@ -17,15 +17,12 @@
         android:id="@+id/primeTV"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="10dp"
         android:layout_weight="5"
         android:gravity="center_vertical|start"
         android:longClickable="false"
         android:text="1"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         android:textStyle="bold" />
 
@@ -33,13 +30,10 @@
         android:id="@+id/translateTV"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
         android:layout_weight="5"
-        android:gravity="center_vertical|end"
+        android:gravity="center_vertical|start"
         android:text="2"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         android:textStyle="bold" />
 

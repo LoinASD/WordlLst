@@ -8,12 +8,16 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
+import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -53,6 +57,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     RecyclerView main;
 
     public BottomSheetManager bsManager;
+
+    View testSheet;
+    float testSheetHiddenTranslationY;
 
     private int MODE;
 
@@ -142,6 +149,19 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                 testBar.setTranslationY(100);
 
+                testSheet = v.findViewById(R.id.tests_sheet);
+                testSheetHiddenTranslationY = testSheet.getTranslationY();
+
+                v.findViewById(R.id.tests_button).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (testSheet.getTranslationY() <= 0) {
+                            testSheet.animate().translationYBy(testSheet.getMeasuredHeight() - v.findViewById(R.id.tests_button).getHeight()).setDuration(225).setInterpolator(new LinearOutSlowInInterpolator()).start();
+                        }else
+                            testSheet.animate().translationYBy( - testSheet.getMeasuredHeight() + v.findViewById(R.id.tests_button).getHeight()).setDuration(195).setInterpolator(new FastOutLinearInInterpolator()).start();
+                    }
+                });
+
                 v.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -202,7 +222,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
                     main.scrollToPosition(0);
-                    ((AppBarLayout)getView().findViewById(R.id.appbar)).setExpanded(false, false);
+                    AppBarLayout appBar = (AppBarLayout)getView().findViewById(R.id.appbar);
+                    appBar.setExpanded(true, true);
+
                     break;
 
                 default: break;

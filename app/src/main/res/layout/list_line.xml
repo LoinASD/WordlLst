@@ -16,7 +16,7 @@
         android:layout_marginEnd="3dp"
         android:layout_marginStart="3dp"
         android:background="@drawable/border"
-        android:elevation="8dp"
+        android:elevation="2dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -39,9 +39,10 @@
                 android:text="asdasd"
                 android:textAlignment="textStart"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@color/colorPrimary"
+                android:textColor="@color/primaryDarkColor"
                 android:textSize="30sp"
-                android:textStyle="bold">
+                android:textStyle="bold"
+                android:typeface="normal">
 
             </TextView>
 
@@ -59,9 +60,8 @@
                 android:id="@+id/progressBar2"
                 style="@style/AppTheme.ProgressBar.Horizontal"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="5dp"
                 android:layout_gravity="center_vertical"
-                android:layout_marginBottom="0dp"
                 android:layout_marginEnd="10dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
@@ -71,6 +71,7 @@
                 android:indeterminate="false"
                 android:max="100"
                 android:progress="33"
+                android:progressDrawable="@drawable/progress_drawable"
                 android:progressTint="@color/colorAccent" />
 
             <TextView
@@ -80,11 +81,13 @@
                 android:layout_marginEnd="15dp"
                 android:layout_marginRight="15dp"
                 android:layout_weight="0"
+                android:gravity="center_vertical"
                 android:maxLines="1"
                 android:minLines="1"
                 android:text="50%"
                 android:textAlignment="center"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                app:fontFamily="@font/roboto_mono" />
         </LinearLayout>
 
     </LinearLayout>
