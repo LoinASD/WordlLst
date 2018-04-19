@@ -46,29 +46,33 @@ public class BottomSheetManager {
 
         blurView = ((View) bottomSheet.getParent()).findViewById(R.id.blur_view);
 
-        blurView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                closeBottomSheet();
-            }
-        });
-
         main = ((View) bottomSheet.getParent()).findViewById(R.id.scrollView);
 
         BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
         behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
         behavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+
+
+            boolean hasBeenDragged;
+
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_COLLAPSED && bottomSheet.findViewById(R.id.bre_edit_toolbar).getVisibility() == View.VISIBLE){
                     closeBottomSheet();
+                }
+                if (hasBeenDragged && newState == BottomSheetBehavior.STATE_EXPANDED){
+                    hasBeenDragged = false;
                 }
             }
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 if (BottomSheetBehavior.from(bottomSheet).getState() == BottomSheetBehavior.STATE_DRAGGING) {
+                    hasBeenDragged = true;
+                }
+                if (hasBeenDragged && BottomSheetBehavior.from(bottomSheet).getState() == BottomSheetBehavior.STATE_SETTLING){
+                    hasBeenDragged = false;
                     closeBottomSheet();
                 }
             }
@@ -297,7 +301,7 @@ public class BottomSheetManager {
             changeState(false);
         }
 
-
+        fragment.getView().findViewById(R.id.tests_button).setClickable(true);
         BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
         behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         blurView.setVisibility(View.INVISIBLE);
@@ -347,6 +351,15 @@ public class BottomSheetManager {
         main.setClickable(false);
 
         blurView.setVisibility(View.VISIBLE);
+
+        fragment.getView().findViewById(R.id.tests_button).setClickable(false);
+
+        blurView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                closeBottomSheet();
+            }
+        });
 
         bottomSheet.findViewById(R.id.bre_prim).refreshDrawableState();
 

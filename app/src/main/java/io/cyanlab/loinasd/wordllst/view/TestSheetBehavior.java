@@ -31,7 +31,7 @@ public class TestSheetBehavior<V extends LinearLayout> extends CoordinatorLayout
     public boolean onDependentViewChanged(CoordinatorLayout parent, V child, View dependency) {
 
         if (dependency.getId() != R.id.scrollView && dependency.getY() + dependency.getHeight() < 56 * height){
-            child.setTranslationY(dependency.getY() - (dependency.getHeight() - child.getHeight()) - height * 49 + ((dependency.getHeight() + dependency.getY())/ 56 * height - 1) * 32 * height);
+            child.setTranslationY(dependency.getY() - (dependency.getHeight() - child.getHeight()) - (height * 49) + (((dependency.getHeight() + dependency.getY())/ (56 * height)) - 1) * 32 * height);
             return true;
         }else if (dependency.getId() != R.id.scrollView && dependency.getY() + dependency.getHeight() >= 56 * height){
             child.setY(dependency.getY() - (dependency.getHeight() - child.getHeight()) - height * 49);

@@ -5,10 +5,10 @@
     style="@style/AppTheme.Dialog"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/greyColor"
+    android:background="@color/darkerGreyColor"
+    android:elevation="16dp"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:elevation="16dp">
+    android:padding="16dp">
 
     <LinearLayout
         android:id="@+id/bre_edit_toolbar"
@@ -83,17 +83,6 @@
             app:srcCompat="@drawable/ic_content_cut_white_24dp" />
 
         <ImageButton
-            android:id="@+id/paste_line"
-            style="@style/AppTheme.ImageButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:layout_weight="2"
-            android:background="@drawable/dialog_background"
-            android:padding="8dp"
-            app:srcCompat="@drawable/ic_content_paste_white_24dp" />
-
-        <ImageButton
             android:id="@+id/copy_line"
             style="@style/AppTheme.ImageButton"
             android:layout_width="0dp"
@@ -103,6 +92,17 @@
             android:background="@drawable/dialog_background"
             android:padding="8dp"
             app:srcCompat="@drawable/ic_content_copy_white_24dp" />
+
+        <ImageButton
+            android:id="@+id/paste_line"
+            style="@style/AppTheme.ImageButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:layout_weight="2"
+            android:background="@drawable/dialog_background"
+            android:padding="8dp"
+            app:srcCompat="@drawable/ic_content_paste_white_24dp" />
 
     </LinearLayout>
 
@@ -119,8 +119,8 @@
             android:layout_weight="1"
             android:text="Edit"
             android:textAlignment="center"
-            android:textColor="@color/colorWhiteLowAlpha"
-            android:textSize="10sp" />
+            android:textColor="@color/colorWhite"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/textView5"
@@ -129,8 +129,8 @@
             android:layout_weight="2"
             android:text="Cut"
             android:textAlignment="center"
-            android:textColor="@color/colorWhiteLowAlpha"
-            android:textSize="10sp" />
+            android:textColor="@color/colorWhite"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/textView4"
@@ -139,8 +139,8 @@
             android:layout_weight="2"
             android:text="Paste"
             android:textAlignment="center"
-            android:textColor="@color/colorWhiteLowAlpha"
-            android:textSize="10sp" />
+            android:textColor="@color/colorWhite"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/textView"
@@ -149,8 +149,8 @@
             android:layout_weight="2"
             android:text="Copy"
             android:textAlignment="center"
-            android:textColor="@color/colorWhiteLowAlpha"
-            android:textSize="10sp" />
+            android:textColor="@color/colorWhite"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <LinearLayout

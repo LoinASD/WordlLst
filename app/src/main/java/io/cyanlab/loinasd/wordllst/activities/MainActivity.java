@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity
 
     public android.support.v4.app.Fragment lists;
     public android.support.v4.app.Fragment lines;
-    public LinearLayout progBarLayout, testBar;
+    public LinearLayout progBarLayout;
 
     public static StaticHandler h;
 
@@ -386,14 +386,14 @@ public class MainActivity extends AppCompatActivity
         main.animate().alpha(0f).setListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                toolbar.animate().translationY(-100).setDuration(duration).start();
+                toolbar.animate().translationY(-toolbar.getHeight()).setDuration(duration).start();
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
 
                 loadLines();
-                toolbar.animate().translationY(0).setDuration(100).start();
+                toolbar.animate().translationY(0).setDuration(toolbar.getHeight()).start();
                 main.animate().alpha(1f).setDuration(100).setListener(null).start();
 
             }

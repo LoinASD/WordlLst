@@ -1,5 +1,6 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
+import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,8 +17,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -59,7 +59,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
     public BottomSheetManager bsManager;
 
     View testSheet;
-    float testSheetHiddenTranslationY;
+    float testSheetTranslationYBy;
 
     private int MODE;
 
@@ -93,7 +93,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams)(header.findViewById(R.id.percents)).getLayoutParams());
                 params.setBehavior(behavior);*/
 
-                LinearLayout testBar = v.findViewById(R.id.test_bar);
                 //-----------testBar------------------------
 
                 View.OnClickListener barListenner = new View.OnClickListener() {
@@ -102,39 +101,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                         System.out.println(view.getId());
                         switch (view.getId()) {
-                            case R.id.cardTest: {
+                            case R.id.card_test: {
                                 Intent testWl = new Intent(getActivity(), CardTestActivity.class);
                                 testWl.putExtra("Name", LIST_NAME);
                                 startActivity(testWl);
                                 break;
                             }
-                            case R.id.addLineButton: {
-                                if (bsManager.bufferedNode != null){
-
-                                    final Node newNode = new Node();
-                                    newNode.setWlName(LIST_NAME);
-                                    newNode.setTransText(bsManager.bufferedNode.getTransText());
-                                    newNode.setPrimText(bsManager.bufferedNode.getPrimText());
-                                    newNode.setWeight(RIGHT_ANSWERS_TO_COMPLETE);
-
-                                    Thread updateNode = new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            MainActivity.database.nodeDao().insertNode(newNode);
-                                        }
-                                    });
-                                    updateNode.start();
-                                    Toast.makeText(getActivity(), "Line successfully pasted", Toast.LENGTH_SHORT).show();
-                                    adapterLoadData();
-                                    try {
-                                        updateNode.join();
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                                break;
-                            }
-                            case R.id.dndTest: {
+                            case R.id.list_test: {
                                 Intent testWl = new Intent(getActivity(), ListTestActivity.class);
                                 testWl.putExtra("Name", LIST_NAME);
                                 startActivity(testWl);
@@ -143,22 +116,38 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                         }
                     }
                 };
-                testBar.findViewById(R.id.cardTest).setOnClickListener(barListenner);
-                testBar.findViewById(R.id.dndTest).setOnClickListener(barListenner);
-                testBar.findViewById(R.id.addLineButton).setOnClickListener(barListenner);
-
-                testBar.setTranslationY(100);
 
                 testSheet = v.findViewById(R.id.tests_sheet);
-                testSheetHiddenTranslationY = testSheet.getTranslationY();
+
+                testSheet.findViewById(R.id.card_test).setOnClickListener(barListenner);
+                testSheet.findViewById(R.id.list_test).setOnClickListener(barListenner);
 
                 v.findViewById(R.id.tests_button).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         if (testSheet.getTranslationY() <= 0) {
-                            testSheet.animate().translationYBy(testSheet.getMeasuredHeight() - v.findViewById(R.id.tests_button).getHeight()).setDuration(225).setInterpolator(new LinearOutSlowInInterpolator()).start();
-                        }else
-                            testSheet.animate().translationYBy( - testSheet.getMeasuredHeight() + v.findViewById(R.id.tests_button).getHeight()).setDuration(195).setInterpolator(new FastOutLinearInInterpolator()).start();
+
+                            animateTestsButton(true);
+
+                            main.setLayoutFrozen(true);
+                            View blurView = v.findViewById(R.id.blur_view);
+                            blurView.setVisibility(View.VISIBLE);
+                            blurView.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    animateTestsButton(false);
+                                    main.setLayoutFrozen(false);
+                                    View blurView = v.findViewById(R.id.blur_view);
+                                    blurView.setVisibility(View.GONE);
+                                }
+                            });
+
+                        }else {
+                            animateTestsButton(false);
+                            main.setLayoutFrozen(false);
+                            View blurView = v.findViewById(R.id.blur_view);
+                            blurView.setVisibility(View.GONE);
+                        }
                     }
                 });
 
@@ -168,8 +157,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                         bsManager.expandBottomSheet(adapter.list);
                     }
                 });
-
-                ((MainActivity) getActivity()).testBar = testBar;
 
                 bsManager = new BottomSheetManager(getActivity(), this, v.findViewById(R.id.bottom_sheet));
 
@@ -186,7 +173,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
                 try {
                     listener = (onListSelectedListener) getActivity();
-                    stateListener = (onStateChangedListener) getActivity();
+
                 } catch (ClassCastException e) {
                     e.printStackTrace();
                 }
@@ -264,6 +251,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
 
     }
 
+    private void animateTestsButton(final boolean isExpanding){
+        testSheet.animate().translationYBy((isExpanding ? 1 : -1) * (testSheet.getHeight() - testSheet.findViewById(R.id.tests_button).getHeight()))
+                .setDuration(isExpanding ? 225 : 195)
+                .setInterpolator(isExpanding ? new LinearOutSlowInInterpolator() : new FastOutLinearInInterpolator())
+                .start();
+    }
+
     public void changeHeader() {
         header.listName.setText(LIST_NAME);
         header.listName.refreshDrawableState();
@@ -290,13 +284,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             statsWords = header.findViewById(R.id.stats_words);
             statsApprLearnedWords = header.findViewById(R.id.stats_appr_learned_words);
             bar = header.findViewById(R.id.progressBar2);
-
-            header.findViewById(R.id.edit_listname).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ((MainActivity) getActivity()).deleteList(LIST_NAME);
-                }
-            });
         }
     }
 

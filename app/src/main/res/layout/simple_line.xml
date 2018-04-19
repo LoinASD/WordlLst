@@ -4,20 +4,15 @@
     android:id="@+id/lineLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/line_margin"
-    android:layout_marginBottom="@dimen/line_margin"
     android:layout_marginEnd="@dimen/line_margin"
-    android:layout_marginLeft="@dimen/line_margin"
-    android:layout_marginRight="@dimen/line_margin"
     android:layout_marginStart="@dimen/line_margin"
-    android:layout_marginTop="@dimen/line_margin"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:padding="@dimen/line_margin">
 
     <TextView
         android:id="@+id/primeTV"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_marginRight="8dp"
         android:layout_weight="5"
         android:gravity="center_vertical|start"
@@ -30,7 +25,6 @@
         android:id="@+id/translateTV"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_weight="5"
         android:gravity="center_vertical|start"
         android:text="2"
