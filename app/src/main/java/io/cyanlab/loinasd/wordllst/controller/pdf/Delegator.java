@@ -2,15 +2,17 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
 
 import android.os.Bundle;
 import android.os.Message;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.activities.ShowFragment;
-
+import io.cyanlab.loinasd.wordllst.controller.database.DataProvider;
 
 public class Delegator {
 
@@ -33,6 +35,11 @@ public class Delegator {
 
     final private int COINS_TO_SET_X = 10;
 
+    public final static String MESSAGE_DB_ERROR = "DB is null";
+    public final static String MESSAGE_EXISTS = "List already exists";
+    public final static String MESSAGE_NO_DICT = "No dictionary found";
+    public final static String MESSAGE_IO_EXCEPTION = "No dictionary found";
+
     private double engX;
 
     private boolean isRusXSet;
@@ -50,14 +57,15 @@ public class Delegator {
         return log;
     }
 
+
     /**
+     *
      * Main extraction method. Extracts text from @io
      *
      * @param io
+     * @return Wordlist if successfully extracted else String with message;
      */
-
-
-    public void extract(final PipedInputStream io) {
+    public Object extract(final PipedInputStream io) {
 
         long startTime = System.currentTimeMillis();
         this.io = io;
@@ -72,19 +80,25 @@ public class Delegator {
 
 
             if (gotDictionary && !isExists) {
-                nodeCollect();
+
+                WordList list = nodeCollect();
+
+                return list != null ? list : MESSAGE_DB_ERROR;
+
             } else if (isExists) {
-                MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_EXISTS);
+
+                return MESSAGE_EXISTS;
             } else {
-                MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
+
+                return MESSAGE_NO_DICT;
             }
 
         } catch (IOException e) {
             e.printStackTrace();
 
         }
-        log.warning("Delegator works in ms:" + (System.currentTimeMillis() - startTime));
-        //System.out.printf("Delegator works %d ms", System.currentTimeMillis() - startTime);
+
+        return MESSAGE_IO_EXCEPTION;
     }
 
     /**
@@ -115,13 +129,25 @@ public class Delegator {
     }
 
     private void convertName(){
-        if (newWlName != null && newWlName.length() > 0){
-            Node nameNode = new Node();
-            nameNode.setPrimText(newWlName);
-            nameNode.convertText(converter);
-            newWlName = nameNode.getPrimText();
 
-            for (String s : MainActivity.database.listDao().loadNames()) {
+        if (newWlName != null && newWlName.length() > 0){
+
+            Node nameNode = new Node();
+            nameNode.primText = (newWlName);
+
+            convertText(converter, nameNode);
+
+            newWlName = nameNode.primText;
+
+            if (!DataProvider.isBaseLoaded)
+                return;
+
+            List<String> names = DataProvider.loadListNames();
+
+            if (names == null)
+                return;
+
+            for (String s : names) {
                 if (newWlName.equals(s)) {
                     isExists = true;
                 }
@@ -233,7 +259,9 @@ public class Delegator {
      * Method, called when the whole text has been read.
      * Converts text within Nodes with CharConverter using personal thread for each Node
      */
-    private void nodeCollect() {
+
+    @Nullable
+    private WordList nodeCollect() {
 
         /*
           This method take all prims, convert text and sort
@@ -242,18 +270,27 @@ public class Delegator {
         nodes.add(waitingNode);
 
         WordList list = new WordList();
-        list.setWlName(newWlName);
-        list.maxWeight = list.currentWeight = nodes.size() * ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
+        list.name = newWlName;
 
         ThreadGroup group = new ThreadGroup("Converting");
 
         for (final Node node : nodes) {
 
-            Thread thread = new Thread(group, new Runnable() {
-                @Override
-                public void run() {
-                    node.convertText(converter);
+            Thread thread = new Thread(group, () -> {
+
+                if (node == null){
+
+                    nodes.remove(node);
+
+                    return;
                 }
+
+
+                CharConverter converter = new CharConverter();
+
+                converter.ranges = this.converter.ranges;
+
+                convertText(converter,node);
             });
 
             thread.start();
@@ -262,22 +299,80 @@ public class Delegator {
         while (group.activeCount() > 0) {
         }
 
-        MainActivity.database.nodeDao().insertAll(nodes);
-        MainActivity.database.listDao().insertList(list);
+        if (!DataProvider.isBaseLoaded)
+            return null;
 
+        DataProvider.insertList(list);
+        DataProvider.insertAllNodes(nodes);
 
-        Message message = new Message();
+        return DataProvider.getList(newWlName);
+    }
 
-        message.what = MainActivity.HANDLE_MESSAGE_EXTRACTED;
+    void convertText(CharConverter converter, Node node) {
 
-        Bundle data = new Bundle();
+        if (node == null)
+            return;
 
-        data.putString(MainActivity.WL_NAME, newWlName);
+        for (int j = 0; j < 2; j++) {
 
-        message.setData(data);
+            String text = (j == 0 ? node.transText : node.primText);
 
-        MainActivity.h.sendMessage(message);
+            if (text != null && text.contains("<")) {
 
+                StringBuilder message = new StringBuilder();
+
+                char cc;
+
+                int last = 0;
+
+                int i = text.indexOf('<');
+
+                while (i != -1 && i < text.length() && i >= last) {
+
+                    message.append(text.substring(last, i));
+
+                    cc = text.charAt(++i);
+
+                    StringBuilder numChar;
+
+                    while (cc != '>') {
+
+                        numChar = new StringBuilder();
+
+                        for (int k = 0; k < 4; k++) {// 4 - char`s length in HEX
+
+                            numChar.append(cc);
+                            cc = text.charAt(++i);
+                        }
+
+                        int c;
+
+                        try{
+
+                            c = Integer.parseInt(numChar.toString(), 16);
+
+                            char ch = converter.convert(c);
+
+                            if (ch != '.' && LangChecker.langCheck(ch) != Lang.NUM)
+                                message.append(ch);
+
+                        }catch (Exception e) {
+
+                            e.printStackTrace();
+                            System.out.println(numChar);
+                            System.out.println(cc);
+                        }
+                    }
+                    last = i + 1;
+                    i = text.substring(last).indexOf('<') + last;
+                }
+                if (j == 0)
+                    node.transText = message.toString();
+                else
+                    node.primText = message.toString();
+            }
+
+        }
 
     }
 
@@ -331,11 +426,9 @@ public class Delegator {
                 if (waitingNode == null) {
 
                     waitingNode = new Node();
-                    waitingNode.setWlName(newWlName);
+                    waitingNode.wlName = newWlName;
 
-                    waitingNode.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
-
-                    waitingNode.setPrimText(textPlusX.getText());
+                    waitingNode.primText = textPlusX.getText();
                     waitingNodeLang = Lang.ENG;
 
                     continue;
@@ -449,9 +542,15 @@ public class Delegator {
 
             if (!isOldVersion) {
                 if (newWlName == null) {
+
                     newWlName = text.trim();
 
-                    for (String s : MainActivity.database.listDao().loadNames()) {
+                    List<String> names = DataProvider.loadListNames();
+
+                    if (names == null)
+                        return;
+                    
+                    for (String s : names) {
                         if (newWlName.equals(s)) {
                             isExists = true;
                         }
@@ -492,11 +591,9 @@ public class Delegator {
                     if (waitingNode == null) {
 
                         waitingNode = new Node();
-                        waitingNode.setWlName(newWlName);
+                        waitingNode.wlName = newWlName;
 
-                        waitingNode.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
-
-                        waitingNode.setPrimText(text);
+                        waitingNode.primText = text;
                         waitingNodeLang = Lang.ENG;
 
                     }
@@ -522,24 +619,22 @@ public class Delegator {
 
             if (nodeLang == (waitingNodeLang == Lang.ENG ? Lang.RUS : Lang.ENG)) {
 
-                waitingNode.setWlName(newWlName);
+                waitingNode.wlName = newWlName;
                 if (nodeLang == Lang.ENG) {
 
                     nodes.add(waitingNode);
 
                     waitingNode = new Node();
 
-                    waitingNode.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
+                    waitingNode.primText = text;
 
-                    waitingNode.setPrimText(text);
-
-                } else waitingNode.setTransText(text);
+                } else waitingNode.transText = text;
                 waitingNodeLang = nodeLang;
 
             } else {
                 if (waitingNodeLang == Lang.ENG)
-                    waitingNode.setPrimText(waitingNode.getPrimText().concat(text));
-                else waitingNode.setTransText(waitingNode.getTransText().concat(text));
+                    waitingNode.primText = waitingNode.primText.concat(text);
+                else waitingNode.transText = waitingNode.transText.concat(text);
             }
         }
     }
@@ -570,7 +665,6 @@ public class Delegator {
         Lang getTextLang() {
             return textLang;
         }
-
 
     }
 }

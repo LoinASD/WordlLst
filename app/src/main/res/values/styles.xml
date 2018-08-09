@@ -61,7 +61,5 @@
     <style name="AppTheme.EditText" parent="Widget.AppCompat.EditText">
         <item name="android:colorControlHighlight">@color/colorAccent</item>
         <item name="android:colorControlActivated">@color/colorAccent</item>
-        <item name="editTextColor">@color/colorAccent</item>
-        <item name="android:textColor">@color/colorAccent</item>
     </style>
 </resources>

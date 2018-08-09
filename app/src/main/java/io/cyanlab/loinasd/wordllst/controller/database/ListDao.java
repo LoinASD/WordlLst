@@ -9,7 +9,6 @@ import android.arch.persistence.room.Update;
 
 import java.util.List;
 
-import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 /**
@@ -22,27 +21,22 @@ public interface ListDao {
     List<WordList> getAllLists();
 
     @Transaction
-    @Query("SELECT wlName, id FROM WordList WHERE id = :id")
-    FilledList getWordlist(int id);
-
-    @Transaction
-    @Query("SELECT * FROM WordList WHERE wlName = :wlName")
+    @Query("SELECT * FROM WordList WHERE name = :wlName")
     WordList getWordlist(String wlName);
 
     @Update
-    void updateList(WordList list);
+    int updateList(WordList list);
 
     @Insert
-    long insertList(WordList list);
+    void insertList(WordList list);
 
     @Delete
     void deleteList(WordList list);
 
-    @Query("DELETE FROM wordlist WHERE wlName = :wlName")
+    @Query("DELETE FROM wordlist WHERE name = :wlName")
     void deleteList(String wlName);
 
-    @Query("SELECT wlName FROM wordlist")
+    @Query("SELECT name FROM wordlist")
     List<String> loadNames();
-
 
 }

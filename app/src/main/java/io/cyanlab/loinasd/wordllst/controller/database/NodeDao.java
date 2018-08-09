@@ -20,12 +20,11 @@ public interface NodeDao {
     @Query("SELECT * FROM node")
     List<Node> getAllNodes();
 
-    @Query("SELECT * FROM node WHERE nodeWLName = :wlName")
+    @Query("SELECT * FROM node WHERE wlName LIKE :wlName")
     List<Node> getNodes(String wlName);
 
-    @Query("SELECT * FROM node WHERE (nodeWLName = :wlName & id < :last)")
+    @Query("SELECT * FROM node WHERE (wlName LIKE :wlName & id < :last)")
     List<Node> getNodes(String wlName, int last);
-
 
     @Transaction
     @Insert
@@ -38,7 +37,7 @@ public interface NodeDao {
     void updateNode(Node node);
 
     @Transaction
-    @Query("DELETE FROM node WHERE nodeWLName = :wlName")
+    @Query("DELETE FROM node WHERE wlName LIKE :wlName")
     void deleteNodes(String wlName);
 
     @Delete

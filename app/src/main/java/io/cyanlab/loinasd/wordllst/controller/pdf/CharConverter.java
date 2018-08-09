@@ -3,9 +3,7 @@ package io.cyanlab.loinasd.wordllst.controller.pdf;
 import java.util.ArrayList;
 class CharConverter {
 
-    private ArrayList<Range> ranges = new ArrayList<>();
-
-    public CharConverter() {}
+    public ArrayList<Range> ranges = new ArrayList<>();
 
     public char convert(int c) {
         int res;

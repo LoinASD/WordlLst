@@ -1,6 +1,5 @@
 package io.cyanlab.loinasd.wordllst.activities;
 
-import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,11 +16,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -31,14 +28,14 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 import io.cyanlab.loinasd.wordllst.view.BottomSheetManager;
 
-import static io.cyanlab.loinasd.wordllst.activities.MainActivity.LIST_NAME;
+/*import static io.cyanlab.loinasd.wordllst.activities.MainActivity.LIST_NAME;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_LINES;
 import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_TEST;
-import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_WL;
+import static io.cyanlab.loinasd.wordllst.activities.MainActivity.SHOW_WL;*/
 
 public class ShowFragment extends android.support.v4.app.Fragment {
 
-    private int STATE;
+    /*private int STATE;
 
     public static final int RIGHT_ANSWERS_TO_COMPLETE = 3;
     public static final int HANDLE_MESSAGE_NAME_LOADED = 0;
@@ -89,9 +86,9 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                 header = new Header(v.findViewById(R.id.appbar));
                 //main.addHeaderView(header);
 
-                /*BottomBarBehavior behavior = new BottomBarBehavior((TextView)(header.findViewById(R.id.percents)), (LinearLayout)(header.findViewById(R.id.name_plus_button)));
+                *//*BottomBarBehavior behavior = new BottomBarBehavior((TextView)(header.findViewById(R.id.percents)), (LinearLayout)(header.findViewById(R.id.name_plus_button)));
                 CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams)(header.findViewById(R.id.percents)).getLayoutParams());
-                params.setBehavior(behavior);*/
+                params.setBehavior(behavior);*//*
 
                 //-----------testBar------------------------
 
@@ -166,7 +163,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             case SHOW_WL:
 
                 Toolbar toolbar = v.findViewById(R.id.toolbar);
-                ((MainActivity)getActivity()).toolbar = toolbar;
+                ((MainActivity)getActivity()).appBar = v.findViewById(R.id.appbar);
                 ((MainActivity)getActivity()).setSupportActionBar(toolbar);
 
                 setAdapter(R.layout.list_line);
@@ -193,10 +190,13 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             switch (MODE){
                 case SHOW_WL:
 
-                    View toolbar = getView().findViewById(R.id.toolbar);
+                    View appbar = getView().findViewById(R.id.appbar);
 
-                    toolbar.setTranslationY(-100);
-                    toolbar.animate().translationY(0).setDuration(150).start();
+                    if (appbar == null)
+                        break;
+
+                    appbar.setTranslationY(-100);
+                    appbar.animate().translationY(0).setDuration(150).start();
 
                     break;
 
@@ -287,7 +287,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
         }
     }
 
-    /*public void loadProgress() {
+    *//*public void loadProgress() {
         for (int i = 0; i < main.getChildCount(); i++) {
             int progress = ;
             int max = dbHelper.getData(((TextView) main.getChildAt(i).findViewById(R.id.name_line)).getText().toString(), 0).getCount() * RIGHT_ANSWERS_TO_COMPLETE;
@@ -295,7 +295,7 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             ((ProgressBar) main.getChildAt(i).findViewById(R.id.progressBar2)).setMax(max);
             ((TextView) main.getChildAt(i).findViewById(R.id.percents)).setText(((max - progress) * 100 / max) + "%");
         }
-    }*/
+    }*//*
 
 
     //-----Adapter-----//
@@ -511,8 +511,8 @@ public class ShowFragment extends android.support.v4.app.Fragment {
                     ((ListHolder) holder).listLayout.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            String wlName = (lists.get(id)).getWlName();
-                            listener.onListSelected(wlName, view);
+                            String name = (lists.get(id)).getWlName();
+                            listener.onListSelected(name, view);
                         }
                     });
 
@@ -550,6 +550,6 @@ public class ShowFragment extends android.support.v4.app.Fragment {
             return ((MODE == SHOW_WL && lists != null || MODE == SHOW_LINES && nodes != null) ? (MODE == SHOW_WL ? lists.size() : nodes.size()) : 0);
         }
 
-    }
+    }*/
 
 }

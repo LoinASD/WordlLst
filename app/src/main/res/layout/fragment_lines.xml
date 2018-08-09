@@ -8,7 +8,7 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/scrollView"
+        android:id="@+id/recycler_lines"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/greyColor"
@@ -113,7 +113,8 @@
             layout="@layout/stats_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed" />
+            android:minHeight="56dp"
+            app:layout_scrollFlags="scroll" />
     </android.support.design.widget.AppBarLayout>
 
     <include

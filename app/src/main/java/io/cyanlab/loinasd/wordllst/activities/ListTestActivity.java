@@ -89,7 +89,7 @@ public class ListTestActivity extends AppCompatActivity implements AdapterView.O
         Thread loadData = new Thread(new Runnable() {
             @Override
             public void run() {
-                data = MainActivity.database.nodeDao().getNodes(wlName);
+                //data = MainActivity.database.nodeDao().getNodes(name);
             }
         });
         try {
@@ -115,14 +115,14 @@ public class ListTestActivity extends AppCompatActivity implements AdapterView.O
             int lineNum = r.nextInt(data.size() - 1);
             if (!isFake) {
                 if (!stack.contains(lineNum)) {
-                    real = data.get(lineNum).getPrimText().split(",");
+                    real = data.get(lineNum).primText.split(",");
                     realChecked = 0;
                     curLineNum = lineNum;
                     if (stack.size() == data.size()) {
                         stack.remove(0);
                     }
                     stack.add(curLineNum);
-                    translation = data.get(lineNum).getTransText();
+                    translation = data.get(lineNum).transText;
                     ((TextView) findViewById(R.id.transTV)).setText(translation);
                     fake = new String[OPTIONS_NUMBER - real.length];
                     for (int i = 0; i < fake.length; i++) {
@@ -134,7 +134,7 @@ public class ListTestActivity extends AppCompatActivity implements AdapterView.O
                     return;
                 }
             } else if (lineNum != prevNum) {
-                String[] buf = data.get(lineNum).getPrimText().split(",");
+                String[] buf = data.get(lineNum).primText.split(",");
                 if (buf.length > 1) {
                     fake[num] = buf[r.nextInt(buf.length - 1)];
                 } else {

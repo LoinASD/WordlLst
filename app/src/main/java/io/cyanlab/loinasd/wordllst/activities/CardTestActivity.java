@@ -30,9 +30,9 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
  * Created by Анатолий on 25.12.2017.
  */
 
-public class CardTestActivity extends AppCompatActivity implements View.OnClickListener {
+public class CardTestActivity extends AppCompatActivity{
 
-    String wlName;
+    /*String name;
     String primary;
     List<Node> data;
     WordList list;
@@ -51,13 +51,13 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
 
         card = findViewById(R.id.card);
 
-        wlName = getIntent().getStringExtra("Name");
+        name = getIntent().getStringExtra("Name");
 
         Thread getData = new Thread(new Runnable() {
             @Override
             public void run() {
-                data = db.nodeDao().getNodes(wlName);
-                list = db.listDao().getWordlist(wlName);
+                data = db.nodeDao().getNodes(name);
+                list = db.listDao().getWordlist(name);
             }
         });
         getData.start();
@@ -71,7 +71,7 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
             Toast.makeText(this, "You must have at least 6 lines to use Card Test", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            setTitle(wlName);
+            setTitle(name);
             card.setOnClickListener(this);
             final Activity activity = this;
             detector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -255,6 +255,6 @@ public class CardTestActivity extends AppCompatActivity implements View.OnClickL
             } else loadLine();
         } else loadLine();
     }
-
+*/
 
 }

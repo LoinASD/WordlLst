@@ -2,59 +2,50 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "84bf7e7265be2d4fe5f57c94c5fd00d1",
+    "identityHash": "7174e347a2750d2e97e8e5f7f325f884",
     "entities": [
       {
         "tableName": "WordList",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `maxWeight` INTEGER NOT NULL, `currentWeight` INTEGER NOT NULL, `wlName` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
         "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "maxWeight",
-            "columnName": "maxWeight",
-            "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "currentWeight",
-            "columnName": "currentWeight",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "wlName",
-            "columnName": "wlName",
-            "affinity": "TEXT",
-            "notNull": false
           }
         ],
         "primaryKey": {
           "columnNames": [
             "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_WordList_name",
+            "unique": true,
+            "columnNames": [
+              "name"
+            ],
+            "createSql": "CREATE UNIQUE INDEX `index_WordList_name` ON `${TABLE_NAME}` (`name`)"
+          }
+        ],
         "foreignKeys": []
       },
       {
         "tableName": "Node",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weight` INTEGER NOT NULL, `nodeWLName` TEXT, `id` INTEGER, `primText` TEXT, `transText` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`wlName` TEXT, `id` INTEGER PRIMARY KEY AUTOINCREMENT, `primText` TEXT, `transText` TEXT, FOREIGN KEY(`wlName`) REFERENCES `WordList`(`name`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
-            "fieldPath": "weight",
-            "columnName": "weight",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
             "fieldPath": "wlName",
-            "columnName": "nodeWLName",
+            "columnName": "wlName",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -81,15 +72,36 @@
           "columnNames": [
             "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
-        "indices": [],
-        "foreignKeys": []
+        "indices": [
+          {
+            "name": "index_Node_wlName",
+            "unique": false,
+            "columnNames": [
+              "wlName"
+            ],
+            "createSql": "CREATE  INDEX `index_Node_wlName` ON `${TABLE_NAME}` (`wlName`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "WordList",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "wlName"
+            ],
+            "referencedColumns": [
+              "name"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"84bf7e7265be2d4fe5f57c94c5fd00d1\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"7174e347a2750d2e97e8e5f7f325f884\")"
     ]
   }
 }

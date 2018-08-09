@@ -39,7 +39,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
 
                 isAdding = false;
                 node = (Node) getIntent().getSerializableExtra("Node");
-                wlName = node.getWlName();
+                name = node.getWlName();
                 ((EditText) findViewById(R.id.primET)).setText(node.getPrimText());
                 ((EditText) findViewById(R.id.transET)).setText(node.getTransText());
                 findViewById(R.id.primET).refreshDrawableState();
@@ -60,7 +60,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                             public void run() {
                                 MainActivity.database.nodeDao().deleteNode(node);
                                 MainActivity.database.nodeDao().deleteNode(node);
-                                WordList list = MainActivity.database.listDao().getWordlist(wlName);
+                                WordList list = MainActivity.database.listDao().getWordlist(name);
                                 list.maxWeight -= ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
                                 list.currentWeight -= node.getWeight();
                                 MainActivity.database.listDao().updateList(list);
@@ -106,8 +106,8 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
             }
             case ("Change list"): {
                 setContentView(R.layout.activity_change_list);
-                wlName = getIntent().getStringExtra("Name");
-                ((EditText) findViewById(R.id.reqest_del)).setText(wlName);
+                name = getIntent().getStringExtra("Name");
+                ((EditText) findViewById(R.id.reqest_del)).setText(name);
                 findViewById(R.id.reqest_del).refreshDrawableState();
                 findViewById(R.id.save_list).setOnClickListener(this);
                 vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
@@ -125,14 +125,14 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                         Thread deleteWL = new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                MainActivity.database.nodeDao().deleteNodes(wlName);
-                                MainActivity.database.listDao().deleteList(wlName);
+                                MainActivity.database.nodeDao().deleteNodes(name);
+                                MainActivity.database.listDao().deleteList(name);
                             }
                         });
                         deleteWL.start();
                         try {
                             deleteWL.join();
-                            Toast.makeText(activity, "Wordlist " + wlName + " has been successfully deleted", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "Wordlist " + name + " has been successfully deleted", Toast.LENGTH_SHORT).show();
                         } catch (InterruptedException exception) {
                             exception.printStackTrace();
                         }
@@ -147,7 +147,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     @Override
                     public boolean onSingleTapConfirmed(MotionEvent e) {
 
-                        Toast.makeText(activity, "Double-tap this button to delete " + wlName, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "Double-tap this button to delete " + name, Toast.LENGTH_SHORT).show();
 
                         activity.findViewById(R.id.delBut).animate().rotation(10).setInterpolator(AnimationUtils.loadInterpolator(activity,R.anim.cycle_7)).setDuration(200).start();
 
@@ -194,7 +194,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 setContentView(io.cyanlab.loinasd.wordllst.R.layout.activity_changing_line);
 
                 isAdding = true;
-                wlName = getIntent().getStringExtra("Name");
+                name = getIntent().getStringExtra("Name");
 
                 findViewById(R.id.primET).refreshDrawableState();
                 findViewById(R.id.transET).refreshDrawableState();
@@ -220,7 +220,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                 try {
                     if (isAdding) {
                         node = new Node();
-                        node.setWlName(wlName);
+                        node.setWlName(name);
                         node.setWeight(ShowFragment.RIGHT_ANSWERS_TO_COMPLETE);
                     }
                     node.setPrimText(((EditText) findViewById(R.id.primET)).getText().toString());
@@ -230,7 +230,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                         public void run() {
 
                             if (isAdding) {
-                                WordList list = MainActivity.database.listDao().getWordlist(wlName);
+                                WordList list = MainActivity.database.listDao().getWordlist(name);
                                 list.currentWeight += ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
                                 list.maxWeight += ShowFragment.RIGHT_ANSWERS_TO_COMPLETE;
                                 MainActivity.database.listDao().updateList(list);
@@ -244,7 +244,7 @@ public class ChangingWLActivity extends AppCompatActivity implements View.OnClic
                     save.start();
 
                     setResult(RESULT_OK,
-                            new Intent().putExtra("Name", wlName));
+                            new Intent().putExtra("Name", name));
                 }catch (InterruptedException e) {
                     e.printStackTrace();
                 }

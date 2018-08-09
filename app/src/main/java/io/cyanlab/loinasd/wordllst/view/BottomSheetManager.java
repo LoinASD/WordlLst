@@ -2,29 +2,41 @@ package io.cyanlab.loinasd.wordllst.view;
 
 import android.animation.Animator;
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
+import android.support.constraint.ConstraintSet;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.invoke.ConstantCallSite;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.cyanlab.loinasd.wordllst.R;
 import io.cyanlab.loinasd.wordllst.activities.MainActivity;
 import io.cyanlab.loinasd.wordllst.activities.ShowFragment;
+import io.cyanlab.loinasd.wordllst.controller.ListEditor;
+import io.cyanlab.loinasd.wordllst.controller.database.DataProvider;
 import io.cyanlab.loinasd.wordllst.controller.pdf.Node;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
-public class BottomSheetManager {
+public class BottomSheetManager implements ListEditor {
 
     private View bottomSheet;
 
-    private MainActivity context;
-    private ShowFragment fragment;
+    private Listener listener;
 
     private RecyclerView main;
     private View blurView;
@@ -37,116 +49,77 @@ public class BottomSheetManager {
     private View.OnClickListener editLineListener;
     private View.OnClickListener editListListener;
 
-    public BottomSheetManager(Context context, ShowFragment fragment, View bottomSheetView){
+    public BottomSheetManager(Listener listener, View bottomSheetView){
 
-        this.context = (MainActivity)context;
-        this.fragment = fragment;
+        this.listener = listener;
 
         bottomSheet = bottomSheetView;
 
         blurView = ((View) bottomSheet.getParent()).findViewById(R.id.blur_view);
 
-        main = ((View) bottomSheet.getParent()).findViewById(R.id.scrollView);
-
-        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
-        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-
-        behavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-
-
-            boolean hasBeenDragged;
-
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                if (newState == BottomSheetBehavior.STATE_COLLAPSED && bottomSheet.findViewById(R.id.bre_edit_toolbar).getVisibility() == View.VISIBLE){
-                    closeBottomSheet();
-                }
-                if (hasBeenDragged && newState == BottomSheetBehavior.STATE_EXPANDED){
-                    hasBeenDragged = false;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                if (BottomSheetBehavior.from(bottomSheet).getState() == BottomSheetBehavior.STATE_DRAGGING) {
-                    hasBeenDragged = true;
-                }
-                if (hasBeenDragged && BottomSheetBehavior.from(bottomSheet).getState() == BottomSheetBehavior.STATE_SETTLING){
-                    hasBeenDragged = false;
-                    closeBottomSheet();
-                }
-            }
-        });
+        main = ((View) bottomSheet.getParent()).findViewById(R.id.recycler_lines);
 
         setListeners();
+
+        bottomSheet.setTranslationY(bottomSheet.getHeight());
+    }
+
+    @Override
+    public void editLine(Node node) {
+
+        expandBottomSheet(node);
+    }
+
+    @Override
+    public void editList(WordList list) {
+
+        expandBottomSheet(list);
     }
 
     private void setListeners(){
-        View.OnClickListener bottomSheetListener = new View.OnClickListener() {
+        View.OnClickListener bottomSheetListener = view -> {
 
-            @Override
-            public void onClick(View view) {
-                try {
-                    switch (view.getId()) {
-                        case R.id.copy_line: {
-                            bufferedNode = expandedNode;
-                            Toast.makeText(context, "Line successfully copied", Toast.LENGTH_SHORT).show();
-                            closeBottomSheet();
-                            break;
-                        }
-                        case R.id.cut_line: {
+            switch (view.getId()) {
 
-                            bufferedNode = expandedNode;
+                case R.id.copy_line: {
 
-                            Thread deleteNode = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MainActivity.database.nodeDao().deleteNode(expandedNode);
-                                }
-                            });
+                    bufferedNode = expandedNode;
 
-                            deleteNode.start();
-                            deleteNode.join();
+                    listener.copyLine(bufferedNode);
 
-                            closeBottomSheet();
-                            Toast.makeText(context, "Line successfully cut", Toast.LENGTH_SHORT).show();
-
-                            break;
-                        }
-                        case R.id.paste_line: {
-
-                            if (bufferedNode != null) {
-                                ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(bufferedNode.getPrimText());
-                                ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(bufferedNode.getTransText());
-
-                                expandedNode.setPrimText(bufferedNode.getPrimText());
-                                expandedNode.setTransText(bufferedNode.getTransText());
-
-                                Thread updateNode = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        MainActivity.database.nodeDao().updateNode(expandedNode);
-                                    }
-                                });
-                                updateNode.start();
-                                Toast.makeText(context, "Line successfully pasted", Toast.LENGTH_SHORT).show();
-                                updateNode.join();
-                                break;
-                            }
-                        }
-                        case R.id.edit_line: {
-                            changeState(true);
-                        }
-                    }
-
-                    fragment.adapterLoadData();
-
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    closeBottomSheet();
+                    break;
                 }
+                case R.id.cut_line: {
 
+                    bufferedNode = expandedNode;
+
+                    closeBottomSheet();
+
+                    listener.cutLine(bufferedNode);
+
+                    break;
+                }
+                case R.id.paste_line: {
+
+                    if (bufferedNode == null)
+                        break;
+
+                    ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(bufferedNode.primText);
+                    ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(bufferedNode.transText);
+
+                    expandedNode.primText = bufferedNode.primText;
+                    expandedNode.transText = bufferedNode.transText;
+
+                    listener.pasteLine(expandedNode);
+
+                    break;
+                }
+                case R.id.edit_line: {
+                    changeState(true);
+                }
             }
+
         };
 
         bottomSheet.findViewById(R.id.copy_line).setOnClickListener(bottomSheetListener);
@@ -154,168 +127,100 @@ public class BottomSheetManager {
         bottomSheet.findViewById(R.id.paste_line).setOnClickListener(bottomSheetListener);
         bottomSheet.findViewById(R.id.edit_line).setOnClickListener(bottomSheetListener);
 
-        editLineListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    switch (view.getId()){
-                        case R.id.bre_cancel_edition:{
-                            changeState(false);
-                            break;
-                        }
-                        case R.id.bre_save_line:{
-                            expandedNode.setPrimText(((EditText) bottomSheet.findViewById(R.id.bre_prim)).getText().toString());
-                            expandedNode.setTransText(((EditText) bottomSheet.findViewById(R.id.bre_trans)).getText().toString());
+        editLineListener = view -> {
+            switch (view.getId()){
 
-                            Thread updateNode = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MainActivity.database.nodeDao().updateNode(expandedNode);
-                                }
-                            });
-                            updateNode.start();
+                case R.id.bre_cancel_edition:{
 
-                            updateNode.join();
+                    changeState(false);
+                    break;
+                }
+                case R.id.bre_save_line:{
 
-                            closeBottomSheet();
-                            Toast.makeText(context, "Line successfully saved", Toast.LENGTH_SHORT).show();
+                    expandedNode.primText = ((EditText) bottomSheet.findViewById(R.id.bre_prim)).getText().toString();
+                    expandedNode.transText = ((EditText) bottomSheet.findViewById(R.id.bre_trans)).getText().toString();
 
-                            fragment.adapterLoadData();
-                            break;
-                        }case R.id.bre_delete_line:{
+                    closeBottomSheet();
 
-                            Thread deleteNode = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MainActivity.database.nodeDao().deleteNode(expandedNode);
-                                }
-                            });
+                    listener.changeLine(expandedNode);
 
-                            deleteNode.start();
-                            deleteNode.join();
+                    break;
 
+                }case R.id.bre_delete_line:{
 
+                    listener.removeLine(expandedNode);
 
-                            closeBottomSheet();
+                    closeBottomSheet();
 
-                            Toast.makeText(context, "Line successfully deleted", Toast.LENGTH_SHORT).show();
-                            fragment.adapterLoadData();
-                            break;
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    break;
                 }
             }
         };
 
-        editListListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    switch (view.getId()){
-                        case R.id.bre_cancel_edition:{
-                            closeBottomSheet();
-                            break;
-                        }
-                        case R.id.bre_save_line:{
+        editListListener = view -> {
+            switch (view.getId()){
+                case R.id.bre_cancel_edition:{
+                    closeBottomSheet();
+                    break;
+                }
+                case R.id.bre_save_line:{
 
-                            final String newName = ((EditText) bottomSheet.findViewById(R.id.bre_prim)).getText().toString();
+                    final String newName = ((EditText) bottomSheet.findViewById(R.id.bre_prim)).getText().toString();
 
-                            Thread updateList = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        MainActivity.database.beginTransaction();
+                    closeBottomSheet();
 
-                                        List<Node> nodes = MainActivity.database.nodeDao().getNodes(expandedList.getWlName());
+                    listener.changeList(expandedList, newName);
 
-                                        for (Node node: nodes){
-                                            node.setWlName(newName);
-                                            MainActivity.database.nodeDao().updateNode(node);
-                                        }
+                    break;
 
-                                        expandedList.setWlName(newName);
-                                        MainActivity.database.listDao().updateList(expandedList);
+                }case R.id.bre_delete_line:{
 
-                                        MainActivity.database.setTransactionSuccessful();
-                                        MainActivity.LIST_NAME = newName;
+                    listener.deleteList(expandedList);
 
-                                    } finally {
-                                        MainActivity.database.endTransaction();
-                                    }
-                                }
-                            });
-                            updateList.start();
+                    closeBottomSheet();
 
-                            updateList.join();
-
-                            closeBottomSheet();
-                            Toast.makeText(context, "List name successfully changed", Toast.LENGTH_SHORT).show();
-
-                            ((ShowFragment)context.lists).notifyAdapter();
-                            fragment.adapterLoadData();
-                            fragment.changeHeader();
-
-                            break;
-
-                        }case R.id.bre_delete_line:{
-
-                            final String wlName = expandedList.getWlName();
-
-                            Thread deleteWL = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MainActivity.database.nodeDao().deleteNodes(wlName);
-                                    MainActivity.database.listDao().deleteList(expandedList);
-                                }
-                            });
-                            deleteWL.start();
-                            try {
-                                deleteWL.join();
-                                Toast.makeText(context, "Wordlist " + wlName + " has been successfully deleted", Toast.LENGTH_SHORT).show();
-                            } catch (InterruptedException exception) {
-                                exception.printStackTrace();
-                            }
-
-                            MainActivity.LIST_NAME = null;
-                            ((ShowFragment) context.lists).notifyAdapter();
-                            fragment.notifyAdapter();
-                            context.loadLists();
-
-                            closeBottomSheet();
-
-                            break;
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    break;
                 }
             }
         };
     }
 
-    public void closeBottomSheet(){
+    private void closeBottomSheet(){
 
-        if (bottomSheet.findViewById(R.id.bre_edit_toolbar).getVisibility() == View.VISIBLE){
+        InputMethodManager manager = ((InputMethodManager)bottomSheet.getContext().getSystemService(Context.INPUT_METHOD_SERVICE));
+
+        manager.hideSoftInputFromWindow(bottomSheet.getWindowToken(), 0);
+
+        blurView.setAlpha(1f);
+        blurView.animate().alpha(0f).setDuration(195).start();
+
+        bottomSheet.animate().translationY(bottomSheet.getHeight()).setDuration(195).setInterpolator(new AccelerateInterpolator()).withEndAction(() -> {
+
+            blurView.setVisibility(View.INVISIBLE);
+
+            bottomSheet.setVisibility(View.GONE);
+
             changeState(false);
-        }
 
-        fragment.getView().findViewById(R.id.tests_button).setClickable(true);
-        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
-        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        blurView.setVisibility(View.INVISIBLE);
-        main.setLayoutFrozen(false);
-        main.setClickable(true);
+            main.setLayoutFrozen(false);
+            main.setClickable(true);
+
+        }).start();
+
+
     }
 
     public void expandBottomSheet(Node node){
 
         expandedNode = node;
-        ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(node.getPrimText());
-        ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(node.getTransText());
+
+        bottomSheet.findViewById(R.id.bre_trans).setVisibility(View.VISIBLE);
+
+        ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(node.primText);
+        ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(node.transText);
 
         View toolbar = bottomSheet.findViewById(R.id.bre_edit_toolbar);
+
         toolbar.findViewById(R.id.bre_save_line).setOnClickListener(editLineListener);
         toolbar.findViewById(R.id.bre_delete_line).setOnClickListener(editLineListener);
         toolbar.findViewById(R.id.bre_cancel_edition).setOnClickListener(editLineListener);
@@ -325,41 +230,37 @@ public class BottomSheetManager {
     }
 
     public void expandBottomSheet(WordList list){
-        ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(list.getWlName());
-        expandedList = list;
-        bottomSheet.findViewById(R.id.bre_trans).setVisibility(View.GONE);
+        
+		((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(list.name);
+        
+		expandedList = list;
+        
+		bottomSheet.findViewById(R.id.bre_trans).setVisibility(View.GONE);
 
         View toolbar = bottomSheet.findViewById(R.id.bre_edit_toolbar);
+		
         toolbar.findViewById(R.id.bre_save_line).setOnClickListener(editListListener);
         toolbar.findViewById(R.id.bre_delete_line).setOnClickListener(editListListener);
         toolbar.findViewById(R.id.bre_cancel_edition).setOnClickListener(editListListener);
 
-        bottomSheet.getLayoutParams().height = blurView.getHeight();
-
-        changeState(true);
-
         openBottomSheet();
 
-
+        changeState(true);
 
     }
 
     private void openBottomSheet(){
-        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
 
         main.setLayoutFrozen(true);
         main.setClickable(false);
 
         blurView.setVisibility(View.VISIBLE);
+        blurView.setAlpha(0f);
+        blurView.animate().alpha(1f).setDuration(225).start();
 
-        fragment.getView().findViewById(R.id.tests_button).setClickable(false);
+        bottomSheet.setVisibility(View.VISIBLE);
 
-        blurView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                closeBottomSheet();
-            }
-        });
+        blurView.setOnClickListener(view -> closeBottomSheet());
 
         bottomSheet.findViewById(R.id.bre_prim).refreshDrawableState();
 
@@ -367,58 +268,74 @@ public class BottomSheetManager {
 
         bottomSheet.refreshDrawableState();
 
-        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        bottomSheet.setTranslationY(bottomSheet.getHeight());
+
+        bottomSheet.animate().translationY(0).setDuration(225).setInterpolator(new DecelerateInterpolator()).start();
     }
 
     private void changeState(final boolean isEditing){
 
         final View hidingToolbar, appearingToolbar;
 
+        int newHeight;
+        int oldHeight;
+
         if (isEditing){
+
             hidingToolbar = bottomSheet.findViewById(R.id.ble_toolbar);
             appearingToolbar = bottomSheet.findViewById(R.id.bre_edit_toolbar);
-            //bottomSheet.getLayoutParams().height = getView().getHeight();
+
+            newHeight = blurView.getHeight() - ((int) bottomSheet.getContext().getResources().getDimension(R.dimen.app_bar_height));
+
+            oldHeight = bottomSheet.getHeight();
+
 
         }else {
+
             if (expandedNode != null) {
-                ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(expandedNode.getPrimText());
-                ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(expandedNode.getTransText());
+
+                ((EditText) bottomSheet.findViewById(R.id.bre_prim)).setText(expandedNode.primText);
+                ((EditText) bottomSheet.findViewById(R.id.bre_trans)).setText(expandedNode.transText);
             }
+
             if(bottomSheet.findViewById(R.id.bre_trans).getVisibility() == View.GONE) {
+
                 bottomSheet.findViewById(R.id.bre_trans).setVisibility(View.VISIBLE);
             }
+
             hidingToolbar = bottomSheet.findViewById(R.id.bre_edit_toolbar);
             appearingToolbar = bottomSheet.findViewById(R.id.ble_toolbar);
-            //bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+            oldHeight = bottomSheet.getHeight();
+            newHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
+
         }
 
         bottomSheet.findViewById(R.id.bre_prim).setEnabled(isEditing);
         bottomSheet.findViewById(R.id.bre_trans).setEnabled(isEditing);
 
+        bottomSheet.animate().translationY(oldHeight).setDuration(225).withEndAction(() -> {
 
-        hidingToolbar.animate().alpha(0).setDuration(100).setListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animator) {
-            }
+            bottomSheet.getLayoutParams().height = newHeight;
 
-            @Override
-            public void onAnimationEnd(Animator animator) {
+            bottomSheet.setTranslationY(bottomSheet.getHeight());
 
-                bottomSheet.getLayoutParams().height = isEditing ? blurView.getHeight() : ViewGroup.LayoutParams.WRAP_CONTENT;
+            bottomSheet.animate().translationY(0).setDuration(225).setInterpolator(new DecelerateInterpolator()).start();
 
-                hidingToolbar.setVisibility(View.GONE);
-                appearingToolbar.setVisibility(View.VISIBLE);
-                appearingToolbar.setAlpha(0);
-                appearingToolbar.animate().alpha(1).setDuration(100).setListener(null).start();
+            hidingToolbar.setVisibility(View.GONE);
+            appearingToolbar.setVisibility(View.VISIBLE);
+            appearingToolbar.setAlpha(0);
+            appearingToolbar.animate().alpha(1).setDuration(100).setListener(null).start();
 
-            }
+            View edit = bottomSheet.findViewById(R.id.bre_prim);
 
-            @Override
-            public void onAnimationCancel(Animator animator) {}
+            if (isEditing && edit.requestFocus()){
+                InputMethodManager manager = ((InputMethodManager)bottomSheet.getContext().getSystemService(Context.INPUT_METHOD_SERVICE));
 
-            @Override
-            public void onAnimationRepeat(Animator animator) {}
-        }).start();
+                manager.showSoftInput(edit, InputMethodManager.SHOW_IMPLICIT);
+            };
+
+        }).setInterpolator(new AccelerateDecelerateInterpolator()).start();
 
     }
 

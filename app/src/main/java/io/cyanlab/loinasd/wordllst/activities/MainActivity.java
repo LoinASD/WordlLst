@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -31,9 +30,9 @@ import io.cyanlab.loinasd.wordllst.controller.pdf.PDFParser;
 import io.cyanlab.loinasd.wordllst.controller.pdf.WordList;
 
 public class MainActivity extends AppCompatActivity
-        implements  ShowFragment.onListSelectedListener{
+        {
 
-    static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LINES = 4;
+    /*static final int SHOW_WL = 1, SHOW_TEST = 2, SHOW_LINES = 4;
 
     static final String MODE_LISTS = "Lists";
     static final String MODE_LINES = "Lines";
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity
 
     public static LocalDatabase database;
 
-    public View toolbar;
+    public View appBar;
 
 
     @Override
@@ -123,7 +122,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /*@SuppressWarnings("StatementWithEmptyBody")
+    *//*@SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -149,8 +148,8 @@ public class MainActivity extends AppCompatActivity
                 setResult(RESULT_OK, addWL);
                 break;
 
-            *//*case R.id.nav_settings:
-                break;*//*
+            *//**//*case R.id.nav_settings:
+                break;*//**//*
 
             case R.id.nav_wl_show:
                 if (getSupportFragmentManager().findFragmentByTag(MODE_LINES)!=null){
@@ -170,7 +169,7 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }*/
+    }*//*
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -239,16 +238,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void deleteList(String wlName){
+    public void deleteList(String name){
         Intent changeList = new Intent(this, ChangingWLActivity.class).
-                putExtra("Name", wlName).
+                putExtra("Name", name).
                 putExtra("Action", "Change list");
         startActivityForResult(changeList, REQUEST_CODE_CHANGE_WL);
     }
 
-    public void addList(String wlName){
+    public void addList(String name){
         final WordList list = new WordList();
-        list.setWlName(wlName);
+        list.setWlName(name);
         list.maxWeight = 0;
         list.currentWeight = 0;
         Thread addList = new Thread(new Runnable() {
@@ -386,14 +385,14 @@ public class MainActivity extends AppCompatActivity
         main.animate().alpha(0f).setListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                toolbar.animate().translationY(-toolbar.getHeight()).setDuration(duration).start();
+                appBar.animate().translationY(-appBar.getHeight()).setDuration(duration).start();
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
 
                 loadLines();
-                toolbar.animate().translationY(0).setDuration(toolbar.getHeight()).start();
+                appBar.animate().translationY(0).setDuration(appBar.getHeight()).start();
                 main.animate().alpha(1f).setDuration(100).setListener(null).start();
 
             }
@@ -425,7 +424,7 @@ public class MainActivity extends AppCompatActivity
     public static class StaticHandler extends Handler {
         WeakReference<MainActivity> wrActivity;
         volatile boolean parser, extractor;
-        volatile String wlName = null;
+        volatile String name = null;
         private StaticHandler(MainActivity activity) {
             wrActivity = new WeakReference<>(activity);
         }
@@ -442,7 +441,7 @@ public class MainActivity extends AppCompatActivity
             }
             if (msg.what == HANDLE_MESSAGE_EXTRACTED) {
                 extractor = true;
-                wlName = msg.getData().getString(WL_NAME);
+                name = msg.getData().getString(WL_NAME);
 
 
             }
@@ -471,7 +470,7 @@ public class MainActivity extends AppCompatActivity
                 parser = false;
                 extractor = false;
 
-                LIST_NAME = wlName;
+                LIST_NAME = name;
 
                 Toast.makeText(activity, "Wordlist " + LIST_NAME + " successfully extracted", Toast.LENGTH_LONG).show();
 
@@ -486,5 +485,5 @@ public class MainActivity extends AppCompatActivity
 
             }
         }
-    }
+    }*/
 }

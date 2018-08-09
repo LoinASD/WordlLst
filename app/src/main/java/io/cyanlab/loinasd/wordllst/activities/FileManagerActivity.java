@@ -170,7 +170,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
             Thread addList = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    MainActivity.database.beginTransaction();
+                    /*MainActivity.database.beginTransaction();
 
                     WordList list = new WordList();
 
@@ -188,7 +188,7 @@ public class FileManagerActivity extends AppCompatActivity implements View.OnCli
                     MainActivity.database.nodeDao().insertNode(node);
 
                     MainActivity.database.setTransactionSuccessful();
-                    MainActivity.database.endTransaction();
+                    MainActivity.database.endTransaction();*/
                 }
             });
             addList.start();

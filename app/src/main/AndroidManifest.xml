@@ -32,6 +32,11 @@
             android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label=""
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".activities.PagerActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustPan"
