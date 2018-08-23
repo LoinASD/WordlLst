@@ -21,10 +21,8 @@ public class PDFParser {
     private static char cc;
     private static final String markerStream = "stream";
     private static final String markerLength = "Length";
-    private Logger log = Logger.getLogger(PDFParser.class.getName());
 
     private OutputStream outputStream;
-    private Thread decoder;
 
     /**
      * Парсит все в этой жизни из файла @file, пишет в @out поток.
@@ -34,6 +32,9 @@ public class PDFParser {
      */
     public void parsePdf(final String file, final PipedOutputStream out) {
         try {
+
+            long streamEnd = System.currentTimeMillis();
+
             outputStream = out;
             BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(file),2048);
             long startTime = System.currentTimeMillis();
@@ -47,7 +48,13 @@ public class PDFParser {
             out.write(cc);
 
             cc = (char) bufInput.read();
+
             while (bufInput.available() != 0) {
+
+
+
+                long streamTime = System.currentTimeMillis();
+
                 cc = (char) bufInput.read();
                 int streamLength = 0;
                 boolean isFonts = false;
@@ -93,36 +100,33 @@ public class PDFParser {
                         if (!isOldVersion) {
                             bufInput.read();
                         }
-                        System.out.println(streamLength);
 
+                        System.out.println(String.format("Stream %d found in %d ms", streamLength, System.currentTimeMillis() - streamTime));
+
+                        long decoderStart = System.currentTimeMillis();
                         try {
-                            if (decoder != null) {
-                                decoder.join();
-                            }
+
                             decode(streamLength, bufInput);
+
+
                         } catch (DataFormatException e) {
                             System.out.println("Ошибка расшифровки GZIPa");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                            log.warning("Ошибка расшифровки GZIPa");
-                            //System.out.println("Ошибка расшифровки GZIPa");
                         }
+
+                        System.out.println("Started searching for new stream in " + (System.currentTimeMillis() - streamEnd));
+
+                        streamEnd = System.currentTimeMillis();
                     }
                 }
-            }
-            if (decoder != null && decoder.isAlive()){
-                decoder.join();
             }
 
             //MainActivity.h.sendEmptyMessage(1);
             out.close();
-            log.warning("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
+            System.out.println("PDFParser works (ms): " + (System.currentTimeMillis() - startTime));
         } catch (FileNotFoundException e) {
             //MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
         } catch (IOException e) {
             //MainActivity.h.sendEmptyMessage(MainActivity.HANDLE_MESSAGE_NOT_EXTRACTED);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -133,11 +137,42 @@ public class PDFParser {
      * @param in - входной поток
      */
     private void decode(int length, InputStream in) throws DataFormatException, IOException {
-        byte[] output = new byte[length];
-        int compressedDataLength = in.read(output);
-        decoder = new Thread(new UnGzipper(output, compressedDataLength));
-        decoder.start();
 
+        long startTime = System.currentTimeMillis();
+
+        byte[] output = new byte[length];
+
+        int compressedDataLength = in.read(output);
+
+        System.out.println("Stream read in " + (System.currentTimeMillis() - startTime) );
+
+        startTime = System.currentTimeMillis();
+
+        Inflater decompressor = new Inflater();
+        decompressor.setInput(output, 0, compressedDataLength);
+
+        byte[] result = new byte[compressedDataLength * 10];
+        int resultLength = 0;
+        try {
+            resultLength = decompressor.inflate(result);
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        }
+
+        decompressor.end();
+
+        try {
+
+            System.out.println(String.format("Stream decoded in %d ms", System.currentTimeMillis() - startTime));
+
+            startTime = System.currentTimeMillis();
+
+            outputStream.write(result, 0, resultLength);
+
+            System.out.println(String.format("Stream written in %d ms", System.currentTimeMillis() - startTime));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -159,41 +194,6 @@ public class PDFParser {
         return true;
     }
 
-    /**
-     * Исполняемый класс, который декодит текст и пишет его в @outputStream*/
-
-    private class UnGzipper implements Runnable {
-
-        private byte[] output;
-        private int compressedDataLength;
-
-        UnGzipper(byte[] output, int compressedDataLength) {
-            this.output = output;
-            this.compressedDataLength = compressedDataLength;
-        }
-
-        @Override
-        public void run() {
-            Inflater decompressor = new Inflater();
-            decompressor.setInput(output, 0, compressedDataLength);
-
-            byte[] result = new byte[compressedDataLength * 10];
-            int resultLength = 0;
-            try {
-                resultLength = decompressor.inflate(result);
-            } catch (DataFormatException e) {
-                e.printStackTrace();
-            }
-
-            decompressor.end();
-
-            try {
-                outputStream.write(result, 0, resultLength);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
 
 }
